@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { Menu, X, GraduationCap, User, LogOut } from 'lucide-react'
 import { useAuth } from '@/app/providers'
 import { createClient } from '@/lib/supabase'
@@ -52,6 +53,7 @@ function HeaderContent() {
 
         {/* User Actions */}
         <div className="flex items-center space-x-4">
+          <ThemeToggle />
           {user ? (
             <div className="hidden md:flex items-center space-x-2">
               <Button variant="ghost" size="sm" asChild>
@@ -66,6 +68,19 @@ function HeaderContent() {
                   Profile
                 </Link>
               </Button>
+              {/* Admin Link for authorized users */}
+              {user?.email && [
+                'bhntshwcjc025@student.wethinkcode.co.za',
+                'admin@apply4me.co.za',
+                'bhekumusa@apply4me.co.za'
+              ].includes(user.email) && (
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/admin">
+                    <User className="h-4 w-4 mr-2" />
+                    Admin
+                  </Link>
+                </Button>
+              )}
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
@@ -110,6 +125,10 @@ function HeaderContent() {
             ))}
 
             <div className="pt-4 border-t space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Theme</span>
+                <ThemeToggle />
+              </div>
               {user ? (
                 <>
                   <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
@@ -124,6 +143,19 @@ function HeaderContent() {
                       Profile
                     </Link>
                   </Button>
+                  {/* Admin Link for authorized users */}
+                  {user?.email && [
+                    'bhntshwcjc025@student.wethinkcode.co.za',
+                    'admin@apply4me.co.za',
+                    'bhekumusa@apply4me.co.za'
+                  ].includes(user.email) && (
+                    <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
+                      <Link href="/admin" onClick={() => setIsMenuOpen(false)}>
+                        <User className="h-4 w-4 mr-2" />
+                        Admin Panel
+                      </Link>
+                    </Button>
+                  )}
                   <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleSignOut}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out

@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import { Search, GraduationCap, Users, Award, TrendingUp, ArrowRight, Play } from 'lucide-react'
+import { Search, GraduationCap, Users, Award, TrendingUp, ArrowRight, Play, Star } from 'lucide-react'
+import Image from 'next/image'
 
 export function Hero() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -28,7 +29,7 @@ export function Hero() {
     <section className="relative overflow-hidden bg-gradient-to-br from-sa-green via-sa-green/90 to-sa-blue">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-[url('/patterns/grid.svg')] opacity-10" />
-      
+
       <div className="container relative py-20 lg:py-32">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Content */}
@@ -37,14 +38,14 @@ export function Hero() {
               <span className="mr-2">🎓</span>
               Trusted by 10,000+ South African students
             </div>
-            
+
             <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">
               Your Gateway to
               <span className="block text-sa-gold">Higher Education</span>
             </h1>
-            
+
             <p className="text-xl text-white/90 mb-8 max-w-2xl">
-              Apply to universities, colleges, and TVET institutions across South Africa 
+              Apply to universities, colleges, and TVET institutions across South Africa
               with just one application. We handle the paperwork, you focus on your future.
             </p>
 
@@ -75,7 +76,7 @@ export function Hero() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
-              
+
               <Button size="xl" variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
                 <Play className="mr-2 h-5 w-5" />
                 Watch Demo

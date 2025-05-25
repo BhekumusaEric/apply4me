@@ -13,6 +13,7 @@ import { useAuth } from '@/app/providers'
 import { createClient } from '@/lib/supabase'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { LoadingSpinner, ButtonLoading } from '@/components/ui/loading'
 
 interface Institution {
   id: string
@@ -111,9 +112,9 @@ export default function ApplyPage() {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container py-12">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p>Loading...</p>
+          <div className="text-center space-y-4">
+            <LoadingSpinner size="lg" />
+            <p className="text-muted-foreground">Loading institution details...</p>
           </div>
         </main>
         <Footer />
@@ -224,7 +225,9 @@ export default function ApplyPage() {
                 className="w-full"
                 disabled={submitting || !firstName || !lastName || !email || !phone}
               >
-                {submitting ? 'Processing...' : 'Continue to Payment'}
+                <ButtonLoading loading={submitting}>
+                  {submitting ? 'Processing Application...' : 'Continue to Payment'}
+                </ButtonLoading>
               </Button>
             </form>
           </CardContent>

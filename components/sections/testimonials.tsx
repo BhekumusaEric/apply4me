@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card'
 import { Star, Quote } from 'lucide-react'
+import Image from 'next/image'
 
 export function Testimonials() {
   const testimonials = [
@@ -10,7 +11,7 @@ export function Testimonials() {
       program: 'Computer Science',
       rating: 5,
       quote: "Apply4Me made my university application so much easier! I applied to 5 universities in just one afternoon. The career profiler helped me choose the right program, and I got accepted to my dream university.",
-      avatar: '/avatars/thabo.jpg'
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face'
     },
     {
       name: 'Nomsa Dlamini',
@@ -19,7 +20,7 @@ export function Testimonials() {
       program: 'Medicine',
       rating: 5,
       quote: "The bursary finder feature was a game-changer for me. I found 3 bursaries I qualified for and Apply4Me helped me apply for all of them. I'm now studying medicine with full funding!",
-      avatar: '/avatars/nomsa.jpg'
+      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=80&h=80&fit=crop&crop=face'
     },
     {
       name: 'Sipho Ndlovu',
@@ -28,7 +29,7 @@ export function Testimonials() {
       program: 'Engineering',
       rating: 5,
       quote: "I was overwhelmed by all the different application forms and deadlines. Apply4Me organized everything for me and made sure I didn't miss any deadlines. Highly recommended!",
-      avatar: '/avatars/sipho.jpg'
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face'
     },
     {
       name: 'Lerato Mokwena',
@@ -37,7 +38,7 @@ export function Testimonials() {
       program: 'Information Technology',
       rating: 5,
       quote: "Coming from a rural area, I didn't know much about university applications. The support team guided me through everything via WhatsApp. I'm now studying IT and loving it!",
-      avatar: '/avatars/lerato.jpg'
+      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face'
     },
     {
       name: 'Michael van der Merwe',
@@ -46,7 +47,7 @@ export function Testimonials() {
       program: 'Business Administration',
       rating: 5,
       quote: "The express service was worth every rand. My application was processed in 24 hours and I got early acceptance. Apply4Me's efficiency is unmatched.",
-      avatar: '/avatars/michael.jpg'
+      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face'
     },
     {
       name: 'Zanele Khumalo',
@@ -55,7 +56,7 @@ export function Testimonials() {
       program: 'Education',
       rating: 5,
       quote: "As a first-generation university student, I had no idea where to start. Apply4Me's career profiler showed me that teaching was perfect for me. Now I'm training to be a teacher!",
-      avatar: '/avatars/zanele.jpg'
+      avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face'
     }
   ]
 
@@ -84,7 +85,7 @@ export function Testimonials() {
               <CardContent className="p-6">
                 {/* Quote Icon */}
                 <Quote className="h-8 w-8 text-primary/20 mb-4" />
-                
+
                 {/* Rating */}
                 <div className="flex items-center mb-4">
                   {renderStars(testimonial.rating)}
