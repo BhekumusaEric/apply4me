@@ -47,30 +47,56 @@ interface PaymentMethod {
   fees: string
 }
 
+interface PaymentMethod {
+  id: string
+  name: string
+  icon: any
+  description: string
+  processingTime: string
+  fees: string
+  available: boolean
+  recommended?: boolean
+  comingSoon?: boolean
+}
+
 const PAYMENT_METHODS: PaymentMethod[] = [
+  {
+    id: 'eft',
+    name: 'EFT/Bank Transfer',
+    icon: Building2,
+    description: 'Direct bank transfer - Available Now',
+    processingTime: 'Instant verification',
+    fees: 'No additional fees',
+    available: true,
+    recommended: true
+  },
+  {
+    id: 'mobile',
+    name: 'SnapScan/Mobile Payment',
+    icon: Smartphone,
+    description: 'QR code payment - Available Now',
+    processingTime: '1-2 minutes',
+    fees: 'No additional fees',
+    available: true
+  },
+  {
+    id: 'capitec',
+    name: 'Capitec Pay',
+    icon: Smartphone,
+    description: 'Instant Capitec transfer - Available Now',
+    processingTime: 'Instant',
+    fees: 'No additional fees',
+    available: true
+  },
   {
     id: 'card',
     name: 'Credit/Debit Card',
     icon: CreditCard,
-    description: 'Visa, Mastercard, American Express',
-    processingTime: 'Instant',
-    fees: 'No additional fees'
-  },
-  {
-    id: 'eft',
-    name: 'Instant EFT',
-    icon: Building2,
-    description: 'Direct bank transfer',
-    processingTime: 'Instant',
-    fees: 'No additional fees'
-  },
-  {
-    id: 'mobile',
-    name: 'Mobile Payment',
-    icon: Smartphone,
-    description: 'SnapScan, Zapper, or mobile banking',
-    processingTime: '1-2 minutes',
-    fees: 'No additional fees'
+    description: 'Coming Soon - Automated card payments',
+    processingTime: 'Coming Soon',
+    fees: 'Coming Soon',
+    available: false,
+    comingSoon: true
   }
 ]
 
