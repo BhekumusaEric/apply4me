@@ -19,7 +19,8 @@ import {
   CheckCircle,
   AlertCircle,
   TrendingUp,
-  RefreshCw
+  RefreshCw,
+  Shield
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -291,6 +292,36 @@ export default function DashboardPage() {
               : 'Track your applications and continue your higher education journey'
             }
           </p>
+
+          {/* Admin Access */}
+          {user?.email && [
+            'bhntshwcjc025@student.wethinkcode.co.za',
+            'admin@apply4me.co.za',
+            'bhekumusa@apply4me.co.za'
+          ].includes(user.email) && (
+            <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
+              <h3 className="font-semibold text-primary mb-2 flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                🔐 Admin Access Available
+              </h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                You have admin privileges. Access the admin dashboard to manage institutions and applications.
+              </p>
+              <div className="flex gap-2">
+                <Button asChild>
+                  <Link href="/admin">
+                    <Shield className="h-4 w-4 mr-2" />
+                    Open Admin Dashboard
+                  </Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/admin/login">
+                    Admin Login
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}
