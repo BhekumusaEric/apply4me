@@ -1,0 +1,31 @@
+🚀 APPLY4ME ENVIRONMENT VARIABLES FOR VERCEL/NETLIFY
+=======================================================
+
+Copy and paste these into your deployment platform:
+
+VARIABLE 1:
+Name: NEXT_PUBLIC_SUPABASE_URL
+Value: https://kioqgrvnolerzffqdwmt.supabase.co
+
+VARIABLE 2:
+Name: NEXT_PUBLIC_SUPABASE_ANON_KEY
+Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpb3FncnZub2xlcnpmZnFkd210Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgxODM4MDcsImV4cCI6MjA2Mzc1OTgwN30.CD2PAbcklmqMf8NlCK_zdttAy5sMfesAaeBmyZCVwGk
+
+VARIABLE 3:
+Name: SUPABASE_SERVICE_ROLE_KEY
+Value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtpb3FncnZub2xlcnpmZnFkd210Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODE4MzgwNywiZXhwIjoyMDYzNzU5ODA3fQ.TwVDEZ1uQo8_yOYsHvZNOklGZFhY3-vvV7pr56nqPOs
+
+VARIABLE 4:
+Name: NEXT_PUBLIC_APP_NAME
+Value: Apply4Me
+
+INSTRUCTIONS:
+1. For each variable, click "Add New" in your deployment platform
+2. Copy the Name exactly as shown
+3. Copy the Value exactly as shown
+4. Select "All Environments" (Production, Preview, Development)
+5. Click Save
+
+After adding all 4 variables, redeploy your application.
+
+🎉 Apply4Me will be live!
