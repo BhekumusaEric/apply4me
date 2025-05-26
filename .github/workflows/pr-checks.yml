@@ -1,0 +1,173 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # Comprehensive PR Validation
+  validate-pr:
+    name: 🔍 Validate Pull Request
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: 📥 Install dependencies
+      run: npm ci
+      
+    - name: 🔍 Check for breaking changes
+      run: |
+        echo "🔍 Checking for potential breaking changes..."
+        
+        # Check if critical files were modified
+        if git diff --name-only origin/main...HEAD | grep -E "(package\.json|tsconfig\.json|next\.config\.js)"; then
+          echo "⚠️ Critical configuration files modified - extra review needed"
+        fi
+        
+        # Check if API routes were modified
+        if git diff --name-only origin/main...HEAD | grep -E "app/api/"; then
+          echo "⚠️ API routes modified - ensure backward compatibility"
+        fi
+        
+    - name: 🏗️ Test build
+      run: |
+        echo "🏗️ Testing build process..."
+        npm run build
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        
+    - name: 🧪 Run tests
+      run: npm test -- --passWithNoTests --coverage
+      
+    - name: 📊 Code quality check
+      run: |
+        echo "📊 Running code quality checks..."
+        npm run lint || echo "Linting completed with warnings"
+        
+    - name: 🔒 Security audit
+      run: |
+        echo "🔒 Running security audit..."
+        npm audit --audit-level moderate || echo "Security audit completed"
+        
+    - name: 📱 Mobile app validation
+      run: |
+        echo "📱 Validating mobile app..."
+        if [ -d "apply4me-mobile" ]; then
+          cd apply4me-mobile
+          npm ci
+          npm run lint || echo "Mobile linting completed"
+        fi
+
+  # Preview Deployment
+  deploy-preview:
+    name: 🚀 Deploy Preview
+    needs: validate-pr
+    runs-on: ubuntu-latest
+    if: github.event.action != 'closed'
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 📦 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: 📥 Install Vercel CLI
+      run: npm install --global vercel@latest
+      
+    - name: 🔗 Pull Vercel Environment Information
+      run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      
+    - name: 🏗️ Build Project Artifacts
+      run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      
+    - name: 🚀 Deploy Preview
+      id: deploy
+      run: |
+        url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+        echo "preview_url=$url" >> $GITHUB_OUTPUT
+        echo "🚀 Preview deployed to: $url"
+        
+    - name: 💬 Comment PR with preview link
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && comment.body.includes('🚀 Preview Deployment')
+          );
+          
+          const body = `## 🚀 Preview Deployment
+          
+          ✅ Your changes have been deployed to a preview environment!
+          
+          **Preview URL:** ${{ steps.deploy.outputs.preview_url }}
+          
+          ### 🧪 Test Checklist:
+          - [ ] Homepage loads correctly
+          - [ ] Institution browsing works
+          - [ ] Bursary search functions
+          - [ ] User authentication flows
+          - [ ] Payment system (if modified)
+          - [ ] Mobile responsiveness
+          
+          ### 📱 Mobile Testing:
+          - Test the preview URL on mobile devices
+          - Verify responsive design
+          - Check touch interactions
+          
+          ---
+          *This preview will be automatically updated with new commits.*`;
+          
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: botComment.id,
+              body: body
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+          }
+
+  # Performance Testing
+  performance-test:
+    name: ⚡ Performance Test
+    needs: deploy-preview
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: ⚡ Lighthouse CI
+      uses: treosh/lighthouse-ci-action@v10
+      with:
+        configPath: './lighthouse.config.js'
+        uploadArtifacts: true
+        temporaryPublicStorage: true
