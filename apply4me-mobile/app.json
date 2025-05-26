@@ -50,6 +50,11 @@
         "projectId": "apply4me-sa-mobile"
       }
     },
-    "owner": "bhekumusaeric"
+    "owner": "bhekumusaeric",
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    }
   }
 }
