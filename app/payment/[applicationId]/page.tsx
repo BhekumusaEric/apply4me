@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -38,14 +38,7 @@ interface Application {
   personal_info: any
 }
 
-interface PaymentMethod {
-  id: string
-  name: string
-  icon: any
-  description: string
-  processingTime: string
-  fees: string
-}
+
 
 interface PaymentMethod {
   id: string
@@ -118,6 +111,10 @@ export default function PaymentPage() {
     postalCode: ''
   })
 
+  // Generate payment reference and calculate totals
+  const paymentReference = `APY${params.applicationId?.toString().slice(-6).toUpperCase()}`
+  const totalAmount = application?.total_amount || 200
+
   useEffect(() => {
     if (!user) {
       router.push('/auth/signin')
@@ -186,43 +183,52 @@ export default function PaymentPage() {
 
     setProcessing(true)
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000))
-
       const supabase = createClient()
-      const updatedApplication = {
-        ...application,
-        payment_status: 'paid',
-        status: 'submitted',
-        payment_method: selectedMethod,
-        payment_date: new Date().toISOString()
-      }
 
-      // Try to update in database
-      try {
-        const { error } = await supabase
-          .from('applications')
-          .update({
-            payment_status: 'paid',
-            status: 'submitted',
-            payment_method: selectedMethod,
-            payment_date: new Date().toISOString()
-          })
-          .eq('id', application.id)
+      // For manual payment methods, mark as pending verification
+      if (['eft', 'mobile', 'capitec'].includes(selectedMethod)) {
+        const updatedApplication = {
+          ...application,
+          payment_status: 'pending_verification',
+          status: 'payment_pending',
+          payment_method: selectedMethod,
+          payment_reference: paymentReference,
+          payment_date: new Date().toISOString()
+        }
 
-        if (error) {
+        // Try to update in database
+        try {
+          const { error } = await supabase
+            .from('applications')
+            .update({
+              payment_status: 'pending_verification',
+              status: 'payment_pending',
+              payment_method: selectedMethod,
+              payment_reference: paymentReference,
+              payment_date: new Date().toISOString()
+            })
+            .eq('id', application.id)
+
+          if (error) {
+            // Update localStorage as fallback
+            localStorage.setItem(`application_${application.id}`, JSON.stringify(updatedApplication))
+          }
+        } catch (dbError) {
           // Update localStorage as fallback
           localStorage.setItem(`application_${application.id}`, JSON.stringify(updatedApplication))
         }
-      } catch (dbError) {
-        // Update localStorage as fallback
-        localStorage.setItem(`application_${application.id}`, JSON.stringify(updatedApplication))
+
+        // Redirect to pending verification page
+        router.push(`/payment/pending?ref=${paymentReference}&method=${selectedMethod}&amount=${totalAmount}`)
+
+      } else {
+        // For automated payment methods (coming soon)
+        alert('This payment method is coming soon! Please use EFT, Capitec Pay, or Mobile Payment for now.')
       }
 
-      // Redirect to success page
-      router.push(`/payment/success/${application.id}`)
     } catch (error) {
-      alert('Payment failed. Please try again.')
+      console.error('Payment error:', error)
+      alert('Payment processing failed. Please try again.')
     } finally {
       setProcessing(false)
     }
@@ -296,23 +302,49 @@ export default function PaymentPage() {
                 {PAYMENT_METHODS.map((method) => (
                   <div
                     key={method.id}
-                    className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                      selectedMethod === method.id ? 'ring-2 ring-primary border-primary' : 'hover:border-muted-foreground'
+                    className={`border rounded-lg p-4 transition-all ${
+                      method.available
+                        ? `cursor-pointer ${selectedMethod === method.id ? 'ring-2 ring-primary border-primary' : 'hover:border-muted-foreground'}`
+                        : 'opacity-60 cursor-not-allowed bg-muted/30'
                     }`}
-                    onClick={() => setSelectedMethod(method.id)}
+                    onClick={() => method.available && setSelectedMethod(method.id)}
                   >
                     <div className="flex items-center gap-4">
                       <div className={`w-4 h-4 rounded-full border-2 ${
-                        selectedMethod === method.id ? 'bg-primary border-primary' : 'border-muted-foreground'
+                        selectedMethod === method.id && method.available
+                          ? 'bg-primary border-primary'
+                          : method.available
+                            ? 'border-muted-foreground'
+                            : 'border-muted-foreground/50'
                       }`} />
-                      <method.icon className="h-6 w-6 text-muted-foreground" />
+                      <method.icon className={`h-6 w-6 ${method.available ? 'text-muted-foreground' : 'text-muted-foreground/50'}`} />
                       <div className="flex-1">
-                        <h4 className="font-medium">{method.name}</h4>
-                        <p className="text-sm text-muted-foreground">{method.description}</p>
+                        <div className="flex items-center gap-2">
+                          <h4 className={`font-medium ${method.available ? '' : 'text-muted-foreground'}`}>
+                            {method.name}
+                          </h4>
+                          {method.recommended && (
+                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                              Recommended
+                            </Badge>
+                          )}
+                          {method.comingSoon && (
+                            <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
+                              Coming Soon
+                            </Badge>
+                          )}
+                        </div>
+                        <p className={`text-sm ${method.available ? 'text-muted-foreground' : 'text-muted-foreground/70'}`}>
+                          {method.description}
+                        </p>
                       </div>
                       <div className="text-right text-sm">
-                        <div className="font-medium text-green-600">{method.processingTime}</div>
-                        <div className="text-muted-foreground">{method.fees}</div>
+                        <div className={`font-medium ${method.available ? 'text-green-600' : 'text-muted-foreground/70'}`}>
+                          {method.processingTime}
+                        </div>
+                        <div className={`${method.available ? 'text-muted-foreground' : 'text-muted-foreground/70'}`}>
+                          {method.fees}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -324,46 +356,23 @@ export default function PaymentPage() {
             {selectedMethod === 'card' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Card Details</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <AlertCircle className="h-5 w-5 text-blue-600" />
+                    Card Payments Coming Soon
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="1234 5678 9012 3456"
-                      value={paymentData.cardNumber}
-                      onChange={(e) => setPaymentData(prev => ({ ...prev, cardNumber: e.target.value }))}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="expiryDate">Expiry Date</Label>
-                      <Input
-                        id="expiryDate"
-                        placeholder="MM/YY"
-                        value={paymentData.expiryDate}
-                        onChange={(e) => setPaymentData(prev => ({ ...prev, expiryDate: e.target.value }))}
-                      />
+                <CardContent>
+                  <div className="text-center py-8">
+                    <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Automated Card Payments</h3>
+                    <p className="text-muted-foreground mb-4">
+                      We're integrating with Yoco and PayFast to provide secure, automated card payments.
+                    </p>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>Coming Soon:</strong> One-click payments with Visa, Mastercard, and American Express
+                      </p>
                     </div>
-                    <div>
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input
-                        id="cvv"
-                        placeholder="123"
-                        value={paymentData.cvv}
-                        onChange={(e) => setPaymentData(prev => ({ ...prev, cvv: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="cardholderName">Cardholder Name</Label>
-                    <Input
-                      id="cardholderName"
-                      placeholder="John Doe"
-                      value={paymentData.cardholderName}
-                      onChange={(e) => setPaymentData(prev => ({ ...prev, cardholderName: e.target.value }))}
-                    />
                   </div>
                 </CardContent>
               </Card>
@@ -372,20 +381,66 @@ export default function PaymentPage() {
             {selectedMethod === 'eft' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Instant EFT</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-green-600" />
+                    Bank Transfer Details
+                  </CardTitle>
+                  <CardDescription>
+                    Transfer the exact amount to the account below and we'll verify your payment within 24 hours
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Secure Bank Transfer</h3>
-                    <p className="text-muted-foreground mb-4">
-                      You will be redirected to your bank's secure payment portal
-                    </p>
-                    <div className="flex justify-center gap-4">
-                      <Image src="/logos/fnb.png" alt="FNB" width={60} height={40} className="opacity-60" />
-                      <Image src="/logos/absa.png" alt="ABSA" width={60} height={40} className="opacity-60" />
-                      <Image src="/logos/standard-bank.png" alt="Standard Bank" width={60} height={40} className="opacity-60" />
-                      <Image src="/logos/nedbank.png" alt="Nedbank" width={60} height={40} className="opacity-60" />
+                <CardContent className="space-y-4">
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-green-800 dark:text-green-200">Bank:</span>
+                      <span className="font-semibold">Capitec Bank</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-green-800 dark:text-green-200">Account Holder:</span>
+                      <span className="font-semibold">Ntshwenya</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-green-800 dark:text-green-200">Account Number:</span>
+                      <span className="font-mono font-bold text-lg">1643495273</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-green-800 dark:text-green-200">Branch Code:</span>
+                      <span className="font-semibold">470010 (Universal Capitec Code)</span>
+                    </div>
+                    <div className="border-t border-green-200 dark:border-green-700 pt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-green-800 dark:text-green-200">Payment Reference:</span>
+                        <span className="font-mono text-primary font-bold bg-white dark:bg-gray-800 px-2 py-1 rounded">
+                          {paymentReference}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center text-lg font-bold border-t border-green-200 dark:border-green-700 pt-3">
+                      <span className="text-green-800 dark:text-green-200">Amount to Pay:</span>
+                      <span className="text-2xl text-green-600 dark:text-green-400">R{totalAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      Payment Instructions:
+                    </h4>
+                    <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                      <li>• <strong>Use the exact reference:</strong> {paymentReference}</li>
+                      <li>• <strong>Transfer exact amount:</strong> R{totalAmount.toFixed(2)}</li>
+                      <li>• <strong>Verification time:</strong> Within 24 hours (usually faster)</li>
+                      <li>• <strong>Keep proof of payment</strong> for your records</li>
+                      <li>• <strong>SMS/Email confirmation</strong> will be sent once verified</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">💡 Quick Payment Options:</h4>
+                    <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                      <p>• <strong>Capitec App:</strong> Pay → Someone Else → Use account details above</p>
+                      <p>• <strong>Internet Banking:</strong> Beneficiary payment with reference</p>
+                      <p>• <strong>ATM/Branch:</strong> Cash deposit with reference number</p>
                     </div>
                   </div>
                 </CardContent>
@@ -395,20 +450,117 @@ export default function PaymentPage() {
             {selectedMethod === 'mobile' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Mobile Payment</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Smartphone className="h-5 w-5 text-blue-600" />
+                    Mobile Payment Options
+                  </CardTitle>
+                  <CardDescription>
+                    Quick and easy mobile payment methods
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Smartphone className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Scan to Pay</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Use your mobile banking app or payment app to scan the QR code
-                    </p>
-                    <div className="w-32 h-32 bg-muted rounded-lg mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-muted-foreground">QR Code</span>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* SnapScan */}
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <Smartphone className="h-4 w-4 text-green-600" />
+                        SnapScan
+                      </h4>
+                      <div className="text-center">
+                        <div className="w-24 h-24 bg-green-100 dark:bg-green-900/20 rounded-lg mx-auto mb-3 flex items-center justify-center">
+                          <span className="text-green-600 font-bold">QR</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Scan with SnapScan app
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Reference: {paymentReference}
+                        </p>
+                      </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Supported: SnapScan, Zapper, Banking Apps
+
+                    {/* Zapper */}
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <Smartphone className="h-4 w-4 text-purple-600" />
+                        Zapper
+                      </h4>
+                      <div className="text-center">
+                        <div className="w-24 h-24 bg-purple-100 dark:bg-purple-900/20 rounded-lg mx-auto mb-3 flex items-center justify-center">
+                          <span className="text-purple-600 font-bold">QR</span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Scan with Zapper app
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Reference: {paymentReference}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">📱 Mobile Payment Instructions:</h4>
+                    <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                      <li>• <strong>Amount:</strong> R{totalAmount.toFixed(2)}</li>
+                      <li>• <strong>Reference:</strong> {paymentReference}</li>
+                      <li>• <strong>Verification:</strong> Instant to 24 hours</li>
+                      <li>• <strong>Confirmation:</strong> SMS/Email notification</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">🚧 QR Codes Coming Soon</h4>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      We're setting up SnapScan and Zapper QR codes. For now, please use the EFT option above for fastest processing.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {selectedMethod === 'capitec' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Smartphone className="h-5 w-5 text-red-600" />
+                    Capitec Pay
+                  </CardTitle>
+                  <CardDescription>
+                    Instant payment using Capitec banking app
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <h4 className="font-semibold text-red-800 dark:text-red-200 mb-3">📱 Capitec Pay Instructions:</h4>
+                    <ol className="text-sm text-red-700 dark:text-red-300 space-y-2">
+                      <li><strong>1.</strong> Open your Capitec banking app</li>
+                      <li><strong>2.</strong> Go to "Pay" → "Someone Else"</li>
+                      <li><strong>3.</strong> Enter these details:</li>
+                      <div className="ml-4 bg-white dark:bg-gray-800 p-3 rounded border">
+                        <p><strong>Account:</strong> 1643495273</p>
+                        <p><strong>Amount:</strong> R{totalAmount.toFixed(2)}</p>
+                        <p><strong>Reference:</strong> {paymentReference}</p>
+                      </div>
+                      <li><strong>4.</strong> Confirm and pay</li>
+                      <li><strong>5.</strong> Screenshot confirmation for your records</li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                    <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">✅ Benefits of Capitec Pay:</h4>
+                    <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                      <li>• <strong>Instant transfer</strong> - Payment reflects immediately</li>
+                      <li>• <strong>Same bank</strong> - No inter-bank delays</li>
+                      <li>• <strong>Fast verification</strong> - Usually within 1 hour</li>
+                      <li>• <strong>Secure</strong> - Direct bank-to-bank transfer</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">💡 Pro Tip:</h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Since both accounts are with Capitec, your payment will be instant and verification will be much faster than other banks!
                     </p>
                   </div>
                 </CardContent>
