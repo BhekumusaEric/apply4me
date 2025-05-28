@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
-import { StudentProfile } from '@/lib/types/student-profile'
+import { StudentProfile, DocumentType, DocumentInfo, DocumentCollection } from '@/lib/types/student-profile'
 import { ProfileValidator } from '@/lib/services/profile-validator'
 
 // GET - Fetch user's profile
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
         eligibleForBursaries: true,
         missingDocuments: [],
         missingInformation: [],
-        readiness_score: profile.readiness_score || 0,
+        readinessScore: profile.readiness_score || 0,
         lastAssessment: profile.updated_at
       },
       profileCompleteness: profile.profile_completeness || 0,
@@ -156,24 +156,38 @@ export async function POST(request: NextRequest) {
 
 // Helper function to transform documents
 function transformDocuments(documents: any[]) {
-  const documentCollection = {
-    identityDocument: {},
-    passportPhoto: {},
-    matricCertificate: {},
-    matricResults: {},
-    academicTranscripts: [],
-    parentIncomeStatements: [],
-    bankStatements: [],
-    portfolioDocuments: [],
-    affidavits: [],
-    certifiedCopies: []
+  const emptyDocumentInfo = {
+    id: '',
+    name: '',
+    type: 'OTHER' as DocumentType,
+    fileUrl: '',
+    uploadDate: '',
+    fileSize: 0,
+    mimeType: '',
+    isVerified: false,
+    verificationDate: undefined,
+    expiryDate: undefined,
+    notes: undefined
+  }
+
+  const documentCollection: DocumentCollection = {
+    identityDocument: { ...emptyDocumentInfo },
+    passportPhoto: { ...emptyDocumentInfo },
+    matricCertificate: { ...emptyDocumentInfo },
+    matricResults: { ...emptyDocumentInfo },
+    academicTranscripts: [] as DocumentInfo[],
+    parentIncomeStatements: [] as DocumentInfo[],
+    bankStatements: [] as DocumentInfo[],
+    portfolioDocuments: [] as DocumentInfo[],
+    affidavits: [] as DocumentInfo[],
+    certifiedCopies: [] as DocumentInfo[]
   }
 
   documents.forEach(doc => {
     const documentInfo = {
       id: doc.id,
       name: doc.document_name,
-      type: doc.document_type,
+      type: doc.document_type as DocumentType,
       fileUrl: doc.file_url,
       uploadDate: doc.uploaded_at,
       fileSize: doc.file_size,

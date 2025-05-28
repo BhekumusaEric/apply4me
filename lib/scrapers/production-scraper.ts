@@ -300,7 +300,7 @@ export class ProductionScraper {
   /**
    * Parse HTML content with Cheerio
    */
-  private parseHTML(html: string): cheerio.CheerioAPI {
+  private parseHTML(html: string): cheerio.Root {
     return cheerio.load(html)
   }
 }

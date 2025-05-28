@@ -7,9 +7,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { DatabasePopulationManager } from '@/lib/database/population-manager'
 
 export async function POST(request: NextRequest) {
+  let action = 'unknown'
+
   try {
-    const { action } = await request.json()
-    
+    const requestData = await request.json()
+    action = requestData.action
+
     if (!action || !['populate', 'test', 'stats'].includes(action)) {
       return NextResponse.json(
         { error: 'Invalid action. Use: populate, test, or stats' },
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error(`❌ Database ${action} error:`, error)
     return NextResponse.json(
-      { 
+      {
         error: `Database ${action} failed`,
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -61,7 +64,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const manager = new DatabasePopulationManager()
-    
+
     // Get comprehensive database overview
     const [testResult, stats] = await Promise.all([
       manager.testDatabase(),

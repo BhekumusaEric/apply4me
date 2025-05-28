@@ -20,7 +20,8 @@ import {
   AlertCircle,
   TrendingUp,
   RefreshCw,
-  Shield
+  Shield,
+  User
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'

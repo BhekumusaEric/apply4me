@@ -85,11 +85,11 @@ export class ProgramScraper {
         requirements: template.requirements,
         careerOutcomes: template.careerOutcomes,
         description: template.description,
-        isPopular: template.isPopular || false,
-        isAvailable: template.isAvailable !== false, // Default to true unless explicitly false
-        applicationDeadline: template.applicationDeadline || this.generateApplicationDeadline(),
-        availableSpots: template.availableSpots || this.generateAvailableSpots(),
-        applicationFee: template.applicationFee || this.generateApplicationFee(template.qualificationLevel),
+        isPopular: (template as any).isPopular || false,
+        isAvailable: (template as any).isAvailable !== false, // Default to true unless explicitly false
+        applicationDeadline: (template as any).applicationDeadline || this.generateApplicationDeadline(),
+        availableSpots: (template as any).availableSpots || this.generateAvailableSpots(),
+        applicationFee: (template as any).applicationFee || this.generateApplicationFee(template.qualificationLevel),
         source: 'Mock Program Scraper',
         scrapedAt: new Date()
       })

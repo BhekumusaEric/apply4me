@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Progress } from '@/components/ui/progress'
-import { 
-  FileText, 
-  Upload, 
-  CheckCircle, 
-  AlertCircle, 
-  X, 
+import {
+  FileText,
+  Upload,
+  CheckCircle,
+  AlertCircle,
+  X,
   Eye,
   Download,
   Shield,
@@ -125,7 +125,13 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
       bankStatements: [],
       portfolioDocuments: [],
       affidavits: [],
-      certifiedCopies: []
+      certifiedCopies: [],
+      // Optional fields that might be accessed
+      medicalCertificate: {} as DocumentInfo,
+      policeClearance: {} as DocumentInfo,
+      motivationLetter: {} as DocumentInfo,
+      cv: {} as DocumentInfo,
+      affidavitOfSupport: {} as DocumentInfo
     }
   )
 
@@ -138,8 +144,14 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
   const requiredDocs = REQUIRED_DOCUMENTS.filter(doc => doc.required)
   const uploadedRequired = requiredDocs.filter(doc => {
     const docKey = getDocumentKey(doc.type)
-    return documents[docKey as keyof DocumentCollection] && 
-           (documents[docKey as keyof DocumentCollection] as any).fileUrl
+    const docField = documents[docKey as keyof DocumentCollection]
+
+    // Handle both single documents and arrays
+    if (Array.isArray(docField)) {
+      return docField.length > 0 && docField[0]?.fileUrl
+    } else {
+      return docField && (docField as any).fileUrl
+    }
   }).length
   const completionPercentage = (uploadedRequired / requiredDocs.length) * 100
 
@@ -153,7 +165,7 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
       'ACADEMIC_TRANSCRIPT': 'academicTranscripts',
       'INCOME_STATEMENT': 'parentIncomeStatements',
       'BANK_STATEMENT': 'bankStatements',
-      'AFFIDAVIT_SUPPORT': 'affidavits',
+      'AFFIDAVIT_SUPPORT': 'affidavitOfSupport',
       'MEDICAL_CERTIFICATE': 'medicalCertificate',
       'POLICE_CLEARANCE': 'policeClearance',
       'MOTIVATION_LETTER': 'motivationLetter',
@@ -169,7 +181,7 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
   // Handle file upload
   const handleFileUpload = async (file: File, docType: DocumentType) => {
     const docKey = getDocumentKey(docType)
-    
+
     // Validate file
     const doc = REQUIRED_DOCUMENTS.find(d => d.type === docType)
     if (!doc) return
@@ -187,7 +199,7 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
 
     // Simulate upload progress
     setUploadProgress(prev => ({ ...prev, [docType]: 0 }))
-    
+
     // Mock upload process
     for (let i = 0; i <= 100; i += 10) {
       await new Promise(resolve => setTimeout(resolve, 100))
@@ -234,7 +246,7 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
   // Remove document
   const removeDocument = (docType: DocumentType, docId?: string) => {
     const docKey = getDocumentKey(docType)
-    
+
     if (docKey.endsWith('s') && docId) {
       // Array field
       setDocuments(prev => ({
@@ -261,12 +273,20 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
   // Validate form
   const validateForm = (): boolean => {
     const newErrors: string[] = []
-    
+
     requiredDocs.forEach(doc => {
       const docKey = getDocumentKey(doc.type)
-      const uploadedDoc = documents[docKey as keyof DocumentCollection]
-      
-      if (!uploadedDoc || !(uploadedDoc as any).fileUrl) {
+      const docField = documents[docKey as keyof DocumentCollection]
+
+      let hasValidDocument = false
+
+      if (Array.isArray(docField)) {
+        hasValidDocument = docField.length > 0 && !!docField[0]?.fileUrl
+      } else {
+        hasValidDocument = !!(docField && (docField as any).fileUrl)
+      }
+
+      if (!hasValidDocument) {
         newErrors.push(`${doc.name} is required`)
       }
     })
@@ -311,8 +331,8 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          <strong>Document Security:</strong> All documents are encrypted and stored securely. 
-          Only you and authorized Apply4Me staff can access your documents. 
+          <strong>Document Security:</strong> All documents are encrypted and stored securely.
+          Only you and authorized Apply4Me staff can access your documents.
           We never share your documents with third parties without your explicit consent.
         </AlertDescription>
       </Alert>
@@ -321,8 +341,20 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
       <div className="grid gap-4">
         {REQUIRED_DOCUMENTS.map((doc) => {
           const docKey = getDocumentKey(doc.type)
-          const uploadedDoc = documents[docKey as keyof DocumentCollection] as DocumentInfo
-          const isUploaded = uploadedDoc && uploadedDoc.fileUrl
+          const docField = documents[docKey as keyof DocumentCollection]
+
+          // Handle both single documents and arrays
+          let uploadedDoc: DocumentInfo | undefined
+          let isUploaded = false
+
+          if (Array.isArray(docField)) {
+            uploadedDoc = docField.length > 0 ? docField[0] : undefined
+            isUploaded = uploadedDoc?.fileUrl ? true : false
+          } else {
+            uploadedDoc = docField as DocumentInfo
+            isUploaded = uploadedDoc?.fileUrl ? true : false
+          }
+
           const isUploading = uploadProgress[doc.type] !== undefined
           const progress = uploadProgress[doc.type] || 0
 
@@ -353,21 +385,21 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
-                    {isUploaded && (
+                    {isUploaded && uploadedDoc && (
                       <>
                         <Button variant="outline" size="sm" onClick={() => window.open(uploadedDoc.fileUrl, '_blank')}>
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => removeDocument(doc.type)}>
+                        <Button variant="outline" size="sm" onClick={() => removeDocument(doc.type, uploadedDoc.id)}>
                           <X className="h-4 w-4" />
                         </Button>
                       </>
                     )}
-                    
-                    <Button 
-                      variant={isUploaded ? "outline" : "default"} 
+
+                    <Button
+                      variant={isUploaded ? "outline" : "default"}
                       size="sm"
                       onClick={() => triggerFileInput(doc.type)}
                       disabled={isUploading}
@@ -378,7 +410,7 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
                   </div>
                 </div>
               </CardHeader>
-              
+
               {isUploading && (
                 <CardContent className="pt-0">
                   <div className="space-y-2">
@@ -401,7 +433,9 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
 
               {/* Hidden file input */}
               <input
-                ref={el => fileInputRefs.current[doc.type] = el}
+                ref={el => {
+                  if (el) fileInputRefs.current[doc.type] = el
+                }}
                 type="file"
                 accept={doc.acceptedFormats.map(format => `.${format.toLowerCase()}`).join(',')}
                 onChange={(e) => {

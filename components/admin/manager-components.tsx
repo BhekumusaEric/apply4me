@@ -55,7 +55,9 @@ import {
   RefreshCw,
   BarChart3,
   GraduationCap,
-  Award
+  Award,
+  Users,
+  DollarSign
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { useToast } from '@/hooks/use-toast'
@@ -2323,8 +2325,8 @@ export function AutomationManager({
 
         // Log detailed information
         console.log(`📊 Database Contents:`)
-        console.log(`🏫 Institutions (${institutionCount}):`, result.data.institutions.map(i => i.name))
-        console.log(`💰 Bursaries (${bursaryCount}):`, result.data.bursaries.map(b => b.name))
+        console.log(`🏫 Institutions (${institutionCount}):`, result.data.institutions.map((i: any) => i.name))
+        console.log(`💰 Bursaries (${bursaryCount}):`, result.data.bursaries.map((b: any) => b.name))
 
         // Wait a moment before refreshing to let user see the data check results
         setTimeout(() => {

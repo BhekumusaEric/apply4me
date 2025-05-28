@@ -171,17 +171,38 @@ export default function PaymentPage() {
       if (storedApplication) {
         const appData = JSON.parse(storedApplication)
 
-        // Mock institution data for demo
-        const mockInstitution = {
-          name: 'University of the Witwatersrand',
-          application_fee: 150,
-          logo_url: '/images/institutions/wits-logo.png'
+        // Try to get real institution data
+        let institutionData = null
+        if (appData.institution_id) {
+          try {
+            const supabase = createClient()
+            const { data: institution } = await supabase
+              .from('institutions')
+              .select('name, application_fee, logo_url')
+              .eq('id', appData.institution_id)
+              .single()
+
+            if (institution) {
+              institutionData = institution
+            }
+          } catch (error) {
+            console.error('Failed to fetch institution data:', error)
+          }
+        }
+
+        // Fallback to default data if no real institution found
+        if (!institutionData) {
+          institutionData = {
+            name: appData.institution_name || 'Selected Institution',
+            application_fee: 150,
+            logo_url: '/images/institutions/default-logo.png'
+          }
         }
 
         setApplication({
           ...appData,
-          institution_name: mockInstitution.name,
-          institutions: mockInstitution
+          institution_name: institutionData.name,
+          institutions: institutionData
         })
       } else {
         router.push('/dashboard')

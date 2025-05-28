@@ -47,11 +47,28 @@ export async function GET(request: NextRequest) {
     const { data: notifications, error } = await query
 
     if (error) {
-      console.error('Failed to fetch notifications:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch notifications' },
-        { status: 500 }
-      )
+      console.error('❌ Failed to fetch notifications:', error)
+
+      // Check if table doesn't exist - fall back to mock data for now
+      if (error.code === '42P01') {
+        console.log('📧 Notifications table not found, falling back to mock API')
+
+        // Redirect to mock API
+        const mockResponse = await fetch(`${request.url.replace('/api/notifications', '/api/notifications/mock')}`)
+        const mockData = await mockResponse.json()
+
+        return NextResponse.json({
+          ...mockData,
+          fallbackToMock: true,
+          message: 'Using mock notifications - database table not available'
+        })
+      }
+
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to fetch notifications',
+        details: error.message
+      }, { status: 500 })
     }
 
     const formattedNotifications: Notification[] = notifications?.map(notif => ({
@@ -110,11 +127,23 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Failed to create notification:', error)
-      return NextResponse.json(
-        { error: 'Failed to create notification' },
-        { status: 500 }
-      )
+      console.error('❌ Failed to create notification:', error)
+
+      // Check if table doesn't exist
+      if (error.code === '42P01') {
+        return NextResponse.json({
+          success: false,
+          error: 'Notifications table not found. Please initialize the database.',
+          code: 'TABLE_NOT_FOUND',
+          initUrl: '/api/database/init-notifications'
+        }, { status: 503 })
+      }
+
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to create notification',
+        details: error.message
+      }, { status: 500 })
     }
 
     return NextResponse.json({

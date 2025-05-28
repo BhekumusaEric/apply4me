@@ -16,32 +16,36 @@ jobs:
   test-web:
     name: 🧪 Test Web Application
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
-      
+
     - name: 📦 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        
+
     - name: 📥 Install dependencies
       run: npm ci
-      
+
     - name: 🔍 Run ESLint
       run: npm run lint || echo "Linting completed with warnings"
-      
+
     - name: 🏗️ Build application
       run: npm run build
       env:
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-        
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+        NEXT_PUBLIC_YOCO_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_YOCO_PUBLIC_KEY }}
+        YOCO_SECRET_KEY: ${{ secrets.YOCO_SECRET_KEY }}
+
     - name: 🧪 Run tests
       run: npm test -- --passWithNoTests
-      
+
     - name: 📊 Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
@@ -52,31 +56,31 @@ jobs:
   test-mobile:
     name: 📱 Test Mobile Application
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
-      
+
     - name: 📦 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: apply4me-mobile/package-lock.json
-        
+        cache-dependency-path: mobile/package-lock.json
+
     - name: 📥 Install Expo CLI
       run: npm install -g @expo/cli
-      
+
     - name: 📥 Install mobile dependencies
-      working-directory: ./apply4me-mobile
+      working-directory: ./mobile
       run: npm ci
-      
+
     - name: 🔍 Lint mobile app
-      working-directory: ./apply4me-mobile
+      working-directory: ./mobile
       run: npm run lint || echo "Mobile linting completed"
-      
+
     - name: 🏗️ Expo prebuild
-      working-directory: ./apply4me-mobile
+      working-directory: ./mobile
       run: npx expo prebuild --platform android --no-install
 
   # Deploy to Staging (Develop Branch)
@@ -85,26 +89,26 @@ jobs:
     needs: [test-web, test-mobile]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
-    
+
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
-      
+
     - name: 📦 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        
+
     - name: 📥 Install Vercel CLI
       run: npm install --global vercel@latest
-      
+
     - name: 🔗 Pull Vercel Environment Information
       run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-      
+
     - name: 🏗️ Build Project Artifacts
       run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
-      
+
     - name: 🚀 Deploy to Staging
       run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
 
@@ -114,29 +118,29 @@ jobs:
     needs: [test-web, test-mobile]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
-      
+
     - name: 📦 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        
+
     - name: 📥 Install Vercel CLI
       run: npm install --global vercel@latest
-      
+
     - name: 🔗 Pull Vercel Environment Information
       run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      
+
     - name: 🏗️ Build Project Artifacts
       run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      
+
     - name: 🚀 Deploy to Production
       run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-      
+
     - name: 📧 Notify Success
       if: success()
       run: |
@@ -149,42 +153,42 @@ jobs:
     needs: [test-mobile]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
-      
+
     - name: 📦 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: apply4me-mobile/package-lock.json
-        
+        cache-dependency-path: mobile/package-lock.json
+
     - name: 📥 Install Expo CLI
       run: npm install -g @expo/cli eas-cli
-      
+
     - name: 📥 Install mobile dependencies
-      working-directory: ./apply4me-mobile
+      working-directory: ./mobile
       run: npm ci
-      
+
     - name: 🔐 Authenticate with Expo
-      working-directory: ./apply4me-mobile
+      working-directory: ./mobile
       run: eas login --non-interactive
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        
+
     - name: 🏗️ Build Android APK
-      working-directory: ./apply4me-mobile
+      working-directory: ./mobile
       run: eas build --platform android --profile preview --non-interactive
       env:
         EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        
+
     - name: 📊 Upload APK artifact
       uses: actions/upload-artifact@v3
       with:
         name: android-apk
-        path: apply4me-mobile/*.apk
+        path: mobile/*.apk
 
   # Health Check
   health-check:
@@ -192,7 +196,7 @@ jobs:
     needs: [deploy-production]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
     - name: 🔍 Check website health
       run: |
@@ -204,7 +208,7 @@ jobs:
           echo "❌ Website health check failed (HTTP $response)"
           exit 1
         fi
-        
+
     - name: 🔍 Check API health
       run: |
         echo "🔍 Checking API health..."

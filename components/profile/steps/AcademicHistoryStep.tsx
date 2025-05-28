@@ -24,6 +24,11 @@ const MATRIC_SUBJECTS = [
   'Computer Applications Technology', 'Engineering Graphics and Design', 'Visual Arts', 'Music', 'Dramatic Arts'
 ]
 
+const SA_PROVINCES = [
+  'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
+  'Limpopo', 'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape'
+]
+
 export default function AcademicHistoryStep({ profile, onComplete, onBack }: AcademicHistoryStepProps) {
   const [academicHistory, setAcademicHistory] = useState<AcademicHistory>(
     profile.academicHistory || {
@@ -34,7 +39,8 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
         province: '',
         matricType: 'NSC',
         overallResult: 'Bachelor Pass',
-        subjects: []
+        subjects: [],
+        additionalCertificates: []
       },
       previousStudies: [],
       achievements: [],
@@ -84,9 +90,9 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
       ...prev,
       matricInfo: {
         ...prev.matricInfo!,
-        subjects: prev.matricInfo!.subjects.map((subject, i) => 
-          i === index ? { 
-            ...subject, 
+        subjects: prev.matricInfo!.subjects.map((subject, i) =>
+          i === index ? {
+            ...subject,
             [field]: value,
             // Auto-detect subject types
             isLanguage: field === 'name' ? value.toLowerCase().includes('language') || value.toLowerCase().includes('english') || value.toLowerCase().includes('afrikaans') || value.toLowerCase().includes('zulu') || value.toLowerCase().includes('xhosa') : subject.isLanguage,
@@ -141,7 +147,7 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
     const subjects = academicHistory.matricInfo?.subjects || []
     const hasLanguage = subjects.some(s => s.isLanguage && s.mark >= 40)
     const hasMaths = subjects.some(s => s.isMathematics && s.mark >= 30)
-    
+
     if (!hasLanguage) {
       newErrors.push('At least one language with 40%+ is required')
     }
@@ -154,7 +160,7 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
   const handleSubmit = () => {
     if (validateForm()) {
       setIsLoading(true)
-      
+
       // Calculate APS
       const apsScore = calculateAPS()
       const updatedHistory = {
@@ -164,7 +170,7 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
           apsScore
         }
       }
-      
+
       setTimeout(() => {
         onComplete({ academicHistory: updatedHistory })
         setIsLoading(false)
@@ -199,7 +205,29 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
                 placeholder="Your high school name"
               />
             </div>
-            
+
+            <div>
+              <Label htmlFor="province">School Province *</Label>
+              <Select
+                value={academicHistory.matricInfo?.province || ''}
+                onValueChange={(value) => setAcademicHistory(prev => ({
+                  ...prev,
+                  matricInfo: { ...prev.matricInfo!, province: value }
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select province" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SA_PROVINCES.map(province => (
+                    <SelectItem key={province} value={province}>{province}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="year">Matric Year</Label>
               <Input
@@ -213,13 +241,34 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
                 placeholder="2023"
               />
             </div>
+
+            <div>
+              <Label htmlFor="schoolType">School Type</Label>
+              <Select
+                value={academicHistory.matricInfo?.schoolType || 'Public'}
+                onValueChange={(value: any) => setAcademicHistory(prev => ({
+                  ...prev,
+                  matricInfo: { ...prev.matricInfo!, schoolType: value }
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Public">Public School</SelectItem>
+                  <SelectItem value="Private">Private School</SelectItem>
+                  <SelectItem value="Independent">Independent School</SelectItem>
+                  <SelectItem value="Model C">Model C School</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="matricType">Qualification Type</Label>
-              <Select 
-                value={academicHistory.matricInfo?.matricType} 
+              <Select
+                value={academicHistory.matricInfo?.matricType}
                 onValueChange={(value: any) => setAcademicHistory(prev => ({
                   ...prev,
                   matricInfo: { ...prev.matricInfo!, matricType: value }
@@ -236,11 +285,11 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label htmlFor="overallResult">Overall Result</Label>
-              <Select 
-                value={academicHistory.matricInfo?.overallResult} 
+              <Select
+                value={academicHistory.matricInfo?.overallResult}
                 onValueChange={(value: any) => setAcademicHistory(prev => ({
                   ...prev,
                   matricInfo: { ...prev.matricInfo!, overallResult: value }
@@ -283,8 +332,8 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
               <div key={index} className="grid grid-cols-12 gap-2 items-end">
                 <div className="col-span-4">
                   <Label>Subject</Label>
-                  <Select 
-                    value={subject.name} 
+                  <Select
+                    value={subject.name}
                     onValueChange={(value) => updateSubject(index, 'name', value)}
                   >
                     <SelectTrigger>
@@ -297,7 +346,7 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="col-span-2">
                   <Label>Mark %</Label>
                   <Input
@@ -308,7 +357,7 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
                     onChange={(e) => updateSubject(index, 'mark', parseInt(e.target.value) || 0)}
                   />
                 </div>
-                
+
                 <div className="col-span-2">
                   <Label>Symbol</Label>
                   <Input
@@ -317,11 +366,11 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
                     className="bg-gray-50"
                   />
                 </div>
-                
+
                 <div className="col-span-3">
                   <Label>Level</Label>
-                  <Select 
-                    value={subject.level} 
+                  <Select
+                    value={subject.level}
                     onValueChange={(value: any) => updateSubject(index, 'level', value)}
                   >
                     <SelectTrigger>
@@ -334,11 +383,11 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="col-span-1">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => removeSubject(index)}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -346,7 +395,7 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
                 </div>
               </div>
             ))}
-            
+
             {academicHistory.matricInfo?.subjects.length === 0 && (
               <p className="text-center text-muted-foreground py-8">
                 No subjects added yet. Click "Add Subject" to get started.
