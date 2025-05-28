@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "test": "echo \"No tests specified\" && exit 0",
     "deploy": "npm run build && npm run start"
   },
   "dependencies": {

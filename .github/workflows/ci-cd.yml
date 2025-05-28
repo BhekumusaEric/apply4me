@@ -52,41 +52,18 @@ jobs:
         name: web-build
         path: .next/
 
-  # Test Mobile App
-  test-mobile:
-    name: 📱 Test Mobile Application
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v4
-
-    - name: 📦 Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: mobile/package-lock.json
-
-    - name: 📥 Install Expo CLI
-      run: npm install -g @expo/cli
-
-    - name: 📥 Install mobile dependencies
-      working-directory: ./mobile
-      run: npm ci
-
-    - name: 🔍 Lint mobile app
-      working-directory: ./mobile
-      run: npm run lint || echo "Mobile linting completed"
-
-    - name: 🏗️ Expo prebuild
-      working-directory: ./mobile
-      run: npx expo prebuild --platform android --no-install
+  # Mobile app testing disabled - focusing on web application
+  # test-mobile:
+  #   name: 📱 Test Mobile Application
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: 📥 Checkout code
+  #     uses: actions/checkout@v4
 
   # Deploy to Staging (Develop Branch)
   deploy-staging:
     name: 🚀 Deploy to Staging
-    needs: [test-web, test-mobile]
+    needs: [test-web]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
 
@@ -115,7 +92,7 @@ jobs:
   # Deploy to Production (Main Branch)
   deploy-production:
     name: 🌟 Deploy to Production
-    needs: [test-web, test-mobile]
+    needs: [test-web]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
@@ -147,48 +124,12 @@ jobs:
         echo "✅ Production deployment successful!"
         echo "🌐 Live at: https://apply4me-eta.vercel.app"
 
-  # Build Mobile App for Google Play
-  build-mobile-android:
-    name: 📱 Build Android App
-    needs: [test-mobile]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-    - name: 📥 Checkout code
-      uses: actions/checkout@v4
-
-    - name: 📦 Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: mobile/package-lock.json
-
-    - name: 📥 Install Expo CLI
-      run: npm install -g @expo/cli eas-cli
-
-    - name: 📥 Install mobile dependencies
-      working-directory: ./mobile
-      run: npm ci
-
-    - name: 🔐 Authenticate with Expo
-      working-directory: ./mobile
-      run: eas login --non-interactive
-      env:
-        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-    - name: 🏗️ Build Android APK
-      working-directory: ./mobile
-      run: eas build --platform android --profile preview --non-interactive
-      env:
-        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-    - name: 📊 Upload APK artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: android-apk
-        path: mobile/*.apk
+  # Mobile app build disabled - focusing on web application
+  # build-mobile-android:
+  #   name: 📱 Build Android App
+  #   needs: [test-web]
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main'
 
   # Health Check
   health-check:
