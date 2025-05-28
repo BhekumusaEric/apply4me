@@ -33,15 +33,13 @@ jobs:
     - name: 🔍 Run ESLint
       run: npm run lint || echo "Linting completed with warnings"
 
+    - name: 📝 Setup environment variables
+      run: |
+        cp .env.example .env
+        echo "Environment variables set up for build"
+
     - name: 🏗️ Build application
       run: npm run build
-      env:
-        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
-        NEXT_PUBLIC_YOCO_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_YOCO_PUBLIC_KEY }}
-        YOCO_SECRET_KEY: ${{ secrets.YOCO_SECRET_KEY }}
 
     - name: 🧪 Run tests
       run: npm test -- --passWithNoTests
