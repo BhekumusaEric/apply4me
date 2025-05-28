@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Search, MapPin, Calendar, DollarSign, Filter, ArrowRight, GraduationCap } from 'lucide-react'
+import { Search, MapPin, Calendar, DollarSign, Filter, ArrowRight, GraduationCap, RefreshCw } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { createClient } from '@/lib/supabase'
@@ -34,6 +34,7 @@ export default function InstitutionsPage() {
   const [selectedProvince, setSelectedProvince] = useState<string>('all')
   const [selectedType, setSelectedType] = useState<string>('all')
   const [showFilters, setShowFilters] = useState(false)
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date())
 
   useEffect(() => {
     fetchInstitutions()
@@ -43,8 +44,21 @@ export default function InstitutionsPage() {
     filterInstitutions()
   }, [institutions, searchQuery, selectedProvince, selectedType])
 
+  // Auto-refresh every 30 seconds to get latest data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refreshing institutions data...')
+      fetchInstitutions()
+    }, 30000) // 30 seconds
+
+    return () => clearInterval(interval)
+  }, [])
+
   const fetchInstitutions = async () => {
     try {
+      console.log('🔍 Fetching institutions directly from database...')
+
+      // Use direct Supabase connection like admin interface
       const supabase = createClient()
       const { data, error } = await supabase
         .from('institutions')
@@ -52,12 +66,42 @@ export default function InstitutionsPage() {
         .order('is_featured', { ascending: false })
         .order('name', { ascending: true })
 
-      if (error) throw error
-      setInstitutions(data || [])
+      if (error) {
+        console.error('❌ Supabase error:', error)
+        throw error
+      }
+
+      if (data && data.length > 0) {
+        console.log('✅ Found institutions directly from database:', data.length)
+        console.log('📋 Sample institution:', data[0])
+        setInstitutions(data)
+        setLastRefresh(new Date())
+      } else {
+        console.log('⚠️ No institutions found in database, using mock data')
+        setInstitutions(mockInstitutions)
+        setLastRefresh(new Date())
+      }
     } catch (error) {
-      console.error('Error fetching institutions:', error)
-      // Fallback to mock data
-      setInstitutions(mockInstitutions)
+      console.error('❌ Error fetching institutions from database:', error)
+      console.log('🔄 Falling back to API...')
+
+      // Fallback to API if direct database access fails
+      try {
+        const response = await fetch(`/api/institutions?t=${Date.now()}`)
+        const result = await response.json()
+
+        if (response.ok && result.success && result.data?.length > 0) {
+          console.log('✅ Found institutions from API fallback:', result.data.length)
+          setInstitutions(result.data)
+        } else {
+          console.log('⚠️ API fallback failed, using mock data')
+          setInstitutions(mockInstitutions)
+        }
+      } catch (apiError) {
+        console.error('❌ API fallback also failed:', apiError)
+        console.log('🔄 Using mock data as final fallback')
+        setInstitutions(mockInstitutions)
+      }
     } finally {
       setLoading(false)
     }
@@ -207,7 +251,26 @@ export default function InstitutionsPage() {
       <main className="container py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">Find Your Institution</h1>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <h1 className="text-4xl font-bold">Find Your Institution</h1>
+            <div className="flex flex-col items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setLoading(true)
+                  fetchInstitutions()
+                }}
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Last updated: {lastRefresh.toLocaleTimeString()}
+              </p>
+            </div>
+          </div>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Explore universities, colleges, and TVET institutions across South Africa.
             Find the perfect match for your academic and career goals.

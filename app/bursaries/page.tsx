@@ -46,17 +46,28 @@ export default function BursariesPage() {
 
   const fetchBursaries = async () => {
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('bursaries')
-        .select('*')
-        .eq('is_active', true)
-        .order('amount', { ascending: false })
+      console.log('🔍 Fetching bursaries from API...')
+      const response = await fetch('/api/bursaries')
+      const result = await response.json()
 
-      if (error) throw error
-      setBursaries(data || [])
+      console.log('📊 API response:', { success: result.success, count: result.count })
+
+      if (!response.ok || !result.success) {
+        console.error('❌ API error:', result.error)
+        throw new Error(result.error || 'Failed to fetch bursaries')
+      }
+
+      if (result.data && result.data.length > 0) {
+        console.log('✅ Found bursaries:', result.data.length)
+        console.log('📋 Sample bursary:', result.data[0])
+        setBursaries(result.data)
+      } else {
+        console.log('⚠️ No bursaries found, using mock data')
+        setBursaries(mockBursaries)
+      }
     } catch (error) {
-      console.error('Error fetching bursaries:', error)
+      console.error('❌ Error fetching bursaries:', error)
+      console.log('🔄 Falling back to mock data')
       // Fallback to mock data
       setBursaries(mockBursaries)
     } finally {

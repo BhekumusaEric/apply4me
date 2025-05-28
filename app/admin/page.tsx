@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -24,7 +24,10 @@ import {
   RefreshCw,
   Award,
   Clock,
-  FileText
+  FileText,
+  Database,
+  CheckCircle,
+  BarChart3
 } from 'lucide-react'
 import { useAuth } from '@/app/providers'
 import { createClient } from '@/lib/supabase'
@@ -69,27 +72,11 @@ export default function AdminDashboard() {
     successRate: 0
   })
 
-  // Check if user is admin
+  // Redirect to unified admin interface
   useEffect(() => {
-    if (!user) {
-      router.push('/auth/signin')
-      return
-    }
-
-    // Check if user is admin (specific email addresses)
-    const adminEmails = [
-      'bhntshwcjc025@student.wethinkcode.co.za',
-      'admin@apply4me.co.za',
-      'bhekumusa@apply4me.co.za'
-    ]
-
-    if (!adminEmails.includes(user.email || '')) {
-      router.push('/')
-      return
-    }
-
-    fetchData()
-  }, [user, router])
+    console.log('🔄 Redirecting to unified admin interface...')
+    router.push('/admin/enhanced')
+  }, [router])
 
   const fetchData = async () => {
     try {
@@ -167,6 +154,31 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error('Error adding institution:', error)
+    }
+  }
+
+  // Database management functions
+  const triggerDatabaseAction = async (action: 'populate' | 'test' | 'stats') => {
+    try {
+      console.log(`🚀 Triggering database ${action}...`)
+      const response = await fetch('/api/database/populate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      })
+
+      const result = await response.json()
+      if (result.success) {
+        console.log(`✅ Database ${action} completed:`, result.result)
+        fetchData() // Refresh data
+        return result.result
+      } else {
+        console.error(`❌ Database ${action} failed:`, result.error)
+        return null
+      }
+    } catch (error) {
+      console.error(`❌ Error triggering database ${action}:`, error)
+      return null
     }
   }
 
@@ -427,6 +439,55 @@ export default function AdminDashboard() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
+            {/* Database Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5" />
+                  🗄️ Database Management
+                </CardTitle>
+                <CardDescription>
+                  Test database connectivity and populate with fresh data
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <Button
+                    onClick={() => triggerDatabaseAction('test')}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    Test Database
+                  </Button>
+                  <Button
+                    onClick={() => triggerDatabaseAction('stats')}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    Get Statistics
+                  </Button>
+                  <Button
+                    onClick={() => triggerDatabaseAction('populate')}
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Populate Database
+                  </Button>
+                </div>
+
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                  <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">🔧 Database Actions:</h4>
+                  <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                    <li>• <strong>Test:</strong> Check database connectivity and table structure</li>
+                    <li>• <strong>Statistics:</strong> Get comprehensive data counts and metrics</li>
+                    <li>• <strong>Populate:</strong> Scrape and save fresh institutions and bursaries</li>
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Automation Controls */}
             <Card>
               <CardHeader>

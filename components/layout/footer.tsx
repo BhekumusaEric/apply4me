@@ -53,23 +53,27 @@ export function Footer() {
               <span className="text-xl font-bold text-sa-green">Apply4Me</span>
             </Link>
             <p className="text-sm text-muted-foreground mb-4 max-w-sm">
-              Simplifying higher education applications for South African students. 
+              Simplifying higher education applications for South African students.
               Your gateway to universities, colleges, and TVET institutions.
             </p>
-            
+
             {/* Contact Info */}
             <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4" />
-                <span>support@apply4me.co.za</span>
+                <a href="mailto:apply4me2025@outlook.com" className="hover:text-primary transition-colors">
+                  apply4me2025@outlook.com
+                </a>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4" />
-                <span>+27 (0) 11 123 4567</span>
+                <a href="tel:+27693434126" className="hover:text-primary transition-colors">
+                  +27 69 343 4126
+                </a>
               </div>
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4" />
-                <span>Johannesburg, South Africa</span>
+                <span>South Africa</span>
               </div>
             </div>
           </div>
@@ -148,7 +152,7 @@ export function Footer() {
           <div className="text-sm text-muted-foreground mb-4 md:mb-0">
             © {currentYear} Apply4Me. All rights reserved. | Empowering South African students.
           </div>
-          
+
           {/* Social Links */}
           <div className="flex space-x-4">
             {socialLinks.map((social) => {

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
+import ServiceWorkerRegistration from '@/components/pwa/ServiceWorkerRegistration'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -9,9 +10,9 @@ export const metadata: Metadata = {
   title: 'Apply4Me - South African Student Application Platform',
   description: 'Simplifying higher education applications for South African students. Apply to universities, colleges, and TVET institutions with ease.',
   keywords: 'South Africa, university applications, college applications, TVET, NSFAS, student applications, higher education',
-  authors: [{ name: 'Apply4Me Team' }],
-  creator: 'Apply4Me',
-  publisher: 'Apply4Me',
+  authors: [{ name: 'Bhekumusa Eric Ntshwenya' }],
+  creator: 'Bhekumusa Eric Ntshwenya',
+  publisher: 'Bhekumusa Eric Ntshwenya',
   formatDetection: {
     email: false,
     address: false,
@@ -74,6 +75,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           {children}
+          <ServiceWorkerRegistration />
         </Providers>
       </body>
     </html>

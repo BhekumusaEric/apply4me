@@ -13,7 +13,7 @@ import { Footer } from '@/components/layout/footer'
 import { useAuth } from '@/app/providers'
 import { createClient } from '@/lib/supabase'
 import { validateSAIdNumber, isValidEmail, isValidPhoneNumber } from '@/lib/utils'
-import { 
+import {
   User,
   Mail,
   Phone,
@@ -260,10 +260,22 @@ export default function ProfilePage() {
       <main className="container py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">My Profile</h1>
-          <p className="text-muted-foreground">
-            Update your personal information and contact details
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">My Profile</h1>
+              <p className="text-muted-foreground">
+                Update your personal information and contact details
+              </p>
+            </div>
+            <Button
+              onClick={() => router.push('/profile/setup')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <User className="h-4 w-4" />
+              Complete Profile Setup
+            </Button>
+          </div>
         </div>
 
         {/* Success Message */}
@@ -479,6 +491,31 @@ export default function ProfilePage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Comprehensive Profile CTA */}
+            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="text-blue-900">🎓 Complete Your Student Profile</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-blue-800">
+                  Unlock automatic applications to South African institutions with our comprehensive profile system.
+                </p>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li>• Academic history & APS calculation</li>
+                  <li>• Document upload & verification</li>
+                  <li>• Smart institution matching</li>
+                  <li>• Application readiness assessment</li>
+                </ul>
+                <Button
+                  onClick={() => router.push('/profile/setup')}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  size="sm"
+                >
+                  Start Comprehensive Setup
+                </Button>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Profile Tips</CardTitle>

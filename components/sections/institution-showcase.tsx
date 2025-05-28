@@ -29,18 +29,32 @@ export function InstitutionShowcase() {
   useEffect(() => {
     async function fetchInstitutions() {
       try {
-        const supabase = createClient()
-        const { data, error } = await supabase
-          .from('institutions')
-          .select('*')
-          .eq('is_featured', true)
-          .limit(6)
-          .order('created_at', { ascending: false })
+        console.log('🔍 Fetching featured institutions for homepage...')
+        const response = await fetch('/api/institutions')
+        const result = await response.json()
 
-        if (error) throw error
-        setInstitutions(data || [])
+        console.log('📊 Featured institutions response:', { success: result.success, count: result.count })
+
+        if (!response.ok || !result.success) {
+          console.error('❌ API error:', result.error)
+          throw new Error(result.error || 'Failed to fetch institutions')
+        }
+
+        if (result.data && result.data.length > 0) {
+          // Filter for featured institutions and limit to 6
+          const featuredInstitutions = result.data
+            .filter((inst: any) => inst.is_featured)
+            .slice(0, 6)
+
+          console.log('✅ Found featured institutions:', featuredInstitutions.length)
+          setInstitutions(featuredInstitutions)
+        } else {
+          console.log('⚠️ No featured institutions found, using mock data')
+          setInstitutions(mockInstitutions)
+        }
       } catch (error) {
-        console.error('Error fetching institutions:', error)
+        console.error('❌ Error fetching institutions:', error)
+        console.log('🔄 Falling back to mock data for demo')
         // Fallback to mock data for demo
         setInstitutions(mockInstitutions)
       } finally {

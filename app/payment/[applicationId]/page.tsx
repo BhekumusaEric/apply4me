@@ -26,6 +26,7 @@ import { Footer } from '@/components/layout/footer'
 import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/app/providers'
 import { formatCurrency } from '@/lib/utils'
+import { paymentService, PaymentData } from '@/lib/services/payment-service'
 
 interface Application {
   id: string
@@ -73,10 +74,10 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     available: true
   },
   {
-    id: 'capitec',
-    name: 'Capitec Pay',
+    id: 'tymebank',
+    name: 'TymeBank Pay',
     icon: Smartphone,
-    description: 'Instant Capitec transfer - Available Now',
+    description: 'Instant TymeBank transfer - Available Now',
     processingTime: 'Instant',
     fees: 'No additional fees',
     available: true
@@ -85,11 +86,11 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     id: 'card',
     name: 'Credit/Debit Card',
     icon: CreditCard,
-    description: 'Coming Soon - Automated card payments',
-    processingTime: 'Coming Soon',
-    fees: 'Coming Soon',
-    available: false,
-    comingSoon: true
+    description: 'Secure card payments via Yoco - Available Now',
+    processingTime: 'Instant',
+    fees: 'No additional fees',
+    available: true,
+    recommended: false
   }
 ]
 
@@ -103,13 +104,16 @@ export default function PaymentPage() {
   const [processing, setProcessing] = useState(false)
   const [paymentData, setPaymentData] = useState({
     cardNumber: '',
-    expiryDate: '',
+    expiryMonth: '',
+    expiryYear: '',
     cvv: '',
     cardholderName: '',
     billingAddress: '',
     city: '',
     postalCode: ''
   })
+  const [cardErrors, setCardErrors] = useState<{[key: string]: string}>({})
+  const [yocoLoaded, setYocoLoaded] = useState(false)
 
   // Generate payment reference and calculate totals
   const paymentReference = `APY${params.applicationId?.toString().slice(-6).toUpperCase()}`
@@ -121,7 +125,18 @@ export default function PaymentPage() {
       return
     }
     fetchApplicationDetails()
+    initializeYoco()
   }, [user, params.applicationId, router])
+
+  const initializeYoco = async () => {
+    try {
+      const loaded = await paymentService.initializeYoco()
+      setYocoLoaded(loaded)
+    } catch (error) {
+      console.error('Failed to initialize Yoco:', error)
+      setYocoLoaded(false)
+    }
+  }
 
   const fetchApplicationDetails = async () => {
     try {
@@ -185,8 +200,11 @@ export default function PaymentPage() {
     try {
       const supabase = createClient()
 
-      // For manual payment methods, mark as pending verification
-      if (['eft', 'mobile', 'capitec'].includes(selectedMethod)) {
+      if (selectedMethod === 'card') {
+        // Process card payment with Yoco
+        await handleCardPayment()
+      } else if (['eft', 'mobile', 'tymebank'].includes(selectedMethod)) {
+        // For manual payment methods, mark as pending verification
         const updatedApplication = {
           ...application,
           payment_status: 'pending_verification',
@@ -220,10 +238,6 @@ export default function PaymentPage() {
 
         // Redirect to pending verification page
         router.push(`/payment/pending?ref=${paymentReference}&method=${selectedMethod}&amount=${totalAmount}`)
-
-      } else {
-        // For automated payment methods (coming soon)
-        alert('This payment method is coming soon! Please use EFT, Capitec Pay, or Mobile Payment for now.')
       }
 
     } catch (error) {
@@ -231,6 +245,85 @@ export default function PaymentPage() {
       alert('Payment processing failed. Please try again.')
     } finally {
       setProcessing(false)
+    }
+  }
+
+  const handleCardPayment = async () => {
+    if (!application || !yocoLoaded) {
+      alert('Payment system not ready. Please try again.')
+      return
+    }
+
+    // Validate card details
+    const errors: {[key: string]: string} = {}
+
+    if (!paymentData.cardNumber || !paymentService.validateCardNumber(paymentData.cardNumber)) {
+      errors.cardNumber = 'Invalid card number'
+    }
+
+    if (!paymentData.expiryMonth || !paymentData.expiryYear ||
+        !paymentService.validateExpiryDate(paymentData.expiryMonth, paymentData.expiryYear)) {
+      errors.expiry = 'Invalid expiry date'
+    }
+
+    if (!paymentData.cvv || !paymentService.validateCVV(paymentData.cvv, paymentService.getCardType(paymentData.cardNumber))) {
+      errors.cvv = 'Invalid CVV'
+    }
+
+    if (!paymentData.cardholderName.trim()) {
+      errors.cardholderName = 'Cardholder name required'
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setCardErrors(errors)
+      return
+    }
+
+    setCardErrors({})
+
+    try {
+      // Create payment token
+      const tokenResult = await paymentService.createPaymentToken({
+        number: paymentData.cardNumber,
+        expiryMonth: paymentData.expiryMonth,
+        expiryYear: paymentData.expiryYear,
+        cvv: paymentData.cvv
+      })
+
+      if (tokenResult.error) {
+        alert(`Card validation failed: ${tokenResult.error}`)
+        return
+      }
+
+      if (!tokenResult.token) {
+        alert('Failed to process card details. Please try again.')
+        return
+      }
+
+      // Process payment
+      const paymentResult = await paymentService.processPayment({
+        applicationId: application.id,
+        amount: totalAmount,
+        currency: 'ZAR',
+        description: `Apply4Me Application - ${application.institution_name}`,
+        metadata: {
+          applicationId: application.id,
+          userId: user?.id || '',
+          institutionName: application.institution_name,
+          serviceType: application.service_type
+        }
+      }, tokenResult.token)
+
+      if (paymentResult.success) {
+        // Redirect to success page
+        router.push(`/payment/success/${application.id}`)
+      } else {
+        alert(`Payment failed: ${paymentResult.error}`)
+      }
+
+    } catch (error) {
+      console.error('Card payment error:', error)
+      alert('Payment processing failed. Please try again.')
     }
   }
 
@@ -357,22 +450,143 @@ export default function PaymentPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-blue-600" />
-                    Card Payments Coming Soon
+                    <CreditCard className="h-5 w-5 text-green-600" />
+                    Card Payment Details
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Secure payment processing powered by Yoco
+                  </p>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">Automated Card Payments</h3>
-                    <p className="text-muted-foreground mb-4">
-                      We're integrating with Yoco and PayFast to provide secure, automated card payments.
-                    </p>
-                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                      <p className="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>Coming Soon:</strong> One-click payments with Visa, Mastercard, and American Express
+                <CardContent className="space-y-4">
+                  {!yocoLoaded && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                      <p className="text-sm text-yellow-800">
+                        Loading secure payment system...
                       </p>
                     </div>
+                  )}
+
+                  <div className="grid grid-cols-1 gap-4">
+                    {/* Card Number */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Card Number</label>
+                      <input
+                        type="text"
+                        placeholder="1234 5678 9012 3456"
+                        value={paymentService.formatCardNumber(paymentData.cardNumber)}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\s/g, '')
+                          if (value.length <= 19) {
+                            setPaymentData(prev => ({ ...prev, cardNumber: value }))
+                          }
+                        }}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${
+                          cardErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        disabled={!yocoLoaded}
+                      />
+                      {cardErrors.cardNumber && (
+                        <p className="text-sm text-red-600 mt-1">{cardErrors.cardNumber}</p>
+                      )}
+                    </div>
+
+                    {/* Expiry and CVV */}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Month</label>
+                        <select
+                          value={paymentData.expiryMonth}
+                          onChange={(e) => setPaymentData(prev => ({ ...prev, expiryMonth: e.target.value }))}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${
+                            cardErrors.expiry ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          disabled={!yocoLoaded}
+                        >
+                          <option value="">MM</option>
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={String(i + 1).padStart(2, '0')}>
+                              {String(i + 1).padStart(2, '0')}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Year</label>
+                        <select
+                          value={paymentData.expiryYear}
+                          onChange={(e) => setPaymentData(prev => ({ ...prev, expiryYear: e.target.value }))}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${
+                            cardErrors.expiry ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          disabled={!yocoLoaded}
+                        >
+                          <option value="">YY</option>
+                          {Array.from({ length: 10 }, (_, i) => {
+                            const year = new Date().getFullYear() + i
+                            return (
+                              <option key={year} value={String(year).slice(-2)}>
+                                {String(year).slice(-2)}
+                              </option>
+                            )
+                          })}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-2">CVV</label>
+                        <input
+                          type="text"
+                          placeholder="123"
+                          value={paymentData.cvv}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(/\D/g, '')
+                            if (value.length <= 4) {
+                              setPaymentData(prev => ({ ...prev, cvv: value }))
+                            }
+                          }}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${
+                            cardErrors.cvv ? 'border-red-500' : 'border-gray-300'
+                          }`}
+                          disabled={!yocoLoaded}
+                        />
+                      </div>
+                    </div>
+
+                    {cardErrors.expiry && (
+                      <p className="text-sm text-red-600">{cardErrors.expiry}</p>
+                    )}
+                    {cardErrors.cvv && (
+                      <p className="text-sm text-red-600">{cardErrors.cvv}</p>
+                    )}
+
+                    {/* Cardholder Name */}
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Cardholder Name</label>
+                      <input
+                        type="text"
+                        placeholder="John Doe"
+                        value={paymentData.cardholderName}
+                        onChange={(e) => setPaymentData(prev => ({ ...prev, cardholderName: e.target.value }))}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${
+                          cardErrors.cardholderName ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        disabled={!yocoLoaded}
+                      />
+                      {cardErrors.cardholderName && (
+                        <p className="text-sm text-red-600 mt-1">{cardErrors.cardholderName}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-900">Secure Payment by Yoco</span>
+                    </div>
+                    <p className="text-xs text-green-700 mt-1">
+                      Your card details are encrypted and processed securely by Yoco
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -393,19 +607,19 @@ export default function PaymentPage() {
                   <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-green-800 dark:text-green-200">Bank:</span>
-                      <span className="font-semibold">Capitec Bank</span>
+                      <span className="font-semibold">TymeBank</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-green-800 dark:text-green-200">Account Holder:</span>
-                      <span className="font-semibold">Ntshwenya</span>
+                      <span className="font-semibold">Mr E Siphugu</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-green-800 dark:text-green-200">Account Number:</span>
-                      <span className="font-mono font-bold text-lg">1643495273</span>
+                      <span className="font-mono font-bold text-lg">53002508162</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-green-800 dark:text-green-200">Branch Code:</span>
-                      <span className="font-semibold">470010 (Universal Capitec Code)</span>
+                      <span className="font-semibold">678910 (TymeBank Branch Code)</span>
                     </div>
                     <div className="border-t border-green-200 dark:border-green-700 pt-3">
                       <div className="flex justify-between items-center">
@@ -438,7 +652,7 @@ export default function PaymentPage() {
                   <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                     <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">💡 Quick Payment Options:</h4>
                     <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
-                      <p>• <strong>Capitec App:</strong> Pay → Someone Else → Use account details above</p>
+                      <p>• <strong>TymeBank App:</strong> Pay → Someone Else → Use account details above</p>
                       <p>• <strong>Internet Banking:</strong> Beneficiary payment with reference</p>
                       <p>• <strong>ATM/Branch:</strong> Cash deposit with reference number</p>
                     </div>
@@ -519,26 +733,26 @@ export default function PaymentPage() {
               </Card>
             )}
 
-            {selectedMethod === 'capitec' && (
+            {selectedMethod === 'tymebank' && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Smartphone className="h-5 w-5 text-red-600" />
-                    Capitec Pay
+                    TymeBank Pay
                   </CardTitle>
                   <CardDescription>
-                    Instant payment using Capitec banking app
+                    Instant payment using TymeBank banking app
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <h4 className="font-semibold text-red-800 dark:text-red-200 mb-3">📱 Capitec Pay Instructions:</h4>
+                    <h4 className="font-semibold text-red-800 dark:text-red-200 mb-3">📱 TymeBank Pay Instructions:</h4>
                     <ol className="text-sm text-red-700 dark:text-red-300 space-y-2">
-                      <li><strong>1.</strong> Open your Capitec banking app</li>
+                      <li><strong>1.</strong> Open your TymeBank banking app</li>
                       <li><strong>2.</strong> Go to "Pay" → "Someone Else"</li>
                       <li><strong>3.</strong> Enter these details:</li>
                       <div className="ml-4 bg-white dark:bg-gray-800 p-3 rounded border">
-                        <p><strong>Account:</strong> 1643495273</p>
+                        <p><strong>Account:</strong> 53002508162</p>
                         <p><strong>Amount:</strong> R{totalAmount.toFixed(2)}</p>
                         <p><strong>Reference:</strong> {paymentReference}</p>
                       </div>
@@ -548,7 +762,7 @@ export default function PaymentPage() {
                   </div>
 
                   <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                    <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">✅ Benefits of Capitec Pay:</h4>
+                    <h4 className="font-medium text-green-800 dark:text-green-200 mb-2">✅ Benefits of TymeBank Pay:</h4>
                     <ul className="text-sm text-green-700 dark:text-green-300 space-y-1">
                       <li>• <strong>Instant transfer</strong> - Payment reflects immediately</li>
                       <li>• <strong>Same bank</strong> - No inter-bank delays</li>
@@ -560,7 +774,7 @@ export default function PaymentPage() {
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">💡 Pro Tip:</h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Since both accounts are with Capitec, your payment will be instant and verification will be much faster than other banks!
+                      Since both accounts are with TymeBank, your payment will be instant and verification will be much faster than other banks!
                     </p>
                   </div>
                 </CardContent>
@@ -630,7 +844,7 @@ export default function PaymentPage() {
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
-                  By proceeding, you agree to our Terms of Service and Privacy Policy
+                  By proceeding, you agree to our Terms of Service and Privacy Policy. This is a payment simply for your application and does not guarantee acceptance to the institution.
                 </p>
               </CardContent>
             </Card>

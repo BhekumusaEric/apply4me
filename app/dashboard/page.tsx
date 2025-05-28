@@ -47,6 +47,8 @@ export default function DashboardPage() {
     completedApplications: 0,
     pendingPayments: 0
   })
+  const [profileCompleteness, setProfileCompleteness] = useState<number | null>(null)
+  const [profileExists, setProfileExists] = useState<boolean | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -71,6 +73,34 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       const supabase = createClient()
+
+      // Check profile completeness first
+      try {
+        const profileResponse = await fetch('/api/profile')
+        if (profileResponse.ok) {
+          const { profile } = await profileResponse.json()
+          if (profile) {
+            setProfileExists(true)
+            setProfileCompleteness(profile.profileCompleteness || 0)
+
+            // If profile is incomplete, redirect to setup
+            if (profile.profileCompleteness < 70) {
+              router.push('/profile/setup')
+              return
+            }
+          } else {
+            setProfileExists(false)
+            // No profile exists, redirect to setup
+            router.push('/profile/setup')
+            return
+          }
+        }
+      } catch (profileError) {
+        console.warn('Profile check failed:', profileError)
+        // Continue to dashboard but show profile setup prompt
+        setProfileExists(false)
+      }
+
       let formattedApplications: Application[] = []
 
       // First try to fetch from database
@@ -254,6 +284,46 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container py-12">
+        {/* Profile Completeness Banner */}
+        {profileExists === false && (
+          <div className="mb-6 p-6 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <AlertCircle className="h-6 w-6 text-orange-600" />
+              <h2 className="text-xl font-bold text-orange-800">Complete Your Profile</h2>
+            </div>
+            <p className="text-orange-700 mb-3">
+              🎯 To apply to institutions, you need to complete your comprehensive student profile first.
+            </p>
+            <Button asChild>
+              <Link href="/profile/setup">
+                <User className="h-4 w-4 mr-2" />
+                Complete Profile Setup
+              </Link>
+            </Button>
+          </div>
+        )}
+
+        {profileCompleteness !== null && profileCompleteness < 90 && profileExists && (
+          <div className="mb-6 p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <Clock className="h-6 w-6 text-yellow-600" />
+              <h2 className="text-xl font-bold text-yellow-800">Profile {profileCompleteness}% Complete</h2>
+            </div>
+            <p className="text-yellow-700 mb-3">
+              📋 Complete your profile to unlock automatic applications and smart matching.
+            </p>
+            <div className="mb-3">
+              <Progress value={profileCompleteness} className="h-2" />
+            </div>
+            <Button asChild>
+              <Link href="/profile/setup">
+                <User className="h-4 w-4 mr-2" />
+                Continue Profile Setup
+              </Link>
+            </Button>
+          </div>
+        )}
+
         {/* Welcome Banner for New Users */}
         {showWelcome && (
           <div className="mb-6 p-6 bg-gradient-to-r from-sa-green/10 to-sa-blue/10 border border-sa-green/20 rounded-lg">

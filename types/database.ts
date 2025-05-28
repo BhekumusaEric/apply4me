@@ -108,6 +108,11 @@ export interface Database {
           requirements: string[]
           career_outcomes: string[]
           is_available: boolean
+          is_popular: boolean
+          application_deadline: string | null
+          available_spots: number | null
+          application_fee: number | null
+          description: string | null
           created_at: string
           updated_at: string
         }
@@ -121,6 +126,11 @@ export interface Database {
           requirements?: string[]
           career_outcomes?: string[]
           is_available?: boolean
+          is_popular?: boolean
+          application_deadline?: string | null
+          available_spots?: number | null
+          application_fee?: number | null
+          description?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -134,6 +144,11 @@ export interface Database {
           requirements?: string[]
           career_outcomes?: string[]
           is_available?: boolean
+          is_popular?: boolean
+          application_deadline?: string | null
+          available_spots?: number | null
+          application_fee?: number | null
+          description?: string | null
           created_at?: string
           updated_at?: string
         }

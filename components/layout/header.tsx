@@ -56,6 +56,7 @@ function HeaderContent() {
           <ThemeToggle />
           {user ? (
             <div className="hidden md:flex items-center space-x-2">
+              {/* <NotificationCenter userId={user.id} /> */}
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/dashboard">
                   <User className="h-4 w-4 mr-2" />

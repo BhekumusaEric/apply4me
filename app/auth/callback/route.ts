@@ -20,8 +20,8 @@ export async function GET(request: NextRequest) {
       }
 
       if (data.user) {
-        // Redirect to dashboard with welcome parameter for new users
-        return NextResponse.redirect(`${requestUrl.origin}/dashboard?welcome=true`)
+        // Redirect to profile setup for new users
+        return NextResponse.redirect(`${requestUrl.origin}/profile/setup?welcome=true`)
       }
     } catch (error) {
       return NextResponse.redirect(`${requestUrl.origin}/auth/signin?error=auth_callback_error`)
@@ -45,8 +45,8 @@ export async function GET(request: NextRequest) {
 
       if (data.user) {
         console.log('Email verified and user authenticated:', data.user.email)
-        // Redirect to dashboard with welcome parameter for newly verified users
-        return NextResponse.redirect(`${requestUrl.origin}/dashboard?welcome=true`)
+        // Redirect to profile setup for newly verified users
+        return NextResponse.redirect(`${requestUrl.origin}/profile/setup?welcome=true`)
       }
     } catch (error) {
       console.error('Email verification exception:', error)

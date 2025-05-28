@@ -92,9 +92,9 @@ export default function SignUpPage() {
         // User created and already confirmed (auto-confirm enabled)
         toast({
           title: 'Welcome to Apply4Me!',
-          description: 'Your account has been created successfully.',
+          description: 'Let\'s set up your comprehensive student profile.',
         })
-        router.push('/dashboard')
+        router.push('/profile/setup')
       } else {
         // Fallback
         toast({

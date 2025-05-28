@@ -48,7 +48,7 @@ function PaymentPendingContent() {
           bgColor: 'bg-green-50 dark:bg-green-900/20',
           borderColor: 'border-green-200 dark:border-green-800',
           verificationTime: '24 hours',
-          instructions: 'Transfer to Capitec account 1643495273'
+          instructions: 'Transfer to TymeBank account 53002508162'
         }
       case 'capitec':
         return {
@@ -58,7 +58,7 @@ function PaymentPendingContent() {
           bgColor: 'bg-red-50 dark:bg-red-900/20',
           borderColor: 'border-red-200 dark:border-red-800',
           verificationTime: '1-2 hours',
-          instructions: 'Pay via Capitec app to account 1643495273'
+          instructions: 'Pay via TymeBank app to account 53002508162'
         }
       case 'mobile':
         return {
@@ -183,19 +183,19 @@ function PaymentPendingContent() {
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="font-medium text-green-800 dark:text-green-200">Bank:</p>
-                    <p>Capitec Bank</p>
+                    <p>TymeBank</p>
                   </div>
                   <div>
                     <p className="font-medium text-green-800 dark:text-green-200">Account Holder:</p>
-                    <p>Ntshwenya</p>
+                    <p>Denga Emmanuel Siphugu</p>
                   </div>
                   <div>
                     <p className="font-medium text-green-800 dark:text-green-200">Account Number:</p>
-                    <p className="font-mono font-bold">1643495273</p>
+                    <p className="font-mono font-bold">53002508162</p>
                   </div>
                   <div>
                     <p className="font-medium text-green-800 dark:text-green-200">Branch Code:</p>
-                    <p>470010</p>
+                    <p>678910</p>
                   </div>
                 </div>
               </div>
