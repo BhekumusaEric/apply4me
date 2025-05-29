@@ -1,6 +1,43 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+async function checkAdminSystem(supabase: any) {
+  try {
+    const tables = ['admin_users', 'notifications', 'in_app_notifications'];
+    const tableChecks = [];
+
+    for (const table of tables) {
+      try {
+        const { error } = await supabase.from(table).select('id').limit(1);
+        tableChecks.push({
+          table,
+          exists: !error,
+          error: error?.message
+        });
+      } catch (err) {
+        tableChecks.push({
+          table,
+          exists: false,
+          error: err instanceof Error ? err.message : 'Unknown error'
+        });
+      }
+    }
+
+    const allTablesExist = tableChecks.every(check => check.exists);
+    return {
+      status: allTablesExist ? 'healthy' : 'degraded',
+      tablesExist: allTablesExist,
+      tables: tableChecks
+    };
+  } catch (error) {
+    return {
+      status: 'unhealthy',
+      tablesExist: false,
+      error: error instanceof Error ? error.message : 'Admin system check failed'
+    };
+  }
+}
+
 export async function GET() {
   try {
     const startTime = Date.now();
@@ -48,6 +85,11 @@ export async function GET() {
           automation: 'healthy',
           payments: 'healthy',
           notifications: 'healthy'
+        },
+        adminSystem: await checkAdminSystem(supabase),
+        authentication: {
+          status: (process.env.NODE_ENV === 'production' || process.env.REQUIRE_AUTH === 'true') ? 'enabled' : 'disabled',
+          environment: process.env.NODE_ENV || 'development'
         }
       },
       uptime: process.uptime(),
