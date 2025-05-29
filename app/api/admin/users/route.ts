@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
     const adminEmails = [
       'bhntshwcjc025@student.wethinkcode.co.za',
       'admin@apply4me.co.za',
-      'bhekumusa@apply4me.co.za'
+      'bhekumusa@apply4me.co.za',
+      'emmanuelsiphugu19@gmail.com',
+      'apply4me2025@outlook.com'
     ]
 
     const currentUser = user || testUser
@@ -56,29 +58,51 @@ export async function GET(request: NextRequest) {
       if (error) {
         console.warn('Admin users table not found, using hardcoded list')
         // Fallback to hardcoded admin list
-        adminUsers = adminEmails.map((email, index) => ({
-          id: `admin-${index + 1}`,
-          user_id: `00000000-0000-0000-0000-00000000000${index + 1}`,
-          email,
-          role: index === 0 ? 'super_admin' : 'admin',
-          permissions: index === 0 ? { all: true } : { manage_institutions: true, manage_applications: true },
-          created_at: new Date().toISOString(),
-          source: 'hardcoded'
-        }))
+        adminUsers = adminEmails.map((email, index) => {
+          // Define super admin emails
+          const superAdminEmails = [
+            'bhntshwcjc025@student.wethinkcode.co.za',
+            'emmanuelsiphugu19@gmail.com',
+            'apply4me2025@outlook.com'
+          ]
+
+          const isSuperAdmin = superAdminEmails.includes(email)
+
+          return {
+            id: `admin-${index + 1}`,
+            user_id: `00000000-0000-0000-0000-00000000000${index + 1}`,
+            email,
+            role: isSuperAdmin ? 'super_admin' : 'admin',
+            permissions: isSuperAdmin ? { all: true } : { manage_institutions: true, manage_applications: true },
+            created_at: new Date().toISOString(),
+            source: 'hardcoded'
+          }
+        })
       } else {
         adminUsers = data || []
       }
     } catch (dbError) {
       console.warn('Database error, using hardcoded admin list:', dbError)
-      adminUsers = adminEmails.map((email, index) => ({
-        id: `admin-${index + 1}`,
-        user_id: `00000000-0000-0000-0000-00000000000${index + 1}`,
-        email,
-        role: index === 0 ? 'super_admin' : 'admin',
-        permissions: index === 0 ? { all: true } : { manage_institutions: true, manage_applications: true },
-        created_at: new Date().toISOString(),
-        source: 'hardcoded'
-      }))
+      adminUsers = adminEmails.map((email, index) => {
+        // Define super admin emails
+        const superAdminEmails = [
+          'bhntshwcjc025@student.wethinkcode.co.za',
+          'emmanuelsiphugu19@gmail.com',
+          'apply4me2025@outlook.com'
+        ]
+
+        const isSuperAdmin = superAdminEmails.includes(email)
+
+        return {
+          id: `admin-${index + 1}`,
+          user_id: `00000000-0000-0000-0000-00000000000${index + 1}`,
+          email,
+          role: isSuperAdmin ? 'super_admin' : 'admin',
+          permissions: isSuperAdmin ? { all: true } : { manage_institutions: true, manage_applications: true },
+          created_at: new Date().toISOString(),
+          source: 'hardcoded'
+        }
+      })
     }
 
     return NextResponse.json({
@@ -124,7 +148,9 @@ export async function POST(request: NextRequest) {
     const adminEmails = [
       'bhntshwcjc025@student.wethinkcode.co.za',
       'admin@apply4me.co.za',
-      'bhekumusa@apply4me.co.za'
+      'bhekumusa@apply4me.co.za',
+      'emmanuelsiphugu19@gmail.com',
+      'apply4me2025@outlook.com'
     ]
 
     const currentUser = user || testUser
@@ -254,7 +280,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Check if current user is super admin
-    if (user.email !== 'bhntshwcjc025@student.wethinkcode.co.za') {
+    const superAdminEmails = [
+      'bhntshwcjc025@student.wethinkcode.co.za',
+      'emmanuelsiphugu19@gmail.com',
+      'apply4me2025@outlook.com'
+    ]
+
+    if (!superAdminEmails.includes(user.email || '')) {
       return NextResponse.json({ error: 'Super admin access required' }, { status: 403 })
     }
 
