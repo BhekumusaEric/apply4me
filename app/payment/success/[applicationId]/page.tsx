@@ -41,6 +41,19 @@ export default function PaymentSuccessPage() {
 
   useEffect(() => {
     fetchApplicationDetails()
+
+    // Check for PayFast return parameters
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const paymentId = urlParams.get('pf_payment_id')
+      const paymentStatus = urlParams.get('payment_status')
+
+      if (paymentId && paymentStatus) {
+        console.log('PayFast return detected:', { paymentId, paymentStatus })
+        // PayFast will handle the status update via ITN webhook
+        // This is just for user feedback
+      }
+    }
   }, [params.applicationId])
 
   const fetchApplicationDetails = async () => {

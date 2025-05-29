@@ -45,10 +45,12 @@ export async function POST() {
           error: 'Notifications table does not exist. Please run the SQL schema manually.',
           sqlScript: `
 -- Run this SQL in your Supabase SQL editor:
+-- Complete setup for Apply4Me Admin System
 
-CREATE TABLE IF NOT EXISTS notifications (
+-- 1. Create notifications table
+CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('payment_verified', 'payment_rejected', 'application_update', 'general', 'deadline_reminder', 'application_submitted')),
   title TEXT NOT NULL,
   message TEXT NOT NULL,
@@ -59,24 +61,68 @@ CREATE TABLE IF NOT EXISTS notifications (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_type ON notifications(type);
-CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
-CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
+-- 2. Create admin_users table
+CREATE TABLE IF NOT EXISTS public.admin_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  role VARCHAR(50) DEFAULT 'admin' CHECK (role IN ('admin', 'super_admin', 'moderator')),
+  permissions JSONB DEFAULT '{}',
+  created_by UUID,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- RLS Policies
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+-- 3. Create indexes
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_type ON public.notifications(type);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON public.notifications(read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON public.notifications(created_at);
+CREATE INDEX IF NOT EXISTS idx_admin_users_email ON public.admin_users(email);
+CREATE INDEX IF NOT EXISTS idx_admin_users_role ON public.admin_users(role);
 
-CREATE POLICY "Users can view own notifications" ON notifications
+-- 4. Enable RLS
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
+
+-- 5. Create policies for notifications
+CREATE POLICY "Users can view own notifications" ON public.notifications
   FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own notifications" ON notifications
+CREATE POLICY "Users can update own notifications" ON public.notifications
   FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "System can create notifications" ON notifications
+CREATE POLICY "System can create notifications" ON public.notifications
   FOR INSERT WITH CHECK (true);
-          `
+
+-- 6. Create policies for admin_users
+CREATE POLICY "Admins can view admin users" ON public.admin_users
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.admin_users
+      WHERE user_id = auth.uid()
+      AND role IN ('admin', 'super_admin')
+    )
+  );
+
+-- 7. Insert default admin users
+INSERT INTO public.admin_users (user_id, email, role, permissions)
+VALUES
+  ('00000000-0000-0000-0000-000000000001', 'bhntshwcjc025@student.wethinkcode.co.za', 'super_admin', '{"all": true}'),
+  ('00000000-0000-0000-0000-000000000002', 'admin@apply4me.co.za', 'admin', '{"manage_institutions": true, "manage_applications": true}'),
+  ('00000000-0000-0000-0000-000000000003', 'bhekumusa@apply4me.co.za', 'admin', '{"manage_institutions": true, "manage_applications": true}')
+ON CONFLICT (email) DO UPDATE SET role = EXCLUDED.role, permissions = EXCLUDED.permissions;
+
+-- Setup complete! For full setup, see: /database/setup-admin-system.sql
+          `,
+          setupInstructions: [
+            '1. Open your Supabase project dashboard',
+            '2. Navigate to SQL Editor',
+            '3. Copy and paste the SQL script above',
+            '4. Click "Run" to execute the script',
+            '5. Refresh this page to verify the setup',
+            '6. For complete setup with RLS policies, use /database/setup-admin-system.sql'
+          ]
         }, { status: 500 })
       }
     }
@@ -199,8 +245,8 @@ export async function GET() {
       success: true,
       tableExists,
       status: tableExists ? 'ready' : 'needs_initialization',
-      message: tableExists 
-        ? 'Notifications system is ready' 
+      message: tableExists
+        ? 'Notifications system is ready'
         : 'Notifications table needs to be created'
     })
 

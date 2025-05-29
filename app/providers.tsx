@@ -24,6 +24,18 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
+    // Check if we're on the server side
+    if (typeof window === 'undefined') {
+      // Server-side fallback
+      return {
+        user: null,
+        loading: true,
+        signIn: async () => ({ error: new Error('Auth not available on server') }),
+        signUp: async () => ({ error: new Error('Auth not available on server') }),
+        signOut: async () => {},
+      }
+    }
+
     // In development, log the error but provide a fallback
     if (process.env.NODE_ENV === 'development') {
       console.warn('useAuth called outside of AuthProvider, providing fallback')

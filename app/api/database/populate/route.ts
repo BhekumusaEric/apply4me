@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
     const requestData = await request.json()
     action = requestData.action
 
-    if (!action || !['populate', 'test', 'stats'].includes(action)) {
+    if (!action || !['populate', 'test', 'stats', 'migrate'].includes(action)) {
       return NextResponse.json(
-        { error: 'Invalid action. Use: populate, test, or stats' },
+        { error: 'Invalid action. Use: populate, test, stats, or migrate' },
         { status: 400 }
       )
     }
@@ -39,6 +39,11 @@ export async function POST(request: NextRequest) {
       case 'stats':
         console.log('📈 Gathering database statistics...')
         result = await manager.getDatabaseStats()
+        break
+
+      case 'migrate':
+        console.log('🔧 Running hierarchical application system migration...')
+        result = await manager.runHierarchicalMigration()
         break
     }
 
