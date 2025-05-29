@@ -6,6 +6,7 @@
 import * as cheerio from 'cheerio'
 import { ScrapedInstitution } from './institution-scraper'
 import { ScrapedBursary } from './bursary-scraper'
+import { DeadlineManager } from '@/lib/services/deadline-manager'
 
 export interface ScrapingResult {
   institutions: ScrapedInstitution[]
@@ -16,6 +17,7 @@ export interface ScrapingResult {
 
 export class ProductionScraper {
   private readonly USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+  private deadlineManager = new DeadlineManager()
 
   private institutionSources = [
     {
@@ -153,15 +155,25 @@ export class ProductionScraper {
       timestamp: new Date().toISOString()
     }
 
-    console.log('🚀 Starting comprehensive scraping...')
+    console.log('🚀 Starting comprehensive scraping with deadline filtering...')
+
+    // First, mark expired items as inactive in database
+    console.log('🗓️ Marking expired items as inactive...')
+    const expiredUpdate = await this.deadlineManager.markExpiredItemsInactive()
+    console.log(`📊 Updated: ${expiredUpdate.institutionsUpdated} institutions, ${expiredUpdate.programsUpdated} programs, ${expiredUpdate.bursariesUpdated} bursaries`)
 
     // Scrape institutions
     for (const source of this.institutionSources) {
       try {
         console.log(`🏫 Scraping institutions from ${source.name}...`)
         const institutions = await this.scrapeInstitutions(source)
-        result.institutions.push(...institutions)
-        console.log(`✅ Found ${institutions.length} institutions from ${source.name}`)
+
+        // Filter out institutions with expired deadlines
+        const openInstitutions = this.deadlineManager.filterOpenInstitutions(institutions)
+        result.institutions.push(...openInstitutions)
+
+        const filtered = institutions.length - openInstitutions.length
+        console.log(`✅ Found ${institutions.length} institutions, ${openInstitutions.length} open (${filtered} filtered out)`)
       } catch (error) {
         const errorMsg = `Failed to scrape ${source.name}: ${error}`
         console.error(`❌ ${errorMsg}`)
@@ -174,8 +186,13 @@ export class ProductionScraper {
       try {
         console.log(`💰 Scraping bursaries from ${source.name}...`)
         const bursaries = await this.scrapeBursaries(source)
-        result.bursaries.push(...bursaries)
-        console.log(`✅ Found ${bursaries.length} bursaries from ${source.name}`)
+
+        // Filter out expired bursaries
+        const activeBursaries = this.deadlineManager.filterActiveBursaries(bursaries)
+        result.bursaries.push(...activeBursaries)
+
+        const filtered = bursaries.length - activeBursaries.length
+        console.log(`✅ Found ${bursaries.length} bursaries, ${activeBursaries.length} active (${filtered} filtered out)`)
       } catch (error) {
         const errorMsg = `Failed to scrape ${source.name}: ${error}`
         console.error(`❌ ${errorMsg}`)
@@ -183,7 +200,7 @@ export class ProductionScraper {
       }
     }
 
-    console.log(`🎉 Scraping completed: ${result.institutions.length} institutions, ${result.bursaries.length} bursaries`)
+    console.log(`🎉 Scraping completed: ${result.institutions.length} open institutions, ${result.bursaries.length} active bursaries`)
     return result
   }
 
@@ -552,17 +569,40 @@ export class ProductionScraper {
   }
 
   /**
-   * Generate realistic application deadline
+   * Generate realistic application deadline based on SA university calendar
    */
   private generateApplicationDeadline(): string {
-    const currentYear = new Date().getFullYear()
-    const deadlines = [
-      `${currentYear}-09-30`, // September 30
-      `${currentYear}-10-31`, // October 31
-      `${currentYear}-11-30`, // November 30
-      `${currentYear + 1}-01-31`, // January 31 next year
-    ]
-    return deadlines[Math.floor(Math.random() * deadlines.length)]
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() // 0-based (0 = January)
+
+    // South African university application periods
+    // Main intake: Applications open March-September for following year
+    // Mid-year intake: Applications open January-April for same year
+
+    if (currentMonth >= 2 && currentMonth <= 8) {
+      // March to September: Main application period for next year
+      const deadlines = [
+        `${currentYear}-09-30`, // September 30 (most common)
+        `${currentYear}-10-15`, // October 15 (extended)
+        `${currentYear}-10-31`, // October 31 (late applications)
+      ]
+      return deadlines[Math.floor(Math.random() * deadlines.length)]
+    } else if (currentMonth >= 0 && currentMonth <= 3) {
+      // January to April: Mid-year intake applications
+      const deadlines = [
+        `${currentYear}-04-30`, // April 30
+        `${currentYear}-05-15`, // May 15 (extended)
+      ]
+      return deadlines[Math.floor(Math.random() * deadlines.length)]
+    } else {
+      // October to December: Next year's main intake
+      const deadlines = [
+        `${currentYear + 1}-09-30`, // September 30 next year
+        `${currentYear + 1}-10-15`, // October 15 next year
+      ]
+      return deadlines[Math.floor(Math.random() * deadlines.length)]
+    }
   }
 
   /**
@@ -626,11 +666,13 @@ export class ProductionScraper {
   }
 
   /**
-   * Check application status (open/closed)
+   * Check application status (open/closed) with deadline validation
    */
   private async checkApplicationStatus(source: any): Promise<{ isOpen: boolean; deadline?: string }> {
     if (!source.admissionsUrl) {
-      return { isOpen: true, deadline: this.generateApplicationDeadline() }
+      const deadline = this.generateApplicationDeadline()
+      const window = this.deadlineManager.determineApplicationWindow(source.name, deadline)
+      return { isOpen: window.isCurrentlyOpen, deadline }
     }
 
     try {
@@ -639,11 +681,15 @@ export class ProductionScraper {
       const pageText = $('body').text().toLowerCase()
 
       // Look for application status indicators
-      const isOpen = !pageText.includes('applications closed') &&
-                     !pageText.includes('deadline passed') &&
-                     (pageText.includes('apply now') ||
-                      pageText.includes('applications open') ||
-                      pageText.includes('deadline'))
+      const hasOpenIndicators = pageText.includes('apply now') ||
+                               pageText.includes('applications open') ||
+                               pageText.includes('applications are open') ||
+                               pageText.includes('now accepting applications')
+
+      const hasClosedIndicators = pageText.includes('applications closed') ||
+                                 pageText.includes('deadline passed') ||
+                                 pageText.includes('applications are closed') ||
+                                 pageText.includes('no longer accepting')
 
       // Try to extract deadline
       const deadlineRegex = /deadline[:\s]*(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}|\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2})/gi
@@ -655,10 +701,28 @@ export class ProductionScraper {
         deadline = this.parseDeadlineString(deadlineMatch[0])
       }
 
+      // Use deadline manager to validate the deadline
+      const deadlineStatus = this.deadlineManager.checkDeadlineStatus(deadline)
+      const window = this.deadlineManager.determineApplicationWindow(source.name, deadline)
+
+      // Determine final status
+      let isOpen = window.isCurrentlyOpen && !deadlineStatus.isExpired
+
+      // Override with explicit indicators from website
+      if (hasClosedIndicators) {
+        isOpen = false
+      } else if (hasOpenIndicators && !deadlineStatus.isExpired) {
+        isOpen = true
+      }
+
+      console.log(`📅 ${source.name}: ${isOpen ? 'OPEN' : 'CLOSED'} (deadline: ${deadline}, ${deadlineStatus.message})`)
+
       return { isOpen, deadline }
     } catch (error) {
       console.error(`Error checking application status for ${source.name}:`, error)
-      return { isOpen: true, deadline: this.generateApplicationDeadline() }
+      const deadline = this.generateApplicationDeadline()
+      const window = this.deadlineManager.determineApplicationWindow(source.name, deadline)
+      return { isOpen: window.isCurrentlyOpen, deadline }
     }
   }
 
