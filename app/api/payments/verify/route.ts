@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase'
+import { notificationService } from '@/lib/services/notification-service'
 
 interface VerifyPaymentRequest {
   applicationId: string
@@ -83,10 +84,31 @@ export async function POST(request: NextRequest) {
 
     // Send notification to user
     try {
+      // Create in-app notification using the new service
+      const notificationResult = await notificationService.createPaymentVerificationNotification(
+        application.user_id,
+        status,
+        {
+          id: application.id,
+          institutionName: application.institutions?.name || 'the institution',
+          paymentReference: application.payment_reference || 'N/A',
+          amount: application.total_amount || 0
+        },
+        adminNotes
+      )
+
+      if (notificationResult.success) {
+        console.log(`✅ In-app notification created for payment ${status} - Application ${applicationId}`)
+      } else {
+        console.error('❌ Failed to create in-app notification:', notificationResult.error)
+      }
+
+      // Also send email notification (if email service is available)
       await sendPaymentVerificationNotification(application, status, adminNotes)
-      await createUserNotification(application, status, adminNotes)
+
+      console.log(`✅ Notifications sent for payment ${status} - Application ${applicationId}`)
     } catch (notificationError) {
-      console.error('Failed to send notification:', notificationError)
+      console.error('❌ Failed to send notification:', notificationError)
       // Don't fail the verification if notification fails
     }
 
@@ -121,68 +143,84 @@ export async function GET(request: NextRequest) {
 
     const supabase = createClient()
 
-    const { data: applications, error } = await supabase
-      .from('applications')
-      .select(`
-        id,
-        payment_reference,
-        payment_method,
-        payment_date,
-        payment_status,
-        payment_verification_status,
-        total_amount,
-        status,
-        created_at,
-        personal_info,
-        institutions (
-          name,
-          logo_url
-        )
-      `)
-      .eq('payment_status', status)
-      .order('payment_date', { ascending: false })
-      .range(offset, offset + limit - 1)
-
-    if (error) {
-      console.error('Failed to fetch pending payments:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch pending payments' },
-        { status: 500 }
+    // Select only columns that definitely exist in the current schema (first schema version)
+    let selectQuery = `
+      id,
+      payment_status,
+      status,
+      created_at,
+      personal_details,
+      institutions (
+        name,
+        logo_url
       )
+    `
+
+    // Try to add optional columns that might not exist
+    try {
+      const { data: applications, error } = await supabase
+        .from('applications')
+        .select(selectQuery)
+        .eq('payment_status', status)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      if (error) {
+        console.error('❌ Error fetching applications:', error)
+        return NextResponse.json({
+          success: false,
+          error: 'Failed to fetch pending payments',
+          details: error.message,
+          schemaIssue: error.code === '42703',
+          fixUrl: '/api/database/fix-applications-schema'
+        }, { status: 500 })
+      }
+
+      // Format the response with safe property access for existing columns only
+      const formattedApplications = Array.isArray(applications) ? applications.map((app: any) => ({
+        id: app.id,
+        paymentReference: 'N/A', // Column doesn't exist yet
+        paymentMethod: 'Unknown', // Column doesn't exist yet
+        paymentDate: app.created_at, // Use created_at as fallback
+        amount: 150, // Default amount since column doesn't exist
+        status: app.payment_status,
+        verificationStatus: 'pending_verification', // Default value since column doesn't exist
+        applicationStatus: app.status,
+        createdAt: app.created_at,
+        studentName: `${app.personal_details?.firstName || ''} ${app.personal_details?.lastName || ''}`.trim(),
+        studentEmail: app.personal_details?.email,
+        studentPhone: app.personal_details?.phone,
+        institutionName: app.institutions?.name,
+        institutionLogo: app.institutions?.logo_url
+      })) : []
+
+      return NextResponse.json({
+        success: true,
+        applications: formattedApplications,
+        total: formattedApplications.length,
+        offset,
+        limit,
+        schemaWarning: 'Some columns may be missing from database schema'
+      })
+
+    } catch (queryError) {
+      console.error('❌ Query error:', queryError)
+      return NextResponse.json({
+        success: false,
+        error: 'Database query failed',
+        details: queryError instanceof Error ? queryError.message : 'Unknown error',
+        schemaIssue: true,
+        fixUrl: '/api/database/fix-applications-schema'
+      }, { status: 500 })
     }
 
-    // Format the response
-    const formattedApplications = applications?.map(app => ({
-      id: app.id,
-      paymentReference: app.payment_reference,
-      paymentMethod: app.payment_method,
-      paymentDate: app.payment_date,
-      amount: app.total_amount,
-      status: app.payment_status,
-      verificationStatus: app.payment_verification_status,
-      applicationStatus: app.status,
-      createdAt: app.created_at,
-      studentName: `${app.personal_info?.firstName || ''} ${app.personal_info?.lastName || ''}`.trim(),
-      studentEmail: app.personal_info?.email,
-      studentPhone: app.personal_info?.phone,
-      institutionName: app.institutions?.name,
-      institutionLogo: app.institutions?.logo_url
-    })) || []
-
-    return NextResponse.json({
-      success: true,
-      applications: formattedApplications,
-      total: formattedApplications.length,
-      offset,
-      limit
-    })
-
   } catch (error) {
-    console.error('Get pending payments error:', error)
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('❌ Get pending payments error:', error)
+    return NextResponse.json({
+      success: false,
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 

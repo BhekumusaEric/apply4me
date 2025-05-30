@@ -7,12 +7,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { DatabasePopulationManager } from '@/lib/database/population-manager'
 
 export async function POST(request: NextRequest) {
+  let action = 'unknown'
+
   try {
-    const { action } = await request.json()
-    
-    if (!action || !['populate', 'test', 'stats'].includes(action)) {
+    const requestData = await request.json()
+    action = requestData.action
+
+    if (!action || !['populate', 'test', 'stats', 'migrate'].includes(action)) {
       return NextResponse.json(
-        { error: 'Invalid action. Use: populate, test, or stats' },
+        { error: 'Invalid action. Use: populate, test, stats, or migrate' },
         { status: 400 }
       )
     }
@@ -37,6 +40,11 @@ export async function POST(request: NextRequest) {
         console.log('📈 Gathering database statistics...')
         result = await manager.getDatabaseStats()
         break
+
+      case 'migrate':
+        console.log('🔧 Running hierarchical application system migration...')
+        result = await manager.runHierarchicalMigration()
+        break
     }
 
     return NextResponse.json({
@@ -49,7 +57,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error(`❌ Database ${action} error:`, error)
     return NextResponse.json(
-      { 
+      {
         error: `Database ${action} failed`,
         details: error instanceof Error ? error.message : 'Unknown error'
       },
@@ -61,7 +69,7 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const manager = new DatabasePopulationManager()
-    
+
     // Get comprehensive database overview
     const [testResult, stats] = await Promise.all([
       manager.testDatabase(),

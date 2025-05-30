@@ -24,6 +24,7 @@ function HeaderContent() {
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Institutions', href: '/institutions' },
+    { name: 'Programs', href: '/programs' },
     { name: 'Career Profiler', href: '/career-profiler' },
     { name: 'Bursaries', href: '/bursaries' },
     { name: 'How It Works', href: '/how-it-works' },

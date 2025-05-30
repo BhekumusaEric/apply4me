@@ -22,7 +22,7 @@ interface PaymentRequest {
 export async function POST(request: NextRequest) {
   try {
     const body: PaymentRequest = await request.json()
-    
+
     if (!YOCO_SECRET_KEY) {
       return NextResponse.json(
         { error: 'Payment gateway not configured' },
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
     if (!yocoResponse.ok) {
       console.error('Yoco payment failed:', yocoResult)
       return NextResponse.json(
-        { 
-          error: 'Payment failed', 
+        {
+          error: 'Payment failed',
           details: yocoResult.displayMessage || yocoResult.message || 'Unknown error'
         },
         { status: 400 }
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Payment successful - update application in database
     const supabase = createClient()
-    
+
     const { error: updateError } = await supabase
       .from('applications')
       .update({
@@ -114,12 +114,12 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    
+
     // Verify webhook signature (implement based on Yoco documentation)
     // const signature = request.headers.get('x-yoco-signature')
-    
+
     const { id: chargeId, status, metadata } = body
-    
+
     if (!chargeId || !status) {
       return NextResponse.json(
         { error: 'Invalid webhook payload' },
@@ -128,11 +128,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const supabase = createClient()
-    
+
     // Update application based on payment status
     let applicationStatus = 'payment_pending'
     let paymentStatus = 'pending'
-    
+
     switch (status) {
       case 'successful':
         applicationStatus = 'submitted'
@@ -191,10 +191,10 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createClient()
-    
+
     let query = supabase
       .from('applications')
-      .select('id, payment_status, payment_method, payment_reference, payment_date, total_amount')
+      .select('id, payment_status')
 
     if (applicationId) {
       query = query.eq('id', applicationId)
@@ -214,11 +214,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       payment: {
-        status: data.payment_status,
-        method: data.payment_method,
-        reference: data.payment_reference,
-        date: data.payment_date,
-        amount: data.total_amount
+        status: (data as any).payment_status,
+        method: (data as any).payment_method || null,
+        reference: (data as any).payment_reference || null,
+        date: (data as any).payment_date || null,
+        amount: (data as any).total_amount || null
       }
     })
 

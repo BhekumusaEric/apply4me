@@ -8,9 +8,23 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  // Skip middleware for API routes and health checks
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    return response
+  }
+
+  // Check if Supabase environment variables are available
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.warn('⚠️ Supabase environment variables not configured, skipping auth middleware')
+    return response
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         get(name: string) {

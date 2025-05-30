@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -11,6 +12,8 @@ import {
   Sparkles,
   CheckCircle,
   ArrowRight,
+  ArrowLeft,
+  Home,
   User,
   Shield,
   GraduationCap,
@@ -20,7 +23,7 @@ import ProfileBuilder from '@/components/profile/ProfileBuilder'
 import ApplicationReadinessDashboard from '@/components/profile/ApplicationReadinessDashboard'
 import { StudentProfile } from '@/lib/types/student-profile'
 
-export default function ProfileSetupPage() {
+function ProfileSetupContent() {
   const [currentView, setCurrentView] = useState<'welcome' | 'builder' | 'dashboard'>('welcome')
   const [studentProfile, setStudentProfile] = useState<Partial<StudentProfile>>({})
   const [isProfileComplete, setIsProfileComplete] = useState(false)
@@ -143,6 +146,34 @@ export default function ProfileSetupPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Navigation Header */}
+      <div className="bg-white border-b">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Link>
+              </Button>
+              {currentView !== 'welcome' && (
+                <Button variant="outline" size="sm" onClick={() => setCurrentView('welcome')}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Profile Setup</span>
+              {currentView === 'welcome' && <Badge variant="outline">Welcome</Badge>}
+              {currentView === 'builder' && <Badge variant="outline">Building</Badge>}
+              {currentView === 'dashboard' && <Badge variant="default">Complete</Badge>}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Welcome View */}
       {currentView === 'welcome' && (
         <div className="py-12">
@@ -284,13 +315,20 @@ export default function ProfileSetupPage() {
               </AlertDescription>
             </Alert>
 
-            {/* Start Button */}
+            {/* Action Buttons */}
             <div className="text-center">
-              <Button onClick={startProfileSetup} size="lg" className="px-8">
-                Start Profile Setup
-                <ArrowRight className="h-5 w-5 ml-2" />
-              </Button>
-              <p className="text-sm text-muted-foreground mt-4">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+                <Button onClick={startProfileSetup} size="lg" className="px-8">
+                  Start Profile Setup
+                  <ArrowRight className="h-5 w-5 ml-2" />
+                </Button>
+                <Button variant="outline" size="lg" asChild>
+                  <Link href="/institutions">
+                    Skip for Now - Browse Institutions
+                  </Link>
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
                 Ready to unlock automatic applications to South African institutions
               </p>
             </div>
@@ -325,9 +363,46 @@ export default function ProfileSetupPage() {
               onUpdateProfile={handleUpdateProfile}
               onStartApplication={handleStartApplication}
             />
+
+            {/* Quick Actions */}
+            <div className="mt-8 text-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button size="lg" asChild>
+                  <Link href="/institutions">
+                    <GraduationCap className="h-5 w-5 mr-2" />
+                    Browse Institutions
+                  </Link>
+                </Button>
+                <Button variant="outline" size="lg" asChild>
+                  <Link href="/dashboard">
+                    <Target className="h-5 w-5 mr-2" />
+                    Go to Dashboard
+                  </Link>
+                </Button>
+                <Button variant="outline" size="lg" onClick={handleUpdateProfile}>
+                  <User className="h-5 w-5 mr-2" />
+                  Edit Profile
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       )}
     </div>
+  )
+}
+
+export default function ProfileSetupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading profile setup...</p>
+        </div>
+      </div>
+    }>
+      <ProfileSetupContent />
+    </Suspense>
   )
 }

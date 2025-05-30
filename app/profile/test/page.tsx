@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  User, 
-  FileText, 
-  Target, 
+import {
+  User,
+  FileText,
+  Target,
   TestTube,
   CheckCircle,
   ArrowRight,
@@ -111,7 +111,7 @@ export default function ProfileTestPage() {
       previousStudies: [],
       achievements: [
         {
-          type: 'Academic',
+          type: 'Award',
           title: 'Top 10 in Mathematics',
           description: 'Achieved top 10 position in provincial mathematics competition',
           year: 2018,
@@ -269,7 +269,7 @@ export default function ProfileTestPage() {
             <Sparkles className="h-8 w-8 text-yellow-500" />
           </div>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Test the comprehensive student profile and document management system designed for 
+            Test the comprehensive student profile and document management system designed for
             South African higher education applications.
           </p>
         </div>
@@ -287,23 +287,23 @@ export default function ProfileTestPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-4">
-              <Button 
+              <Button
                 onClick={() => setCurrentView('builder')}
                 variant={currentView === 'builder' ? 'default' : 'outline'}
               >
                 <User className="h-4 w-4 mr-2" />
                 Profile Builder
               </Button>
-              
-              <Button 
+
+              <Button
                 onClick={loadSampleProfile}
                 variant="outline"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Load Sample Profile
               </Button>
-              
-              <Button 
+
+              <Button
                 onClick={() => setCurrentView('dashboard')}
                 variant={currentView === 'dashboard' ? 'default' : 'outline'}
                 disabled={!isProfileComplete}
@@ -319,8 +319,8 @@ export default function ProfileTestPage() {
         <Alert className="mb-8">
           <Sparkles className="h-4 w-4" />
           <AlertDescription>
-            <strong>🎯 What you're testing:</strong> Complete student profile system with SA ID validation, 
-            document upload, academic history tracking, application readiness assessment, and automated 
+            <strong>🎯 What you're testing:</strong> Complete student profile system with SA ID validation,
+            document upload, academic history tracking, application readiness assessment, and automated
             eligibility checking for universities, TVET colleges, and bursaries.
           </AlertDescription>
         </Alert>
@@ -355,35 +355,35 @@ export default function ProfileTestPage() {
                   Validates South African ID numbers with Luhn algorithm and auto-extracts date of birth
                 </p>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <h3 className="font-semibold mb-2">📄 Document Management</h3>
                 <p className="text-sm text-muted-foreground">
                   Secure upload, validation, and verification of all required SA education documents
                 </p>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <h3 className="font-semibold mb-2">🎓 Academic Tracking</h3>
                 <p className="text-sm text-muted-foreground">
                   Complete matric results, APS calculation, and eligibility assessment
                 </p>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <h3 className="font-semibold mb-2">📊 Readiness Scoring</h3>
                 <p className="text-sm text-muted-foreground">
                   Real-time assessment of application readiness with personalized recommendations
                 </p>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <h3 className="font-semibold mb-2">🎯 Smart Matching</h3>
                 <p className="text-sm text-muted-foreground">
                   Eligibility checking for universities, TVET colleges, and bursary programs
                 </p>
               </div>
-              
+
               <div className="p-4 border rounded-lg">
                 <h3 className="font-semibold mb-2">🔒 Security & Privacy</h3>
                 <p className="text-sm text-muted-foreground">

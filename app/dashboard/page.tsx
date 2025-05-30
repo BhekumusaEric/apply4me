@@ -20,10 +20,12 @@ import {
   AlertCircle,
   TrendingUp,
   RefreshCw,
-  Shield
+  Shield,
+  User
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
+import { NotificationsPanel } from '@/components/dashboard/notifications-panel'
 import { createClient } from '@/lib/supabase'
 
 interface Application {
@@ -569,41 +571,8 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Application Progress</CardTitle>
-                <CardDescription>
-                  Your overall application completion rate
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Profile Completion</span>
-                      <span>85%</span>
-                    </div>
-                    <Progress value={85} />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Documents Uploaded</span>
-                      <span>60%</span>
-                    </div>
-                    <Progress value={60} />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Applications Submitted</span>
-                      <span>75%</span>
-                    </div>
-                    <Progress value={75} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Notifications Panel */}
+            <NotificationsPanel />
           </div>
         </div>
       </main>

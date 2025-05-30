@@ -55,38 +55,38 @@ interface PaymentMethod {
 
 const PAYMENT_METHODS: PaymentMethod[] = [
   {
-    id: 'eft',
-    name: 'EFT/Bank Transfer',
-    icon: Building2,
-    description: 'Direct bank transfer - Available Now',
-    processingTime: 'Instant verification',
+    id: 'payfast',
+    name: 'PayFast (All Methods)',
+    icon: CreditCard,
+    description: 'Credit/Debit Cards, EFT, SnapScan & more - Secure SA Payment Gateway',
+    processingTime: 'Instant',
     fees: 'No additional fees',
     available: true,
     recommended: true
   },
   {
-    id: 'mobile',
-    name: 'SnapScan/Mobile Payment',
-    icon: Smartphone,
-    description: 'QR code payment - Available Now',
-    processingTime: '1-2 minutes',
+    id: 'eft',
+    name: 'Direct EFT/Bank Transfer',
+    icon: Building2,
+    description: 'Manual bank transfer with proof of payment',
+    processingTime: '1-2 business days verification',
     fees: 'No additional fees',
     available: true
   },
   {
-    id: 'tymebank',
-    name: 'TymeBank Pay',
+    id: 'mobile',
+    name: 'SnapScan/Mobile Payment',
     icon: Smartphone,
-    description: 'Instant TymeBank transfer - Available Now',
-    processingTime: 'Instant',
+    description: 'QR code payment with manual verification',
+    processingTime: '1-2 hours verification',
     fees: 'No additional fees',
     available: true
   },
   {
     id: 'card',
-    name: 'Credit/Debit Card',
+    name: 'Credit/Debit Card (Yoco)',
     icon: CreditCard,
-    description: 'Secure card payments via Yoco - Available Now',
+    description: 'Direct card payments via Yoco',
     processingTime: 'Instant',
     fees: 'No additional fees',
     available: true,
@@ -171,17 +171,38 @@ export default function PaymentPage() {
       if (storedApplication) {
         const appData = JSON.parse(storedApplication)
 
-        // Mock institution data for demo
-        const mockInstitution = {
-          name: 'University of the Witwatersrand',
-          application_fee: 150,
-          logo_url: '/images/institutions/wits-logo.png'
+        // Try to get real institution data
+        let institutionData = null
+        if (appData.institution_id) {
+          try {
+            const supabase = createClient()
+            const { data: institution } = await supabase
+              .from('institutions')
+              .select('name, application_fee, logo_url')
+              .eq('id', appData.institution_id)
+              .single()
+
+            if (institution) {
+              institutionData = institution
+            }
+          } catch (error) {
+            console.error('Failed to fetch institution data:', error)
+          }
+        }
+
+        // Fallback to default data if no real institution found
+        if (!institutionData) {
+          institutionData = {
+            name: appData.institution_name || 'Selected Institution',
+            application_fee: 150,
+            logo_url: '/images/institutions/default-logo.png'
+          }
         }
 
         setApplication({
           ...appData,
-          institution_name: mockInstitution.name,
-          institutions: mockInstitution
+          institution_name: institutionData.name,
+          institutions: institutionData
         })
       } else {
         router.push('/dashboard')
@@ -200,10 +221,13 @@ export default function PaymentPage() {
     try {
       const supabase = createClient()
 
-      if (selectedMethod === 'card') {
+      if (selectedMethod === 'payfast') {
+        // Process PayFast payment
+        await handlePayFastPayment()
+      } else if (selectedMethod === 'card') {
         // Process card payment with Yoco
         await handleCardPayment()
-      } else if (['eft', 'mobile', 'tymebank'].includes(selectedMethod)) {
+      } else if (['eft', 'mobile'].includes(selectedMethod)) {
         // For manual payment methods, mark as pending verification
         const updatedApplication = {
           ...application,
@@ -245,6 +269,52 @@ export default function PaymentPage() {
       alert('Payment processing failed. Please try again.')
     } finally {
       setProcessing(false)
+    }
+  }
+
+  const handlePayFastPayment = async () => {
+    if (!application || !user) {
+      alert('Application or user data not available. Please try again.')
+      return
+    }
+
+    try {
+      // Create PayFast payment
+      const response = await fetch('/api/payments/payfast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          applicationId: application.id,
+          amount: totalAmount,
+          description: `Apply4Me Application - ${application.institution_name}`,
+          userEmail: user.email || email,
+          userName: `${firstName} ${lastName}` || user.user_metadata?.full_name || 'Student',
+          metadata: {
+            applicationId: application.id,
+            userId: user.id,
+            institutionName: application.institution_name,
+            programName: application.program_info?.name || 'Program Application'
+          }
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        alert(`Payment setup failed: ${result.error || 'Unknown error'}`)
+        return
+      }
+
+      console.log('✅ PayFast payment created, redirecting to:', result.paymentUrl)
+
+      // Redirect to PayFast payment page
+      window.location.href = result.paymentUrl
+
+    } catch (error) {
+      console.error('PayFast payment error:', error)
+      alert('Payment setup failed. Please try again.')
     }
   }
 

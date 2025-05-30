@@ -54,15 +54,16 @@ interface Program {
   name: string
   qualification_level: string
   duration_years: number
-  requirements: string[]
-  career_outcomes: string[]
   field_of_study: string
-  is_available?: boolean
-  is_popular?: boolean
   application_deadline?: string
+  is_available?: boolean
   available_spots?: number
   application_fee?: number
-  description?: string
+  application_status?: string
+  is_popular?: boolean
+  priority_level?: number
+  application_count?: number
+  success_rate?: number
 }
 
 export default function InstitutionDetailsPage() {
@@ -72,12 +73,18 @@ export default function InstitutionDetailsPage() {
   const [programs, setPrograms] = useState<Program[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
+
+  // Ensure component is mounted before using router
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
-    if (params.id) {
+    if (mounted && params.id) {
       fetchInstitutionDetails()
     }
-  }, [params.id])
+  }, [mounted, params.id])
 
   const fetchInstitutionDetails = async () => {
     try {
@@ -92,11 +99,30 @@ export default function InstitutionDetailsPage() {
 
       if (institutionError) throw institutionError
 
-      // Fetch programs for this institution
+      // Fetch enhanced programs for this institution with all hierarchical fields
       const { data: programsData, error: programsError } = await supabase
         .from('programs')
-        .select('id, name, qualification_level, duration_years, field_of_study, requirements, career_outcomes, is_available')
+        .select(`
+          id,
+          name,
+          qualification_level,
+          duration_years,
+          field_of_study,
+          application_deadline,
+          is_available,
+          available_spots,
+          application_fee,
+          application_status,
+          is_popular,
+          priority_level,
+          application_count,
+          success_rate
+        `)
         .eq('institution_id', params.id)
+        .eq('is_available', true)
+        .eq('application_status', 'open')
+        .order('is_popular', { ascending: false })
+        .order('priority_level', { ascending: false })
         .order('name', { ascending: true })
 
       if (programsError) {
@@ -112,6 +138,11 @@ export default function InstitutionDetailsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Don't render anything until mounted to prevent SSR issues
+  if (!mounted) {
+    return null
   }
 
   const getTypeLabel = (type: string) => {
@@ -159,22 +190,7 @@ export default function InstitutionDetailsPage() {
     return status.status === 'open' || status.status === 'urgent'
   }
 
-  // Generate enhanced program data dynamically (until database is updated)
-  const enhanceProgram = (program: Program): Program => {
-    // Use program ID as seed for consistent data
-    const seed = program.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0)
-    const random = (seed * 9301 + 49297) % 233280 / 233280 // Simple seeded random
-
-    return {
-      ...program,
-      is_popular: random > 0.7,
-      is_available: random > 0.1, // 90% of programs are available
-      application_deadline: random > 0.5 ? '2024-09-30' : '2024-11-15',
-      available_spots: Math.floor(random * 100 + 25),
-      application_fee: generateApplicationFee(program.qualification_level, seed),
-      description: `Comprehensive program designed to provide students with practical skills and theoretical knowledge in ${program.field_of_study.toLowerCase()}.`
-    }
-  }
+  // Programs now come with real enhanced data from the database!
 
   const generateApplicationFee = (qualificationLevel: string, seed: number): number => {
     const random = (seed * 1234 + 5678) % 1000 / 1000
@@ -233,7 +249,7 @@ export default function InstitutionDetailsPage() {
     )
   }
 
-  if (error || !institution) {
+  if (error || (!loading && !institution)) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -389,10 +405,10 @@ export default function InstitutionDetailsPage() {
             {programs.length > 0 ? (
               <div className="grid gap-4">
                 {programs.map((program) => {
-                  const enhancedProgram = enhanceProgram(program)
-                  const programStatus = getProgramStatus(enhancedProgram)
+                  // Program already comes with enhanced data from database
+                  const programStatus = getProgramStatus(program)
                   const StatusIcon = programStatus.icon
-                  const canApply = isApplicationAvailable(enhancedProgram)
+                  const canApply = isApplicationAvailable(program)
 
                   return (
                     <Card key={program.id} className="relative">
@@ -401,18 +417,21 @@ export default function InstitutionDetailsPage() {
                           <div className="flex-1">
                             <CardTitle className="flex items-center gap-2 mb-2">
                               <BookOpen className="h-5 w-5" />
-                              {enhancedProgram.name}
+                              {program.name}
                             </CardTitle>
 
                             {/* Program Badges */}
                             <div className="flex items-center gap-2 mb-3">
-                              <Badge variant="outline">{enhancedProgram.qualification_level}</Badge>
-                              <Badge variant="outline">{enhancedProgram.duration_years} year{enhancedProgram.duration_years !== 1 ? 's' : ''}</Badge>
-                              {enhancedProgram.field_of_study && (
-                                <Badge variant="outline">{enhancedProgram.field_of_study}</Badge>
+                              <Badge variant="outline">{program.qualification_level}</Badge>
+                              <Badge variant="outline">{program.duration_years} year{program.duration_years !== 1 ? 's' : ''}</Badge>
+                              {program.field_of_study && (
+                                <Badge variant="outline">{program.field_of_study}</Badge>
                               )}
-                              {enhancedProgram.is_popular && (
+                              {program.is_popular && (
                                 <Badge variant="default">Popular</Badge>
+                              )}
+                              {program.success_rate && program.success_rate > 90 && (
+                                <Badge variant="default" className="bg-green-600">High Success Rate</Badge>
                               )}
                             </div>
 
@@ -423,17 +442,24 @@ export default function InstitutionDetailsPage() {
                                 <span className="font-medium">{programStatus.label}</span>
                               </div>
 
-                              {enhancedProgram.application_deadline && (
+                              {program.application_deadline && (
                                 <div className="flex items-center gap-1 text-muted-foreground">
                                   <Calendar className="h-3 w-3" />
-                                  <span>Deadline: {formatDate(enhancedProgram.application_deadline)}</span>
+                                  <span>Deadline: {formatDate(program.application_deadline)}</span>
                                 </div>
                               )}
 
-                              {enhancedProgram.available_spots && (
+                              {program.available_spots && (
                                 <div className="flex items-center gap-1 text-muted-foreground">
                                   <UserCheck className="h-3 w-3" />
-                                  <span>{enhancedProgram.available_spots} spots available</span>
+                                  <span>{program.available_spots} spots available</span>
+                                </div>
+                              )}
+
+                              {program.application_count !== undefined && (
+                                <div className="flex items-center gap-1 text-muted-foreground">
+                                  <UserCheck className="h-3 w-3" />
+                                  <span>{program.application_count} applications</span>
                                 </div>
                               )}
                             </div>
@@ -458,55 +484,42 @@ export default function InstitutionDetailsPage() {
                       </CardHeader>
 
                       <CardContent>
-                        {/* Program Description */}
-                        {enhancedProgram.description && (
-                          <div className="mb-4">
-                            <p className="text-muted-foreground">{enhancedProgram.description}</p>
-                          </div>
-                        )}
-
-                        {/* Program Details Grid */}
-                        <div className="grid md:grid-cols-2 gap-4">
-                          <div>
-                            <h4 className="font-medium mb-2 flex items-center gap-2">
-                              <FileText className="h-4 w-4" />
-                              Requirements
-                            </h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              {enhancedProgram.requirements.map((req, index) => (
-                                <li key={index} className="flex items-start gap-2">
-                                  <div className="w-1 h-1 bg-muted-foreground rounded-full mt-2 flex-shrink-0"></div>
-                                  <span>{req}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-
-                          <div>
-                            <h4 className="font-medium mb-2 flex items-center gap-2">
-                              <Award className="h-4 w-4" />
-                              Career Outcomes
-                            </h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              {enhancedProgram.career_outcomes.map((outcome, index) => (
-                                <li key={index} className="flex items-start gap-2">
-                                  <div className="w-1 h-1 bg-muted-foreground rounded-full mt-2 flex-shrink-0"></div>
-                                  <span>{outcome}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+                        {/* Program Summary */}
+                        <div className="mb-4">
+                          <p className="text-muted-foreground">
+                            {program.qualification_level} in {program.field_of_study} - {program.duration_years} year{program.duration_years !== 1 ? 's' : ''} program
+                          </p>
                         </div>
 
-                        {/* Program Fee */}
-                        {enhancedProgram.application_fee && (
-                          <div className="mt-4 pt-4 border-t">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Program Application Fee:</span>
-                              <span className="font-medium text-primary">{formatCurrency(enhancedProgram.application_fee)}</span>
-                            </div>
+                        {/* Enhanced Program Metrics */}
+                        <div className="mt-4 pt-4 border-t">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            {program.application_fee && (
+                              <div className="text-center">
+                                <div className="font-medium text-primary">{formatCurrency(program.application_fee)}</div>
+                                <div className="text-muted-foreground">Application Fee</div>
+                              </div>
+                            )}
+                            {program.success_rate && (
+                              <div className="text-center">
+                                <div className="font-medium text-green-600">{program.success_rate}%</div>
+                                <div className="text-muted-foreground">Success Rate</div>
+                              </div>
+                            )}
+                            {program.available_spots && (
+                              <div className="text-center">
+                                <div className="font-medium text-blue-600">{program.available_spots}</div>
+                                <div className="text-muted-foreground">Available Spots</div>
+                              </div>
+                            )}
+                            {program.application_count !== undefined && (
+                              <div className="text-center">
+                                <div className="font-medium text-orange-600">{program.application_count}</div>
+                                <div className="text-muted-foreground">Applications</div>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </CardContent>
                     </Card>
                   )
