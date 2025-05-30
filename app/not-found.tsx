@@ -153,7 +153,7 @@ export default function NotFound() {
               If you believe this is an error, please{' '}
               <Link href="/contact" className="text-primary hover:underline">
                 contact our support team
-              </Link>{' '}
+              </Link>{'https://wa.me/27693434126'}.
               and we'll investigate the issue.
             </p>
           </div>

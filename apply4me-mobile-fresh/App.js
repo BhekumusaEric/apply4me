@@ -74,7 +74,7 @@ export default function App() {
             color: '#ffffff',
             textAlign: 'center'
           }}>
-            👥 2,847+ Students Helped
+            👥 50 + Students Helped and still counting
           </Text>
         </View>
 

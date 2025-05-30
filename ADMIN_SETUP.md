@@ -3,9 +3,9 @@
 ## 🎯 ADMIN LOGIN CREDENTIALS
 
 ### **AUTHORIZED ADMIN EMAILS:**
-- `bhntshwcjc025@student.wethinkcode.co.za` (Super Admin)
-- `admin@apply4me.co.za` (Admin)
-- `bhekumusa@apply4me.co.za` (Owner)
+- `apply4me2025@outlook.com` (Super Admin)
+- `bhntshwcjc025@student.wethinkcode.co.za` (Admin)
+- `emmanuelsiphugu19@gmail.com` (Owner)
 
 ---
 

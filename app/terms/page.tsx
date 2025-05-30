@@ -236,11 +236,11 @@ export default function TermsOfServicePage() {
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4 text-primary" />
-                    <span>legal@apply4me.co.za</span>
+                    <span>apply4me2025@outlook.com</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-primary" />
-                    <span>+27 (0) 11 123 4567</span>
+                    <span>+27 69 343 4126</span>
                   </div>
                 </div>
               </CardContent>
