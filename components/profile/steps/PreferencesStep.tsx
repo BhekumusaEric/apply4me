@@ -27,45 +27,62 @@ const SA_PROVINCES = [
 ]
 
 export default function PreferencesStep({ profile, onComplete, onBack }: PreferencesStepProps) {
-  const [preferences, setPreferences] = useState<StudentPreferences>(
-    profile.preferences || {
-      preferredFields: [],
-      preferredQualificationLevels: [],
-      preferredInstitutionTypes: [],
-      preferredProvinces: [],
-      needsFinancialAid: false,
-      interestedInBursaries: false,
-      interestedInLoans: false,
-      needsAccommodation: false,
+  // Create default preferences structure
+  const defaultPreferences: StudentPreferences = {
+    preferredFields: [],
+    preferredQualificationLevels: [],
+    preferredInstitutionTypes: [],
+    preferredProvinces: [],
+    needsFinancialAid: false,
+    interestedInBursaries: false,
+    interestedInLoans: false,
+    needsAccommodation: false,
+    notificationPreferences: {
+      applicationUpdates: true,
+      newOpportunities: true,
+      deadlineReminders: true,
+      bursaryAlerts: true,
+      weeklyDigest: false,
+      smsNotifications: false,
+      whatsappNotifications: false
+    }
+  }
+
+  const [preferences, setPreferences] = useState<StudentPreferences>(() => {
+    if (!profile.preferences) return defaultPreferences
+
+    // Merge with defaults to ensure all nested objects exist
+    return {
+      ...defaultPreferences,
+      ...profile.preferences,
+      preferredFields: profile.preferences.preferredFields || [],
+      preferredQualificationLevels: profile.preferences.preferredQualificationLevels || [],
+      preferredInstitutionTypes: profile.preferences.preferredInstitutionTypes || [],
+      preferredProvinces: profile.preferences.preferredProvinces || [],
       notificationPreferences: {
-        applicationUpdates: true,
-        newOpportunities: true,
-        deadlineReminders: true,
-        bursaryAlerts: true,
-        weeklyDigest: false,
-        smsNotifications: false,
-        whatsappNotifications: false
+        ...defaultPreferences.notificationPreferences,
+        ...(profile.preferences.notificationPreferences || {})
       }
-    } as StudentPreferences
-  )
+    }
+  })
 
   const [isLoading, setIsLoading] = useState(false)
 
   const handleFieldToggle = (field: string) => {
     setPreferences(prev => ({
       ...prev,
-      preferredFields: prev.preferredFields.includes(field)
-        ? prev.preferredFields.filter(f => f !== field)
-        : [...prev.preferredFields, field]
+      preferredFields: (prev.preferredFields || []).includes(field)
+        ? (prev.preferredFields || []).filter(f => f !== field)
+        : [...(prev.preferredFields || []), field]
     }))
   }
 
   const handleProvinceToggle = (province: string) => {
     setPreferences(prev => ({
       ...prev,
-      preferredProvinces: prev.preferredProvinces.includes(province)
-        ? prev.preferredProvinces.filter(p => p !== province)
-        : [...prev.preferredProvinces, province]
+      preferredProvinces: (prev.preferredProvinces || []).includes(province)
+        ? (prev.preferredProvinces || []).filter(p => p !== province)
+        : [...(prev.preferredProvinces || []), province]
     }))
   }
 
@@ -98,7 +115,7 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
                 <div key={field} className="flex items-center space-x-2">
                   <Checkbox
                     id={field}
-                    checked={preferences.preferredFields.includes(field)}
+                    checked={(preferences.preferredFields || []).includes(field)}
                     onCheckedChange={() => handleFieldToggle(field)}
                   />
                   <Label htmlFor={field} className="text-sm">{field}</Label>
@@ -114,7 +131,7 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
                 <div key={province} className="flex items-center space-x-2">
                   <Checkbox
                     id={province}
-                    checked={preferences.preferredProvinces.includes(province)}
+                    checked={(preferences.preferredProvinces || []).includes(province)}
                     onCheckedChange={() => handleProvinceToggle(province)}
                   />
                   <Label htmlFor={province} className="text-sm">{province}</Label>
@@ -140,9 +157,9 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
               id="maxTuition"
               type="number"
               value={preferences.maxTuitionFee || ''}
-              onChange={(e) => setPreferences(prev => ({ 
-                ...prev, 
-                maxTuitionFee: parseInt(e.target.value) || undefined 
+              onChange={(e) => setPreferences(prev => ({
+                ...prev,
+                maxTuitionFee: parseInt(e.target.value) || undefined
               }))}
               placeholder="80000"
             />
@@ -153,9 +170,9 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
               <Checkbox
                 id="needsFinancialAid"
                 checked={preferences.needsFinancialAid}
-                onCheckedChange={(checked) => setPreferences(prev => ({ 
-                  ...prev, 
-                  needsFinancialAid: !!checked 
+                onCheckedChange={(checked) => setPreferences(prev => ({
+                  ...prev,
+                  needsFinancialAid: !!checked
                 }))}
               />
               <Label htmlFor="needsFinancialAid">I need financial aid</Label>
@@ -165,9 +182,9 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
               <Checkbox
                 id="interestedInBursaries"
                 checked={preferences.interestedInBursaries}
-                onCheckedChange={(checked) => setPreferences(prev => ({ 
-                  ...prev, 
-                  interestedInBursaries: !!checked 
+                onCheckedChange={(checked) => setPreferences(prev => ({
+                  ...prev,
+                  interestedInBursaries: !!checked
                 }))}
               />
               <Label htmlFor="interestedInBursaries">Interested in bursaries</Label>
@@ -177,9 +194,9 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
               <Checkbox
                 id="needsAccommodation"
                 checked={preferences.needsAccommodation}
-                onCheckedChange={(checked) => setPreferences(prev => ({ 
-                  ...prev, 
-                  needsAccommodation: !!checked 
+                onCheckedChange={(checked) => setPreferences(prev => ({
+                  ...prev,
+                  needsAccommodation: !!checked
                 }))}
               />
               <Label htmlFor="needsAccommodation">I need accommodation</Label>
@@ -203,7 +220,7 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
           <div className="flex items-center space-x-2">
             <Checkbox
               id="applicationUpdates"
-              checked={preferences.notificationPreferences.applicationUpdates}
+              checked={preferences.notificationPreferences?.applicationUpdates || false}
               onCheckedChange={(checked) => setPreferences(prev => ({
                 ...prev,
                 notificationPreferences: {
@@ -218,7 +235,7 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
           <div className="flex items-center space-x-2">
             <Checkbox
               id="newOpportunities"
-              checked={preferences.notificationPreferences.newOpportunities}
+              checked={preferences.notificationPreferences?.newOpportunities || false}
               onCheckedChange={(checked) => setPreferences(prev => ({
                 ...prev,
                 notificationPreferences: {
@@ -233,7 +250,7 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
           <div className="flex items-center space-x-2">
             <Checkbox
               id="deadlineReminders"
-              checked={preferences.notificationPreferences.deadlineReminders}
+              checked={preferences.notificationPreferences?.deadlineReminders || false}
               onCheckedChange={(checked) => setPreferences(prev => ({
                 ...prev,
                 notificationPreferences: {
@@ -248,7 +265,7 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
           <div className="flex items-center space-x-2">
             <Checkbox
               id="bursaryAlerts"
-              checked={preferences.notificationPreferences.bursaryAlerts}
+              checked={preferences.notificationPreferences?.bursaryAlerts || false}
               onCheckedChange={(checked) => setPreferences(prev => ({
                 ...prev,
                 notificationPreferences: {
@@ -263,7 +280,7 @@ export default function PreferencesStep({ profile, onComplete, onBack }: Prefere
           <div className="flex items-center space-x-2">
             <Checkbox
               id="whatsappNotifications"
-              checked={preferences.notificationPreferences.whatsappNotifications}
+              checked={preferences.notificationPreferences?.whatsappNotifications || false}
               onCheckedChange={(checked) => setPreferences(prev => ({
                 ...prev,
                 notificationPreferences: {

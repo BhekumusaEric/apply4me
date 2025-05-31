@@ -19,7 +19,8 @@ import {
   CheckCircle,
   ArrowLeft,
   Lock,
-  AlertCircle
+  AlertCircle,
+  QrCode
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -27,6 +28,7 @@ import { createClient } from '@/lib/supabase'
 import { useAuth } from '@/app/providers'
 import { formatCurrency } from '@/lib/utils'
 import { paymentService, PaymentData } from '@/lib/services/payment-service'
+import { QRPayment } from '@/components/payment/qr-payment'
 
 interface Application {
   id: string
@@ -61,8 +63,8 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     description: 'Credit/Debit Cards, EFT, SnapScan & more - Secure SA Payment Gateway',
     processingTime: 'Instant',
     fees: 'No additional fees',
-    available: true,
-    recommended: true
+    available: false, // Temporarily disabled
+    recommended: false
   },
   {
     id: 'eft',
@@ -72,6 +74,16 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     processingTime: '1-2 business days verification',
     fees: 'No additional fees',
     available: true
+  },
+  {
+    id: 'qr_code',
+    name: 'Capitec Scan to Pay',
+    icon: QrCode,
+    description: 'Scan with Capitec app or other banking apps',
+    processingTime: '2-4 hours verification',
+    fees: 'No additional fees',
+    available: true,
+    recommended: true
   },
   {
     id: 'mobile',
@@ -89,7 +101,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     description: 'Direct card payments via Yoco',
     processingTime: 'Instant',
     fees: 'No additional fees',
-    available: true,
+    available: false, // Disabled until Yoco is configured
     recommended: false
   }
 ]
@@ -227,7 +239,7 @@ export default function PaymentPage() {
       } else if (selectedMethod === 'card') {
         // Process card payment with Yoco
         await handleCardPayment()
-      } else if (['eft', 'mobile'].includes(selectedMethod)) {
+      } else if (['eft', 'mobile', 'qr_code'].includes(selectedMethod)) {
         // For manual payment methods, mark as pending verification
         const updatedApplication = {
           ...application,
@@ -494,6 +506,11 @@ export default function PaymentPage() {
                           {method.comingSoon && (
                             <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
                               Coming Soon
+                            </Badge>
+                          )}
+                          {!method.available && (method.id === 'payfast' || method.id === 'card') && (
+                            <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
+                              Temporarily Disabled
                             </Badge>
                           )}
                         </div>
@@ -803,6 +820,16 @@ export default function PaymentPage() {
               </Card>
             )}
 
+            {selectedMethod === 'qr_code' && (
+              <QRPayment
+                amount={totalAmount}
+                applicationId={application.id}
+                onPaymentComplete={(reference) => {
+                  router.push(`/payment/pending?ref=${reference}&method=qr_code&amount=${totalAmount}`)
+                }}
+              />
+            )}
+
             {selectedMethod === 'tymebank' && (
               <Card>
                 <CardHeader>
@@ -858,9 +885,9 @@ export default function PaymentPage() {
               <CardHeader>
                 <CardTitle>Order Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 payment-summary">
                 <div>
-                  <h4 className="font-medium mb-2">{application.institution_name}</h4>
+                  <h4 className="font-medium mb-2 card-content-text">{application.institution_name}</h4>
                   <p className="text-sm text-muted-foreground">
                     Application for {application.personal_info?.firstName} {application.personal_info?.lastName}
                   </p>
@@ -869,16 +896,16 @@ export default function PaymentPage() {
                 <Separator />
 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm card-content-text">
                     <span>Institution Fee</span>
                     <span>{formatCurrency((application.total_amount || 0) - (application.service_type === 'express' ? 100 : 50))}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm card-content-text">
                     <span>Service Fee ({application.service_type})</span>
                     <span>{formatCurrency(application.service_type === 'express' ? 100 : 50)}</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between font-semibold">
+                  <div className="flex justify-between font-semibold card-content-text">
                     <span>Total</span>
                     <span className="text-primary">{formatCurrency(application.total_amount)}</span>
                   </div>

@@ -8,7 +8,9 @@ import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { Menu, X, GraduationCap, User, LogOut } from 'lucide-react'
 import { useAuth } from '@/app/providers'
 import { createClient } from '@/lib/supabase'
-import { ClientOnly } from '@/components/client-only'
+import { ClientOnly } from '@/components/ui/client-only'
+import RealTimeNotificationCenter from '@/components/notifications/RealTimeNotificationCenter'
+import { InstallButton } from '@/components/pwa/install-prompt'
 
 function HeaderContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -28,6 +30,7 @@ function HeaderContent() {
     { name: 'Career Profiler', href: '/career-profiler' },
     { name: 'Bursaries', href: '/bursaries' },
     { name: 'How It Works', href: '/how-it-works' },
+    { name: '📱 Install App', href: '/install' },
   ]
 
   return (
@@ -55,9 +58,10 @@ function HeaderContent() {
         {/* User Actions */}
         <div className="flex items-center space-x-4">
           <ThemeToggle />
+          <InstallButton />
           {user ? (
             <div className="hidden md:flex items-center space-x-2">
-              {/* <NotificationCenter userId={user.id} /> */}
+              <RealTimeNotificationCenter userId={user.id} />
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/dashboard">
                   <User className="h-4 w-4 mr-2" />

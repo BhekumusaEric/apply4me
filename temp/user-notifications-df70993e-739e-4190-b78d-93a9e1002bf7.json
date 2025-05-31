@@ -1,0 +1,12 @@
+[
+  {
+    "id": "notif_1748723613516_df70993e-739e-4190-b78d-93a9e1002bf7",
+    "user_id": "df70993e-739e-4190-b78d-93a9e1002bf7",
+    "type": "general",
+    "title": "🎉 Database Connection Test",
+    "message": "Testing the database connection with real user ID!",
+    "read": false,
+    "created_at": "2025-05-31T20:33:33.781Z",
+    "metadata": {}
+  }
+]

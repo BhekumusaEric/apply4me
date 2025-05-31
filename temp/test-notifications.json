@@ -1,0 +1,86 @@
+[
+  {
+    "id": "test_1748724870869",
+    "type": "test_notification",
+    "title": "🧪 AI Assistant Test Notification",
+    "message": "Hello! This is a test notification sent by the AI assistant. If you can see this in your admin dashboard, the notification system UI is working perfectly! 🎉",
+    "status": "sent",
+    "created_by": "ai_assistant",
+    "created_at": "2025-05-31T20:54:30.869Z",
+    "sent_at": "2025-05-31T20:54:30.869Z",
+    "data": {
+      "recipients": [
+        "admin"
+      ],
+      "sentTo": 1,
+      "deliveredTo": 1,
+      "openedBy": 0,
+      "clickedBy": 0,
+      "source": "ai_test",
+      "testTimestamp": "2025-05-31T20:54:30.869Z"
+    }
+  },
+  {
+    "id": "test_1748719983383",
+    "type": "test_notification",
+    "title": "🧪 AI Assistant Test Notification",
+    "message": "Hello! This is a test notification sent by the AI assistant. If you can see this in your admin dashboard, the notification system UI is working perfectly! 🎉",
+    "status": "sent",
+    "created_by": "ai_assistant",
+    "created_at": "2025-05-31T19:33:03.383Z",
+    "sent_at": "2025-05-31T19:33:03.383Z",
+    "data": {
+      "recipients": [
+        "admin"
+      ],
+      "sentTo": 1,
+      "deliveredTo": 1,
+      "openedBy": 0,
+      "clickedBy": 0,
+      "source": "ai_test",
+      "testTimestamp": "2025-05-31T19:33:03.383Z"
+    }
+  },
+  {
+    "id": "test_1748719655955",
+    "type": "test_notification",
+    "title": "🧪 AI Assistant Test Notification",
+    "message": "Hello! This is a test notification sent by the AI assistant. If you can see this in your admin dashboard, the notification system UI is working perfectly! 🎉",
+    "status": "sent",
+    "created_by": "ai_assistant",
+    "created_at": "2025-05-31T19:27:35.955Z",
+    "sent_at": "2025-05-31T19:27:35.955Z",
+    "data": {
+      "recipients": [
+        "admin"
+      ],
+      "sentTo": 1,
+      "deliveredTo": 1,
+      "openedBy": 0,
+      "clickedBy": 0,
+      "source": "ai_test",
+      "testTimestamp": "2025-05-31T19:27:35.955Z"
+    }
+  },
+  {
+    "id": "test_1748719528926",
+    "type": "test_notification",
+    "title": "🧪 AI Assistant Test Notification",
+    "message": "Hello! This is a test notification sent by the AI assistant. If you can see this in your admin dashboard, the notification system UI is working perfectly! 🎉",
+    "status": "sent",
+    "created_by": "ai_assistant",
+    "created_at": "2025-05-31T19:25:28.926Z",
+    "sent_at": "2025-05-31T19:25:28.926Z",
+    "data": {
+      "recipients": [
+        "admin"
+      ],
+      "sentTo": 1,
+      "deliveredTo": 1,
+      "openedBy": 0,
+      "clickedBy": 0,
+      "source": "ai_test",
+      "testTimestamp": "2025-05-31T19:25:28.926Z"
+    }
+  }
+]

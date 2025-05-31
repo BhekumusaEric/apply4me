@@ -69,7 +69,8 @@ import {
   Building,
   CreditCard,
   Globe,
-  Calendar
+  Calendar,
+  Bell
 } from 'lucide-react'
 import { useAuth } from '@/app/providers'
 import { createClient } from '@/lib/supabase'
@@ -196,16 +197,17 @@ export default function EnhancedAdminDashboard() {
     successRate: 0
   })
 
+
+
   // Check if user is admin
   useEffect(() => {
     console.log('🔍 Admin access check:', { user: user?.email, hasUser: !!user })
 
-    // For testing purposes, allow access without authentication
-    // TODO: Re-enable authentication in production
-    const allowTestAccess = true
+    // Check if authentication is required
+    const requireAuth = process.env.REQUIRE_AUTH !== 'false'
 
-    if (allowTestAccess) {
-      console.log('🧪 Test mode: Allowing access without authentication')
+    if (!requireAuth) {
+      console.log('🧪 Development mode: Authentication disabled')
       fetchAllData()
       return
     }
@@ -246,6 +248,8 @@ export default function EnhancedAdminDashboard() {
 
     fetchAllData()
   }, [user, router])
+
+
 
   const fetchAllData = async () => {
     try {
@@ -454,9 +458,24 @@ export default function EnhancedAdminDashboard() {
             <TabsTrigger value="bursaries" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700">
               💰 Bursaries
             </TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700">
-              👥 Users
-            </TabsTrigger>
+            <button
+              onClick={() => router.push('/admin/profiles')}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-white dark:hover:bg-gray-700"
+            >
+              👥 Student Profiles
+            </button>
+            <button
+              onClick={() => router.push('/admin/applications')}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-white dark:hover:bg-gray-700"
+            >
+              📋 Applications
+            </button>
+            <button
+              onClick={() => router.push('/admin/notifications')}
+              className="inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-green-100 dark:hover:bg-green-900/50"
+            >
+              📧 Notifications
+            </button>
             <TabsTrigger value="programs" className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700">
               📚 Programs
             </TabsTrigger>
@@ -563,6 +582,18 @@ export default function EnhancedAdminDashboard() {
                     <Clock className="h-4 w-4 mr-2" />
                     📅 Deadline Management
                   </Button>
+                  <Button onClick={() => router.push('/admin/profiles')} className="w-full justify-start bg-purple-600 hover:bg-purple-700">
+                    <Users className="h-4 w-4 mr-2" />
+                    👥 Student Profiles
+                  </Button>
+                  <Button onClick={() => router.push('/admin/applications')} className="w-full justify-start bg-blue-600 hover:bg-blue-700">
+                    <FileText className="h-4 w-4 mr-2" />
+                    📋 Applications & Payments
+                  </Button>
+                  <Button onClick={() => router.push('/admin/notifications')} className="w-full justify-start bg-green-600 hover:bg-green-700">
+                    <Bell className="h-4 w-4 mr-2" />
+                    📧 Notifications Center
+                  </Button>
                   <Button onClick={() => setActiveTab('institutions')} className="w-full justify-start" variant="outline">
                     <Building className="h-4 w-4 mr-2" />
                     Manage Institutions
@@ -571,9 +602,9 @@ export default function EnhancedAdminDashboard() {
                     <Award className="h-4 w-4 mr-2" />
                     Manage Bursaries
                   </Button>
-                  <Button onClick={() => setActiveTab('users')} className="w-full justify-start" variant="outline">
+                  <Button onClick={() => router.push('/admin/profiles')} className="w-full justify-start" variant="outline">
                     <Users className="h-4 w-4 mr-2" />
-                    Manage Users
+                    Student Profiles
                   </Button>
                   <Button onClick={() => setActiveTab('analytics')} className="w-full justify-start" variant="outline">
                     <BarChart3 className="h-4 w-4 mr-2" />
@@ -644,14 +675,7 @@ export default function EnhancedAdminDashboard() {
             />
           </TabsContent>
 
-          <TabsContent value="users">
-            <UsersManager
-              users={users}
-              onRefresh={fetchAllData}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-            />
-          </TabsContent>
+
 
           <TabsContent value="programs">
             <ProgramsManager
@@ -671,6 +695,8 @@ export default function EnhancedAdminDashboard() {
               setSearchTerm={setSearchTerm}
             />
           </TabsContent>
+
+
 
           <TabsContent value="analytics">
             <AnalyticsManager stats={stats} />

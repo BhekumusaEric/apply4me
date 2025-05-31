@@ -21,7 +21,7 @@ export function InstallPrompt() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e)
-      
+
       // Show install prompt after a delay (don't be too aggressive)
       setTimeout(() => {
         const hasSeenPrompt = localStorage.getItem('pwa-install-prompt-seen')
@@ -42,14 +42,14 @@ export function InstallPrompt() {
     if (!deferredPrompt) return
 
     setIsInstalling(true)
-    
+
     try {
       // Show the install prompt
       deferredPrompt.prompt()
-      
+
       // Wait for the user to respond to the prompt
       const { outcome } = await deferredPrompt.userChoice
-      
+
       if (outcome === 'accepted') {
         console.log('User accepted the install prompt')
         setShowPrompt(false)
@@ -133,16 +133,57 @@ export function InstallPrompt() {
 export function InstallButton() {
   const [canInstall, setCanInstall] = useState(false)
   const [isInstalling, setIsInstalling] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
 
   useEffect(() => {
-    setCanInstall(canInstallPWA() && !isPWAInstalled())
+    // Only show if PWA can be installed and isn't already installed
+    const checkInstallability = () => {
+      const isInstallable = canInstallPWA() && !isPWAInstalled()
+
+      // Additional check for Safari desktop - don't show install button
+      const userAgent = navigator.userAgent
+      const isSafariDesktop = userAgent.includes('Safari') &&
+                             !userAgent.includes('Chrome') &&
+                             !/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
+
+      setCanInstall(isInstallable && !isSafariDesktop)
+    }
+
+    checkInstallability()
+
+    // Listen for the beforeinstallprompt event
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+      setCanInstall(true)
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    }
   }, [])
 
   const handleInstall = async () => {
+    if (!deferredPrompt) return
+
     setIsInstalling(true)
     try {
-      await installPWA()
-      setCanInstall(false)
+      // Show the install prompt
+      deferredPrompt.prompt()
+
+      // Wait for the user to respond to the prompt
+      const { outcome } = await deferredPrompt.userChoice
+
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt')
+        setCanInstall(false)
+      } else {
+        console.log('User dismissed the install prompt')
+      }
+
+      setDeferredPrompt(null)
     } catch (error) {
       console.error('Installation failed:', error)
     } finally {

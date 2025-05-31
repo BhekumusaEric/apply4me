@@ -1,0 +1,202 @@
+[
+  {
+    "id": "notif_1748726802751_all_users",
+    "user_id": "all_users",
+    "type": "payment_reminder",
+    "title": "Payment Required",
+    "message": "Your application fee payment is still pending. Please complete payment to proceed with your application.",
+    "read": false,
+    "created_at": "2025-05-31T21:26:43.038Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748726802751",
+      "channels": []
+    }
+  },
+  {
+    "id": "notif_1748726782366_all_users",
+    "user_id": "all_users",
+    "type": "payment_reminder",
+    "title": "p",
+    "message": "fddfdf",
+    "read": false,
+    "created_at": "2025-05-31T21:26:22.662Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748726782365",
+      "channels": []
+    }
+  },
+  {
+    "id": "notif_1748726777207_all_users",
+    "user_id": "all_users",
+    "type": "payment_reminder",
+    "title": "p",
+    "message": "fddfdf",
+    "read": false,
+    "created_at": "2025-05-31T21:26:17.865Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748726777207",
+      "channels": []
+    }
+  },
+  {
+    "id": "notif_1748726625940_all_users",
+    "user_id": "all_users",
+    "type": "payment_reminder",
+    "title": "p",
+    "message": "fddfdf",
+    "read": false,
+    "created_at": "2025-05-31T21:23:46.293Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748726625940",
+      "channels": [
+        "email"
+      ]
+    }
+  },
+  {
+    "id": "notif_1748726512489_all_users",
+    "user_id": "all_users",
+    "type": "general",
+    "title": "🎉 System Fully Fixed!",
+    "message": "Great news! All database permissions have been resolved and the notification system is now working perfectly!",
+    "read": false,
+    "created_at": "2025-05-31T21:21:52.718Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748726512489",
+      "channels": [
+        "email"
+      ]
+    }
+  },
+  {
+    "id": "notif_1748726319163_all_users",
+    "user_id": "all_users",
+    "type": "general",
+    "title": "🎉 Test Broadcast",
+    "message": "Testing admin broadcast after fixes!",
+    "read": false,
+    "created_at": "2025-05-31T21:18:39.376Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748726319163",
+      "channels": [
+        "email"
+      ]
+    }
+  },
+  {
+    "id": "notif_1748726208939_all_users",
+    "user_id": "all_users",
+    "type": "general",
+    "title": "🎉 System Test After Fixes",
+    "message": "Testing the admin notification system after applying database permission fixes!",
+    "read": false,
+    "created_at": "2025-05-31T21:16:49.653Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748726208939",
+      "channels": [
+        "email"
+      ]
+    }
+  },
+  {
+    "id": "notif_1748724955047_all_users",
+    "user_id": "all_users",
+    "type": "payment_reminder",
+    "title": "Reminder",
+    "message": "Please remember to pay up outstanding ",
+    "read": false,
+    "created_at": "2025-05-31T20:55:55.325Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748724955047",
+      "channels": [
+        "email"
+      ]
+    }
+  },
+  {
+    "id": "notif_1748724949005_all_users",
+    "user_id": "all_users",
+    "type": "payment_reminder",
+    "title": "Reminder",
+    "message": "Please remember to pay up outstanding ",
+    "read": false,
+    "created_at": "2025-05-31T20:55:49.284Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748724949005",
+      "channels": [
+        "email"
+      ]
+    }
+  },
+  {
+    "id": "notif_1748724942656_all_users",
+    "user_id": "all_users",
+    "type": "payment_reminder",
+    "title": "Reminder",
+    "message": "Please remember to pay up outstanding ",
+    "read": false,
+    "created_at": "2025-05-31T20:55:43.344Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748724942656",
+      "channels": []
+    }
+  },
+  {
+    "id": "notif_1748724034034_all_users",
+    "user_id": "all_users",
+    "type": "general",
+    "title": "🎉 System Fully Operational!",
+    "message": "Great news! The notification system is now fully working with database storage and real-time delivery!",
+    "read": false,
+    "created_at": "2025-05-31T20:40:34.670Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748724034033",
+      "channels": [
+        "email"
+      ]
+    }
+  },
+  {
+    "id": "notif_1748723950515_all_users",
+    "user_id": "all_users",
+    "type": "general",
+    "title": "🚀 Database Working!",
+    "message": "The notification database is now working perfectly! Users should see this notification.",
+    "read": false,
+    "created_at": "2025-05-31T20:39:10.891Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748723950514",
+      "channels": [
+        "email"
+      ]
+    }
+  },
+  {
+    "id": "notif_1748723647471_all_users",
+    "user_id": "all_users",
+    "type": "general",
+    "title": "🎉 Database Test Notification",
+    "message": "Testing the database connection after table creation!",
+    "read": false,
+    "created_at": "2025-05-31T20:34:08.909Z",
+    "metadata": {
+      "source": "admin",
+      "admin_notification_id": "notif_1748723647471",
+      "channels": [
+        "email"
+      ]
+    }
+  }
+]

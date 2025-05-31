@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  User, 
-  Phone, 
-  GraduationCap, 
-  FileText, 
-  Settings, 
-  CheckCircle, 
+import {
+  User,
+  Phone,
+  GraduationCap,
+  FileText,
+  Settings,
+  CheckCircle,
   AlertCircle,
   Clock,
   Shield,
@@ -110,14 +110,14 @@ export default function ProfileBuilder({ initialProfile, onComplete, onSave }: P
   const handleStepComplete = (stepData: any) => {
     const updatedProfile = { ...profile, ...stepData }
     setProfile(updatedProfile)
-    
+
     // Mark step as completed
     if (!progress.completedSteps.includes(currentStep)) {
       const newCompletedSteps = [...progress.completedSteps, currentStep]
       const remainingTime = PROFILE_STEPS
         .filter(step => !newCompletedSteps.includes(step.step))
         .reduce((total, step) => total + step.estimatedMinutes, 0)
-      
+
       setProgress({
         ...progress,
         completedSteps: newCompletedSteps,
@@ -179,7 +179,7 @@ export default function ProfileBuilder({ initialProfile, onComplete, onSave }: P
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold">Complete Your Student Profile</h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Create a comprehensive profile to enable Apply4Me to submit applications on your behalf. 
+          Create a comprehensive profile to enable Apply4Me to submit applications on your behalf.
           This one-time setup ensures we have all the information needed for South African higher education applications.
         </p>
       </div>
@@ -207,22 +207,22 @@ export default function ProfileBuilder({ initialProfile, onComplete, onSave }: P
         </CardHeader>
         <CardContent>
           <Progress value={progressPercentage} className="mb-4" />
-          
+
           {/* Step Navigation */}
           <div className="grid grid-cols-7 gap-2">
             {PROFILE_STEPS.map((step, index) => {
               const isCompleted = progress.completedSteps.includes(step.step)
               const isCurrent = currentStep === step.step
               const isAccessible = index <= currentStepIndex || isCompleted
-              
+
               return (
                 <button
                   key={step.step}
                   onClick={() => isAccessible && goToStep(step.step)}
                   disabled={!isAccessible}
                   className={`p-3 rounded-lg border text-center transition-all ${
-                    isCurrent 
-                      ? 'border-primary bg-primary/10 text-primary' 
+                    isCurrent
+                      ? 'border-primary bg-primary/10 text-primary'
                       : isCompleted
                       ? 'border-green-200 bg-green-50 text-green-700'
                       : isAccessible
@@ -278,15 +278,15 @@ export default function ProfileBuilder({ initialProfile, onComplete, onSave }: P
       </div>
 
       {/* Benefits Reminder */}
-      <Card className="bg-blue-50 border-blue-200">
+      <Card className="bg-green-50 border-green-200">
         <CardContent className="pt-6">
           <div className="flex items-start gap-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Shield className="h-6 w-6 text-blue-600" />
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Shield className="h-6 w-6 text-green-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-2">Why Complete Your Profile?</h3>
-              <ul className="text-sm text-blue-800 space-y-1">
+              <h3 className="font-semibold text-green-900 mb-2">Why Complete Your Profile?</h3>
+              <ul className="text-sm text-green-800 space-y-1">
                 <li>• <strong>One-time setup:</strong> Never fill application forms again</li>
                 <li>• <strong>Automatic applications:</strong> We apply to institutions on your behalf</li>
                 <li>• <strong>Smart matching:</strong> Get matched with relevant opportunities</li>

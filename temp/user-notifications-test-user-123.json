@@ -1,0 +1,25 @@
+[
+  {
+    "id": "notif_1748723217906_test-user-123",
+    "user_id": "test-user-123",
+    "type": "general",
+    "title": "🎉 Database Test",
+    "message": "Testing database connection after manual table creation!",
+    "read": false,
+    "created_at": "2025-05-31T20:26:58.561Z",
+    "metadata": {}
+  },
+  {
+    "id": "test_user_notif_1748720690874",
+    "user_id": "test-user-123",
+    "type": "general",
+    "title": "🎉 Welcome to Apply4Me Notifications!",
+    "message": "This is a test notification to show you how our notification system works. You'll receive updates about your applications, payment status, and important deadlines here.",
+    "read": false,
+    "created_at": "2025-05-31T19:44:50.874Z",
+    "metadata": {
+      "source": "test",
+      "testTimestamp": "2025-05-31T19:44:50.874Z"
+    }
+  }
+]

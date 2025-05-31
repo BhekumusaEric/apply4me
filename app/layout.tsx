@@ -3,8 +3,13 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import ServiceWorkerRegistration from '@/components/pwa/ServiceWorkerRegistration'
+import { InstallPrompt } from '@/components/pwa/install-prompt'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+})
 
 export const metadata: Metadata = {
   title: 'Apply4Me - South African Student Application Platform',
@@ -65,6 +70,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Apply4Me" />
@@ -72,10 +78,11 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#007A4D" />
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <Providers>
           {children}
           <ServiceWorkerRegistration />
+          <InstallPrompt />
         </Providers>
       </body>
     </html>

@@ -208,18 +208,18 @@ export default function PaymentSuccessPage() {
               <CardHeader>
                 <CardTitle>Payment Summary</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="payment-summary">
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm card-content-text">
                     <span>Institution Application Fee</span>
                     <span>{formatCurrency((application.total_amount || 0) - (application.service_type === 'express' ? 100 : 50))}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm card-content-text">
                     <span>Apply4Me Service Fee ({application.service_type})</span>
                     <span>{formatCurrency(application.service_type === 'express' ? 100 : 50)}</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between font-semibold text-lg">
+                  <div className="flex justify-between font-semibold text-lg card-content-text">
                     <span>Total Paid</span>
                     <span className="text-green-600">{formatCurrency(application.total_amount)}</span>
                   </div>

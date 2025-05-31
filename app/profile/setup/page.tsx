@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,6 +21,8 @@ import {
 } from 'lucide-react'
 import ProfileBuilder from '@/components/profile/ProfileBuilder'
 import ApplicationReadinessDashboard from '@/components/profile/ApplicationReadinessDashboard'
+import { ErrorBoundary } from '@/components/error-boundary'
+import { ClientOnly } from '@/components/client-only'
 import { StudentProfile } from '@/lib/types/student-profile'
 
 function ProfileSetupContent() {
@@ -29,11 +31,18 @@ function ProfileSetupContent() {
   const [isProfileComplete, setIsProfileComplete] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
+  const [isWelcome, setIsWelcome] = useState(false)
 
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const isWelcome = searchParams.get('welcome') === 'true'
   const supabase = createClient()
+
+  useEffect(() => {
+    // Check for welcome parameter on client side only
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      setIsWelcome(urlParams.get('welcome') === 'true')
+    }
+  }, [])
 
   useEffect(() => {
     checkUserAndProfile()
@@ -45,7 +54,8 @@ function ProfileSetupContent() {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
 
       if (authError || !user) {
-        router.push('/auth/signin')
+        console.log('🔐 Authentication required for profile setup, redirecting...')
+        router.push('/auth/simple-signin')
         return
       }
 
@@ -394,15 +404,28 @@ function ProfileSetupContent() {
 
 export default function ProfileSetupPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading profile setup...</p>
-        </div>
-      </div>
-    }>
-      <ProfileSetupContent />
-    </Suspense>
+    <ErrorBoundary>
+      <ClientOnly
+        fallback={
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading profile setup...</p>
+            </div>
+          </div>
+        }
+      >
+        <Suspense fallback={
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading profile setup...</p>
+            </div>
+          </div>
+        }>
+          <ProfileSetupContent />
+        </Suspense>
+      </ClientOnly>
+    </ErrorBoundary>
   )
 }

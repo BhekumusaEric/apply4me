@@ -30,23 +30,41 @@ const SA_PROVINCES = [
 ]
 
 export default function AcademicHistoryStep({ profile, onComplete, onBack }: AcademicHistoryStepProps) {
-  const [academicHistory, setAcademicHistory] = useState<AcademicHistory>(
-    profile.academicHistory || {
+  // Create default academic history structure
+  const defaultAcademicHistory: AcademicHistory = {
+    matricInfo: {
+      year: new Date().getFullYear() - 1,
+      school: '',
+      schoolType: 'Public',
+      province: '',
+      matricType: 'NSC',
+      overallResult: 'Bachelor Pass',
+      subjects: [],
+      additionalCertificates: []
+    },
+    previousStudies: [],
+    achievements: [],
+    careerInterests: []
+  }
+
+  const [academicHistory, setAcademicHistory] = useState<AcademicHistory>(() => {
+    if (!profile.academicHistory) return defaultAcademicHistory
+
+    // Merge with defaults to ensure all nested objects exist
+    return {
+      ...defaultAcademicHistory,
+      ...profile.academicHistory,
       matricInfo: {
-        year: new Date().getFullYear() - 1,
-        school: '',
-        schoolType: 'Public',
-        province: '',
-        matricType: 'NSC',
-        overallResult: 'Bachelor Pass',
-        subjects: [],
-        additionalCertificates: []
+        ...defaultAcademicHistory.matricInfo,
+        ...(profile.academicHistory.matricInfo || {}),
+        subjects: profile.academicHistory.matricInfo?.subjects || [],
+        additionalCertificates: profile.academicHistory.matricInfo?.additionalCertificates || []
       },
-      previousStudies: [],
-      achievements: [],
-      careerInterests: []
-    } as AcademicHistory
-  )
+      previousStudies: profile.academicHistory.previousStudies || [],
+      achievements: profile.academicHistory.achievements || [],
+      careerInterests: profile.academicHistory.careerInterests || []
+    }
+  })
 
   const [errors, setErrors] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -56,9 +74,9 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
     setAcademicHistory(prev => ({
       ...prev,
       matricInfo: {
-        ...prev.matricInfo!,
+        ...prev.matricInfo,
         subjects: [
-          ...prev.matricInfo!.subjects,
+          ...(prev.matricInfo?.subjects || []),
           {
             name: '',
             level: 'Higher Grade',
@@ -78,8 +96,8 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
     setAcademicHistory(prev => ({
       ...prev,
       matricInfo: {
-        ...prev.matricInfo!,
-        subjects: prev.matricInfo!.subjects.filter((_, i) => i !== index)
+        ...prev.matricInfo,
+        subjects: (prev.matricInfo?.subjects || []).filter((_, i) => i !== index)
       }
     }))
   }
@@ -89,8 +107,8 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
     setAcademicHistory(prev => ({
       ...prev,
       matricInfo: {
-        ...prev.matricInfo!,
-        subjects: prev.matricInfo!.subjects.map((subject, i) =>
+        ...prev.matricInfo,
+        subjects: (prev.matricInfo?.subjects || []).map((subject, i) =>
           i === index ? {
             ...subject,
             [field]: value,
@@ -328,7 +346,7 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {academicHistory.matricInfo?.subjects.map((subject, index) => (
+            {(academicHistory.matricInfo?.subjects || []).map((subject, index) => (
               <div key={index} className="grid grid-cols-12 gap-2 items-end">
                 <div className="col-span-4">
                   <Label>Subject</Label>
@@ -396,7 +414,7 @@ export default function AcademicHistoryStep({ profile, onComplete, onBack }: Aca
               </div>
             ))}
 
-            {academicHistory.matricInfo?.subjects.length === 0 && (
+            {(academicHistory.matricInfo?.subjects || []).length === 0 && (
               <p className="text-center text-muted-foreground py-8">
                 No subjects added yet. Click "Add Subject" to get started.
               </p>

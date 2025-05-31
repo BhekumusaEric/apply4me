@@ -1,6 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { GraduationCap, Loader2 } from 'lucide-react'
 
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg'
@@ -81,9 +82,17 @@ interface LoadingPageProps {
 export function LoadingPage({ message = 'Loading...' }: LoadingPageProps) {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-center space-y-4">
-        <LoadingSpinner size="lg" />
-        <p className="text-muted-foreground">{message}</p>
+      <div className="text-center space-y-6">
+        <div className="relative">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-sa-green to-sa-blue opacity-20 animate-ping"></div>
+          <div className="relative h-16 w-16 rounded-full bg-gradient-to-r from-sa-green to-sa-blue flex items-center justify-center">
+            <GraduationCap className="h-8 w-8 text-white" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <p className="text-lg font-medium gradient-text">{message}</p>
+          <LoadingDots />
+        </div>
       </div>
     </div>
   )
@@ -98,8 +107,62 @@ interface ButtonLoadingProps {
 export function ButtonLoading({ loading, children, className }: ButtonLoadingProps) {
   return (
     <div className={cn('flex items-center space-x-2', className)}>
-      {loading && <LoadingSpinner size="sm" />}
+      {loading && <Loader2 className="h-4 w-4 animate-spin" />}
       <span>{children}</span>
+    </div>
+  )
+}
+
+// Enhanced Apply4Me Loading Component
+export function Apply4MeLoading({ message = 'Loading Apply4Me...', size = 'md' }: { message?: string, size?: 'sm' | 'md' | 'lg' }) {
+  const sizeClasses = {
+    sm: 'h-8 w-8',
+    md: 'h-12 w-12',
+    lg: 'h-16 w-16'
+  }
+
+  const iconSizes = {
+    sm: 'h-4 w-4',
+    md: 'h-6 w-6',
+    lg: 'h-8 w-8'
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-4">
+      <div className="relative">
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-sa-green to-sa-blue opacity-20 animate-ping"></div>
+        <div className={cn('relative rounded-full bg-gradient-to-r from-sa-green to-sa-blue flex items-center justify-center', sizeClasses[size])}>
+          <GraduationCap className={cn('text-white', iconSizes[size])} />
+        </div>
+      </div>
+      <div className="text-center space-y-2">
+        <p className="font-medium gradient-text">{message}</p>
+        <LoadingDots />
+      </div>
+    </div>
+  )
+}
+
+// Skeleton Components
+export function Skeleton({ className }: { className?: string }) {
+  return (
+    <div className={cn('animate-pulse rounded-md bg-muted shimmer', className)} />
+  )
+}
+
+export function NotificationSkeleton() {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="flex items-start space-x-3 p-3 border rounded-lg">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-[200px]" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-[60px]" />
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

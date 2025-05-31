@@ -22,35 +22,56 @@ const SA_PROVINCES = [
 ]
 
 export default function ContactInfoStep({ profile, onComplete, onBack }: ContactInfoStepProps) {
-  const [contactInfo, setContactInfo] = useState<ContactInformation>(
-    profile.contactInfo || {
-      email: '',
-      phone: '',
+  // Create default contact info structure
+  const defaultContactInfo: ContactInformation = {
+    email: '',
+    phone: '',
+    currentAddress: {
+      streetAddress: '',
+      suburb: '',
+      city: '',
+      province: '',
+      postalCode: '',
+      country: 'South Africa'
+    },
+    permanentAddress: {
+      streetAddress: '',
+      suburb: '',
+      city: '',
+      province: '',
+      postalCode: '',
+      country: 'South Africa'
+    },
+    emergencyContact: {
+      name: '',
+      relationship: '',
+      phone: ''
+    },
+    preferredContactMethod: 'Email',
+    communicationLanguage: 'English'
+  }
+
+  const [contactInfo, setContactInfo] = useState<ContactInformation>(() => {
+    if (!profile.contactInfo) return defaultContactInfo
+
+    // Merge with defaults to ensure all nested objects exist
+    return {
+      ...defaultContactInfo,
+      ...profile.contactInfo,
       currentAddress: {
-        streetAddress: '',
-        suburb: '',
-        city: '',
-        province: '',
-        postalCode: '',
-        country: 'South Africa'
+        ...defaultContactInfo.currentAddress,
+        ...(profile.contactInfo.currentAddress || {})
       },
       permanentAddress: {
-        streetAddress: '',
-        suburb: '',
-        city: '',
-        province: '',
-        postalCode: '',
-        country: 'South Africa'
+        ...defaultContactInfo.permanentAddress,
+        ...(profile.contactInfo.permanentAddress || {})
       },
       emergencyContact: {
-        name: '',
-        relationship: '',
-        phone: ''
-      },
-      preferredContactMethod: 'Email',
-      communicationLanguage: 'English'
-    } as ContactInformation
-  )
+        ...defaultContactInfo.emergencyContact,
+        ...(profile.contactInfo.emergencyContact || {})
+      }
+    }
+  })
 
   const [errors, setErrors] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -121,7 +142,7 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
                 placeholder="your.email@example.com"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="phone">Phone Number *</Label>
               <Input
@@ -143,11 +164,11 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
                 placeholder="0112345678"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="preferredContactMethod">Preferred Contact Method</Label>
-              <Select 
-                value={contactInfo.preferredContactMethod} 
+              <Select
+                value={contactInfo.preferredContactMethod}
                 onValueChange={(value: any) => setContactInfo(prev => ({ ...prev, preferredContactMethod: value }))}
               >
                 <SelectTrigger>
@@ -181,7 +202,7 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
             <Label htmlFor="currentStreet">Street Address *</Label>
             <Input
               id="currentStreet"
-              value={contactInfo.currentAddress.streetAddress}
+              value={contactInfo.currentAddress?.streetAddress || ''}
               onChange={(e) => setContactInfo(prev => ({
                 ...prev,
                 currentAddress: { ...prev.currentAddress, streetAddress: e.target.value }
@@ -195,7 +216,7 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
               <Label htmlFor="currentSuburb">Suburb</Label>
               <Input
                 id="currentSuburb"
-                value={contactInfo.currentAddress.suburb}
+                value={contactInfo.currentAddress?.suburb || ''}
                 onChange={(e) => setContactInfo(prev => ({
                   ...prev,
                   currentAddress: { ...prev.currentAddress, suburb: e.target.value }
@@ -203,12 +224,12 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
                 placeholder="Sandton"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="currentCity">City *</Label>
               <Input
                 id="currentCity"
-                value={contactInfo.currentAddress.city}
+                value={contactInfo.currentAddress?.city || ''}
                 onChange={(e) => setContactInfo(prev => ({
                   ...prev,
                   currentAddress: { ...prev.currentAddress, city: e.target.value }
@@ -221,8 +242,8 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="currentProvince">Province *</Label>
-              <Select 
-                value={contactInfo.currentAddress.province} 
+              <Select
+                value={contactInfo.currentAddress?.province || ''}
                 onValueChange={(value) => setContactInfo(prev => ({
                   ...prev,
                   currentAddress: { ...prev.currentAddress, province: value }
@@ -238,12 +259,12 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <Label htmlFor="currentPostalCode">Postal Code *</Label>
               <Input
                 id="currentPostalCode"
-                value={contactInfo.currentAddress.postalCode}
+                value={contactInfo.currentAddress?.postalCode || ''}
                 onChange={(e) => setContactInfo(prev => ({
                   ...prev,
                   currentAddress: { ...prev.currentAddress, postalCode: e.target.value }
@@ -272,7 +293,7 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
               <Label htmlFor="emergencyName">Full Name *</Label>
               <Input
                 id="emergencyName"
-                value={contactInfo.emergencyContact.name}
+                value={contactInfo.emergencyContact?.name || ''}
                 onChange={(e) => setContactInfo(prev => ({
                   ...prev,
                   emergencyContact: { ...prev.emergencyContact, name: e.target.value }
@@ -280,11 +301,11 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
                 placeholder="John Doe"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="emergencyRelationship">Relationship *</Label>
-              <Select 
-                value={contactInfo.emergencyContact.relationship} 
+              <Select
+                value={contactInfo.emergencyContact?.relationship || ''}
                 onValueChange={(value) => setContactInfo(prev => ({
                   ...prev,
                   emergencyContact: { ...prev.emergencyContact, relationship: value }
@@ -311,7 +332,7 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
               <Label htmlFor="emergencyPhone">Phone Number *</Label>
               <Input
                 id="emergencyPhone"
-                value={contactInfo.emergencyContact.phone}
+                value={contactInfo.emergencyContact?.phone || ''}
                 onChange={(e) => setContactInfo(prev => ({
                   ...prev,
                   emergencyContact: { ...prev.emergencyContact, phone: e.target.value }
@@ -319,7 +340,7 @@ export default function ContactInfoStep({ profile, onComplete, onBack }: Contact
                 placeholder="0823456789"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="emergencyEmail">Email Address</Label>
               <Input

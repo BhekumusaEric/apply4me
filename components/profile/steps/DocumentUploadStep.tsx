@@ -221,10 +221,14 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
     // Update documents
     if (docKey.endsWith('s')) {
       // Array field
-      setDocuments(prev => ({
-        ...prev,
-        [docKey]: [...(prev[docKey as keyof DocumentCollection] as DocumentInfo[] || []), documentInfo]
-      }))
+      setDocuments(prev => {
+        const currentValue = prev[docKey as keyof DocumentCollection]
+        const currentArray = Array.isArray(currentValue) ? currentValue : []
+        return {
+          ...prev,
+          [docKey]: [...currentArray, documentInfo]
+        }
+      })
     } else {
       // Single field
       setDocuments(prev => ({
@@ -249,10 +253,14 @@ export default function DocumentUploadStep({ profile, onComplete, onBack }: Docu
 
     if (docKey.endsWith('s') && docId) {
       // Array field
-      setDocuments(prev => ({
-        ...prev,
-        [docKey]: (prev[docKey as keyof DocumentCollection] as DocumentInfo[]).filter(doc => doc.id !== docId)
-      }))
+      setDocuments(prev => {
+        const currentValue = prev[docKey as keyof DocumentCollection]
+        const currentArray = Array.isArray(currentValue) ? currentValue : []
+        return {
+          ...prev,
+          [docKey]: currentArray.filter(doc => doc.id !== docId)
+        }
+      })
     } else {
       // Single field
       setDocuments(prev => ({
