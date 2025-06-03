@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const testNotificationsFormatted = testNotifications.map(notif => ({
+    const testNotificationsFormatted = testNotifications.map((notif: any) => ({
       id: notif.id,
       type: notif.type,
       title: notif.title,

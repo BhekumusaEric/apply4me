@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
           // Generate realistic data for each program
           const updateData = {
             // We'll use existing columns that might exist or add to description
-            description: program.description || generateDescription(program.qualification_level, program.field_of_study),
+            description: (program as any).description || generateDescription(program.qualification_level, program.field_of_study),
             updated_at: new Date().toISOString()
           }
 

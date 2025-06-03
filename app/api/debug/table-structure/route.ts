@@ -48,11 +48,11 @@ export async function GET(request: NextRequest) {
       results: {
         selectQuery: {
           success: !error,
-          error: error?.message
+          error: (error as any)?.message
         },
         insertTest: {
           success: !insertError,
-          error: insertError?.message,
+          error: (insertError as any)?.message,
           details: insertError
         }
       },

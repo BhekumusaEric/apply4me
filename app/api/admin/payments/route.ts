@@ -18,6 +18,12 @@ export async function GET(request: NextRequest) {
 
     const offset = (page - 1) * limit
 
+    // Define missing variables
+    const institutions = ['University of Cape Town', 'University of the Witwatersrand', 'Stellenbosch University']
+    const paymentMethods = ['payfast', 'card', 'eft', 'bank_transfer']
+    const paymentStatuses = ['completed', 'pending', 'failed', 'refunded']
+    const paymentStatus = paymentStatuses[Math.floor(Math.random() * paymentStatuses.length)]
+
     // Get student profiles for payment data
     const { data: profiles, error: profilesError } = await adminSupabase
       .from('student_profiles')
@@ -44,7 +50,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch real payment data from applications table
-    const { data: applications, error: appsError } = await supabase
+    const { data: applications, error: appsError } = await adminSupabase
       .from('applications')
       .select(`
         id,
@@ -63,20 +69,25 @@ export async function GET(request: NextRequest) {
       .not('payment_status', 'is', null)
       .order('payment_date', { ascending: false })
 
-    const realPayments = (applications || []).map(app => ({
-      id: `payment_${app.id}`,
-      userId: app.user_id,
-      applicationId: app.id,
-      studentName: `${app.student_profiles?.first_name || 'Unknown'} ${app.student_profiles?.last_name || 'Student'}`,
-      studentEmail: app.student_profiles?.email || 'unknown@email.com',
-      institutionName: app.institutions?.name || 'Unknown Institution',
-      amount: app.total_amount || 200,
-      status: app.payment_status || 'pending',
-      method: app.payment_method || 'unknown',
-      reference: app.payment_reference || `REF${app.id}`,
-      date: app.payment_date || app.created_at,
-      applicationStatus: app.status || 'pending'
-    }))
+    const realPayments = (applications || []).map((app: any) => {
+      const profile = Array.isArray(app.student_profiles) ? app.student_profiles[0] : app.student_profiles
+      const institution = Array.isArray(app.institutions) ? app.institutions[0] : app.institutions
+
+      return {
+        id: `payment_${app.id}`,
+        userId: app.user_id,
+        applicationId: app.id,
+        studentName: `${profile?.first_name || 'Unknown'} ${profile?.last_name || 'Student'}`,
+        studentEmail: profile?.email || 'unknown@email.com',
+        institutionName: institution?.name || 'Unknown Institution',
+        amount: app.total_amount || 200,
+        status: app.payment_status || 'pending',
+        method: app.payment_method || 'unknown',
+        reference: app.payment_reference || `REF${app.id}`,
+        date: app.payment_date || app.created_at,
+        applicationStatus: app.status || 'pending'
+      }
+    })
 
     // If no real payments, create minimal sample data
     const finalPayments = realPayments.length > 0 ? realPayments : profiles
@@ -88,72 +99,43 @@ export async function GET(request: NextRequest) {
         return {
           id: `pay_${profile.id}_${index}`,
           userId: profile.user_id,
+          applicationId: `app_${profile.id}`,
           studentName: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'No name',
           studentEmail: profile.email || 'No email',
-          studentIdNumber: profile.id_number || 'No ID',
-          applicationId: `app_${profile.id}`,
-          institution: institutions[index % institutions.length],
+          institutionName: institutions[index % institutions.length],
           amount,
-          currency: 'ZAR',
-          paymentStatus,
-          paymentMethod: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
-          paymentReference: `PF_${Date.now()}_${index}`,
-          payfastPaymentId: paymentStatus !== 'pending' ? `pf_${Math.random().toString(36).substr(2, 9)}` : null,
-          transactionId: paymentStatus === 'completed' ? `txn_${Math.random().toString(36).substr(2, 12)}` : null,
-          paymentDate: paymentDate.toISOString(),
-          completedDate: paymentStatus === 'completed' ?
-            new Date(paymentDate.getTime() + Math.random() * 24 * 60 * 60 * 1000).toISOString() : null,
-          failureReason: paymentStatus === 'failed' ?
-            ['Insufficient funds', 'Card declined', 'Bank timeout', 'Invalid card details'][Math.floor(Math.random() * 4)] : null,
-          refundReason: paymentStatus === 'refunded' ? 'Application cancelled by student' : null,
-          refundDate: paymentStatus === 'refunded' ?
-            new Date(paymentDate.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() : null,
-          fees: {
-            applicationFee: amount - 15,
-            processingFee: 10,
-            payfastFee: 5
-          },
-          metadata: {
-            ipAddress: `192.168.1.${Math.floor(Math.random() * 255)}`,
-            userAgent: 'Mozilla/5.0 (compatible)',
-            source: 'web_application'
-          },
-          webhookReceived: paymentStatus !== 'pending',
-          webhookDate: paymentStatus !== 'pending' ?
-            new Date(paymentDate.getTime() + 5 * 60 * 1000).toISOString() : null,
-          createdAt: paymentDate.toISOString(),
-          updatedAt: paymentStatus === 'completed' ?
-            new Date(paymentDate.getTime() + Math.random() * 24 * 60 * 60 * 1000).toISOString() :
-            paymentDate.toISOString()
+          status: paymentStatus,
+          method: paymentMethods[Math.floor(Math.random() * paymentMethods.length)],
+          reference: `PF_${Date.now()}_${index}`,
+          date: paymentDate.toISOString(),
+          applicationStatus: 'pending'
         }
       })
 
     // Apply filters
-    let filteredPayments = mockPayments
+    let filteredPayments = finalPayments
 
     if (status !== 'all') {
-      filteredPayments = filteredPayments.filter(payment => payment.paymentStatus === status)
+      filteredPayments = filteredPayments.filter((payment: any) => payment.status === status)
     }
 
     if (dateFrom) {
-      filteredPayments = filteredPayments.filter(payment =>
-        new Date(payment.paymentDate) >= new Date(dateFrom)
+      filteredPayments = filteredPayments.filter((payment: any) =>
+        new Date(payment.date) >= new Date(dateFrom)
       )
     }
 
     if (dateTo) {
-      filteredPayments = filteredPayments.filter(payment =>
-        new Date(payment.paymentDate) <= new Date(dateTo)
+      filteredPayments = filteredPayments.filter((payment: any) =>
+        new Date(payment.date) <= new Date(dateTo)
       )
     }
 
     if (search) {
-      filteredPayments = filteredPayments.filter(payment =>
+      filteredPayments = filteredPayments.filter((payment: any) =>
         payment.studentName.toLowerCase().includes(search.toLowerCase()) ||
         payment.studentEmail.toLowerCase().includes(search.toLowerCase()) ||
-        payment.studentIdNumber.includes(search) ||
-        payment.paymentReference.toLowerCase().includes(search.toLowerCase()) ||
-        payment.transactionId?.toLowerCase().includes(search.toLowerCase())
+        payment.reference.toLowerCase().includes(search.toLowerCase())
       )
     }
 
@@ -162,25 +144,25 @@ export async function GET(request: NextRequest) {
     const paginatedPayments = filteredPayments.slice(offset, offset + limit)
 
     // Calculate payment statistics
-    const completedPayments = mockPayments.filter(p => p.paymentStatus === 'completed')
-    const pendingPayments = mockPayments.filter(p => p.paymentStatus === 'pending')
-    const failedPayments = mockPayments.filter(p => p.paymentStatus === 'failed')
-    const refundedPayments = mockPayments.filter(p => p.paymentStatus === 'refunded')
+    const completedPayments = finalPayments.filter((p: any) => p.status === 'completed')
+    const pendingPayments = finalPayments.filter((p: any) => p.status === 'pending')
+    const failedPayments = finalPayments.filter((p: any) => p.status === 'failed')
+    const refundedPayments = finalPayments.filter((p: any) => p.status === 'refunded')
 
     const summary = {
-      totalTransactions: mockPayments.length,
+      totalTransactions: finalPayments.length,
       completedTransactions: completedPayments.length,
       pendingTransactions: pendingPayments.length,
       failedTransactions: failedPayments.length,
       refundedTransactions: refundedPayments.length,
-      totalRevenue: completedPayments.reduce((sum, p) => sum + p.amount, 0),
-      pendingRevenue: pendingPayments.reduce((sum, p) => sum + p.amount, 0),
-      refundedAmount: refundedPayments.reduce((sum, p) => sum + p.amount, 0),
+      totalRevenue: completedPayments.reduce((sum: number, p: any) => sum + p.amount, 0),
+      pendingRevenue: pendingPayments.reduce((sum: number, p: any) => sum + p.amount, 0),
+      refundedAmount: refundedPayments.reduce((sum: number, p: any) => sum + p.amount, 0),
       averageTransactionValue: completedPayments.length > 0 ?
-        Math.round(completedPayments.reduce((sum, p) => sum + p.amount, 0) / completedPayments.length) : 0,
-      successRate: mockPayments.length > 0 ?
-        Math.round((completedPayments.length / mockPayments.length) * 100) : 0,
-      totalFees: completedPayments.reduce((sum, p) => sum + p.fees.payfastFee, 0)
+        Math.round(completedPayments.reduce((sum: number, p: any) => sum + p.amount, 0) / completedPayments.length) : 0,
+      successRate: finalPayments.length > 0 ?
+        Math.round((completedPayments.length / finalPayments.length) * 100) : 0,
+      totalFees: completedPayments.reduce((sum: number, p: any) => sum + 5, 0) // Fixed fee of 5
     }
 
     console.log(`💳 Found ${paginatedPayments.length} payments (page ${page})`)

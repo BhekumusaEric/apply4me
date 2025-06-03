@@ -17,9 +17,9 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const params: Record<string, string> = {}
 
-    for (const [key, value] of formData.entries()) {
+    Array.from(formData.entries()).forEach(([key, value]) => {
       params[key] = value.toString()
-    }
+    })
 
     console.log('📊 PayFast ITN params:', {
       payment_status: params.payment_status,

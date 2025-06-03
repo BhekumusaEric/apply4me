@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
       await notificationService.broadcastNotification(
         ['admin'], // Send to admin
         {
-          type: 'new_application',
+          type: 'general',
           title: '🎓 New Application Submitted!',
           message: `A new application has been submitted to ${institutionName}. Application ID: ${application.id}. Service Type: ${service_type}. Amount: R${total_amount || 50}`,
           metadata: {
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
       await notificationService.sendNotification({
         id: `app_confirm_${application.id}`,
         userId: user_id,
-        type: 'application_submitted',
+        type: 'application_update',
         title: '📝 Application Submitted Successfully!',
         message: `Your application to ${institutionName} has been submitted successfully! We'll process your application and notify you once payment is verified.`,
         metadata: {

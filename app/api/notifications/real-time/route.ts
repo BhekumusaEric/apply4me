@@ -136,7 +136,7 @@ async function handleBroadcast(data: any) {
       .from('applications')
       .select('user_id')
       .eq('payment_status', 'pending')
-    userIds = [...new Set(applications?.map(a => a.user_id) || [])]
+    userIds = Array.from(new Set(applications?.map((a: any) => a.user_id) || []))
   } else if (Array.isArray(recipients)) {
     userIds = recipients
   } else {
