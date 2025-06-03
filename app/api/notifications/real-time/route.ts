@@ -81,8 +81,7 @@ async function handleSendNotification(data: any) {
     type: type || 'general',
     title,
     message,
-    metadata,
-    channels: channels || ['database']
+    metadata
   })
 
   return NextResponse.json(result)
@@ -98,11 +97,19 @@ async function handleMarkAsRead(data: any) {
     }, { status: 400 })
   }
 
-  const success = await notificationService.markAsRead(notificationIds, userId)
+  // Handle both single ID and array of IDs
+  const ids = Array.isArray(notificationIds) ? notificationIds : [notificationIds]
+
+  // Mark each notification as read
+  const results = await Promise.all(
+    ids.map(id => notificationService.markAsRead(id))
+  )
+
+  const success = results.every(result => result)
 
   return NextResponse.json({
     success,
-    message: success ? 'Notifications marked as read' : 'Failed to mark notifications as read'
+    message: success ? 'Notifications marked as read' : 'Failed to mark some notifications as read'
   })
 }
 

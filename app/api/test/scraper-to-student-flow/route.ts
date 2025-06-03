@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
           fullyConfigured: readyForApplications.length,
           sampleReady: readyForApplications.slice(0, 2).map(p => ({
             name: p.name,
-            institution: p.institutions?.name,
+            institution: (p.institutions as any)?.name,
             deadline: p.application_deadline,
             fee: p.application_fee,
             spots: p.available_spots

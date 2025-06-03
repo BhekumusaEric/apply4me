@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseAdminClient } from '@/lib/supabase-server'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
+    // Handle static generation - use defaults when URL is not available
+    let searchParams: URLSearchParams
+    try {
+      searchParams = new URL(request.url).searchParams
+    } catch {
+      // During static generation, create empty search params
+      searchParams = new URLSearchParams()
+    }
     const userId = searchParams.get('userId') || 'df70993e-739e-4190-b78d-93a9e1002bf7'
     
     console.log('🔍 Simple fetch test for user:', userId)

@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     const adminResult = await notificationService.broadcastNotification(
       ['admin'], // Send to admin
       {
-        type: 'new_application',
+        type: 'general',
         title: '🎓 New Application Submitted!',
         message: `A new application has been submitted to ${institutionName}. Application ID: ${mockApplication.id}. Service Type: ${mockApplication.service_type}. Amount: R${mockApplication.total_amount}`,
         metadata: {
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const userResult = await notificationService.sendNotification({
       id: `app_confirm_${mockApplication.id}`,
       userId: mockApplication.user_id,
-      type: 'application_submitted',
+      type: 'application_update',
       title: '📝 Application Submitted Successfully!',
       message: `Your application to ${institutionName} has been submitted successfully! We'll process your application and notify you once payment is verified.`,
       metadata: {

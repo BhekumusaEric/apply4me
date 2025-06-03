@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     console.log('🧪 Testing Apply4Me Admin System...')
-    
-    const baseUrl = request.nextUrl.origin
+
+    // Handle static generation - use default URL when not available
+    let baseUrl: string
+    try {
+      baseUrl = request.nextUrl.origin
+    } catch {
+      // During static generation, use a default URL
+      baseUrl = 'http://localhost:3000'
+    }
     const testResults = {
       timestamp: new Date().toISOString(),
       tests: [] as any[],

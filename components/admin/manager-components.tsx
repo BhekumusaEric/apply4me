@@ -304,7 +304,7 @@ export function InstitutionsManager({
               Add Institution
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-w-[calc(100vw-2rem)] mx-4">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Institution</DialogTitle>
               <DialogDescription>
@@ -420,37 +420,29 @@ export function InstitutionsManager({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[200px]">Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Type</TableHead>
-                  <TableHead className="hidden md:table-cell">Province</TableHead>
-                  <TableHead className="hidden sm:table-cell">Fee</TableHead>
-                  <TableHead className="hidden lg:table-cell">Featured</TableHead>
-                  <TableHead className="min-w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Province</TableHead>
+                <TableHead>Fee</TableHead>
+                <TableHead>Featured</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {filteredInstitutions.map((institution) => (
                 <TableRow key={institution.id}>
-                  <TableCell className="font-medium">
-                    <div>
-                      <div className="font-medium">{institution.name}</div>
-                      <div className="text-xs text-muted-foreground sm:hidden">
-                        {institution.type} • {institution.province} • R{institution.application_fee?.toLocaleString() || 0}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">
+                  <TableCell className="font-medium">{institution.name}</TableCell>
+                  <TableCell>
                     <Badge variant="outline">
                       {institution.type}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">{institution.province}</TableCell>
-                  <TableCell className="hidden sm:table-cell">R{institution.application_fee?.toLocaleString() || 0}</TableCell>
-                  <TableCell className="hidden lg:table-cell">
+                  <TableCell>{institution.province}</TableCell>
+                  <TableCell>R{institution.application_fee?.toLocaleString() || 0}</TableCell>
+                  <TableCell>
                     {institution.is_featured ? (
                       <Badge variant="default">Featured</Badge>
                     ) : (
@@ -458,7 +450,7 @@ export function InstitutionsManager({
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -494,14 +486,13 @@ export function InstitutionsManager({
               ))}
             </TableBody>
           </Table>
-          </div>
         </CardContent>
       </Card>
 
       {/* Edit Dialog */}
       {editingInstitution && (
         <Dialog open={!!editingInstitution} onOpenChange={() => setEditingInstitution(null)}>
-          <DialogContent className="max-w-2xl max-w-[calc(100vw-2rem)] mx-4">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Institution</DialogTitle>
               <DialogDescription>
@@ -766,7 +757,7 @@ export function BursariesManager({
               Add Bursary
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-w-[calc(100vw-2rem)] mx-4">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Add New Bursary</DialogTitle>
               <DialogDescription>
@@ -873,37 +864,29 @@ export function BursariesManager({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[200px]">Name</TableHead>
-                  <TableHead className="hidden sm:table-cell">Provider</TableHead>
-                  <TableHead className="hidden md:table-cell">Type</TableHead>
-                  <TableHead className="hidden sm:table-cell">Amount</TableHead>
-                  <TableHead className="hidden lg:table-cell">Status</TableHead>
-                  <TableHead className="min-w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Provider</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
             <TableBody>
               {filteredBursaries.map((bursary) => (
                 <TableRow key={bursary.id}>
-                  <TableCell className="font-medium">
-                    <div>
-                      <div className="font-medium">{bursary.name}</div>
-                      <div className="text-xs text-muted-foreground sm:hidden">
-                        {bursary.provider} • {bursary.type} • R{bursary.amount?.toLocaleString() || 'N/A'}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell">{bursary.provider}</TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="font-medium">{bursary.name}</TableCell>
+                  <TableCell>{bursary.provider}</TableCell>
+                  <TableCell>
                     <Badge variant="outline">
                       {bursary.type}
                     </Badge>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell">R{bursary.amount?.toLocaleString() || 'N/A'}</TableCell>
-                  <TableCell className="hidden lg:table-cell">
+                  <TableCell>R{bursary.amount?.toLocaleString() || 'N/A'}</TableCell>
+                  <TableCell>
                     {bursary.is_active ? (
                       <Badge variant="default">Active</Badge>
                     ) : (
@@ -911,7 +894,7 @@ export function BursariesManager({
                     )}
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -947,14 +930,13 @@ export function BursariesManager({
               ))}
             </TableBody>
           </Table>
-          </div>
         </CardContent>
       </Card>
 
       {/* Edit Dialog */}
       {editingBursary && (
         <Dialog open={!!editingBursary} onOpenChange={() => setEditingBursary(null)}>
-          <DialogContent className="max-w-2xl max-w-[calc(100vw-2rem)] mx-4">
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit Bursary</DialogTitle>
               <DialogDescription>
@@ -1288,39 +1270,31 @@ export function UsersManager({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="min-w-[150px]">Name</TableHead>
-                  <TableHead className="min-w-[200px]">Email</TableHead>
-                  <TableHead className="hidden sm:table-cell">Phone</TableHead>
-                  <TableHead className="hidden md:table-cell">Province</TableHead>
-                  <TableHead className="hidden sm:table-cell">Role</TableHead>
-                  <TableHead className="min-w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell className="font-medium">
-                      <div>
-                        <div className="font-medium">{user.full_name || 'N/A'}</div>
-                        <div className="text-xs text-muted-foreground sm:hidden">
-                          {user.phone || 'No phone'} • {user.province || 'No province'}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell className="hidden sm:table-cell">{user.phone || 'N/A'}</TableCell>
-                    <TableCell className="hidden md:table-cell">{user.province || 'N/A'}</TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                        {user.role}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-1">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Province</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.full_name || 'N/A'}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.phone || 'N/A'}</TableCell>
+                  <TableCell>{user.province || 'N/A'}</TableCell>
+                  <TableCell>
+                    <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                      {user.role}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -1356,7 +1330,6 @@ export function UsersManager({
               ))}
             </TableBody>
           </Table>
-          </div>
         </CardContent>
       </Card>
 

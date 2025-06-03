@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
     // Test 5: Signature Verification
     console.log('📊 Phase 5: Testing signature verification...')
     const testParams: Record<string, string> = {}
-    for (const [key, value] of params.entries()) {
+    for (const [key, value] of Array.from(params.entries())) {
       testParams[key] = value
     }
 

@@ -1,29 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Search,
-  Filter,
-  Download,
-  Eye,
-  Send,
-  FileText,
-  CreditCard,
-  Users,
-  CheckCircle,
-  Clock,
-  XCircle,
-  AlertTriangle,
-  TrendingUp,
-  DollarSign
-} from 'lucide-react'
+
+// Force dynamic rendering for admin pages
+export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
-import { AdminLayout } from '@/components/admin/admin-nav'
 
 interface Application {
   id: string
@@ -140,111 +121,105 @@ export default function AdminApplicationsPage() {
   }
 
   return (
-    <AdminLayout
-      title="Applications & Payments Dashboard"
-      description="Manage student applications, track payments, and monitor progress"
-      breadcrumb={[{ name: 'Applications' }]}
-    >
-      <div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto p-6">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">Applications & Payments Dashboard</h1>
+          <p className="text-gray-600">Manage student applications, track payments, and monitor progress</p>
+        </div>
+
+        <div>
 
       {/* Summary Cards */}
       {data && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <FileText className="h-5 w-5 text-blue-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Total Applications</p>
-                  <p className="text-2xl font-bold">{data.summary.totalApplications}</p>
-                </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center space-x-2">
+              <div className="h-5 w-5 bg-blue-500 rounded"></div>
+              <div>
+                <p className="text-sm text-gray-600">Total Applications</p>
+                <p className="text-2xl font-bold">{data.summary.totalApplications}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Accepted</p>
-                  <p className="text-2xl font-bold">{data.summary.acceptedApplications}</p>
-                </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center space-x-2">
+              <div className="h-5 w-5 bg-green-500 rounded"></div>
+              <div>
+                <p className="text-sm text-gray-600">Accepted</p>
+                <p className="text-2xl font-bold">{data.summary.acceptedApplications}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <CreditCard className="h-5 w-5 text-purple-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Paid Applications</p>
-                  <p className="text-2xl font-bold">{data.summary.paidApplications}</p>
-                </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center space-x-2">
+              <div className="h-5 w-5 bg-purple-500 rounded"></div>
+              <div>
+                <p className="text-sm text-gray-600">Paid Applications</p>
+                <p className="text-2xl font-bold">{data.summary.paidApplications}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-5 w-5 text-green-500" />
-                <div>
-                  <p className="text-sm text-gray-600">Total Revenue</p>
-                  <p className="text-2xl font-bold">R{data.summary.totalRevenue.toLocaleString()}</p>
-                </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <div className="flex items-center space-x-2">
+              <div className="h-5 w-5 bg-green-500 rounded"></div>
+              <div>
+                <p className="text-sm text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-bold">R{data.summary.totalRevenue.toLocaleString()}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Status Overview */}
       {data && (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-6">
-          <Card className="p-3">
+          <div className="bg-white p-3 rounded shadow">
             <div className="text-center">
               <p className="text-xs text-gray-600">Draft</p>
               <p className="text-lg font-bold text-gray-700">{data.summary.draftApplications}</p>
             </div>
-          </Card>
-          <Card className="p-3">
+          </div>
+          <div className="bg-white p-3 rounded shadow">
             <div className="text-center">
               <p className="text-xs text-gray-600">Submitted</p>
               <p className="text-lg font-bold text-blue-700">{data.summary.submittedApplications}</p>
             </div>
-          </Card>
-          <Card className="p-3">
+          </div>
+          <div className="bg-white p-3 rounded shadow">
             <div className="text-center">
               <p className="text-xs text-gray-600">Paid</p>
               <p className="text-lg font-bold text-green-700">{data.summary.paidApplications}</p>
             </div>
-          </Card>
-          <Card className="p-3">
+          </div>
+          <div className="bg-white p-3 rounded shadow">
             <div className="text-center">
               <p className="text-xs text-gray-600">Processing</p>
               <p className="text-lg font-bold text-yellow-700">{data.summary.processingApplications}</p>
             </div>
-          </Card>
-          <Card className="p-3">
+          </div>
+          <div className="bg-white p-3 rounded shadow">
             <div className="text-center">
               <p className="text-xs text-gray-600">Accepted</p>
               <p className="text-lg font-bold text-emerald-700">{data.summary.acceptedApplications}</p>
             </div>
-          </Card>
-          <Card className="p-3">
+          </div>
+          <div className="bg-white p-3 rounded shadow">
             <div className="text-center">
               <p className="text-xs text-gray-600">Rejected</p>
               <p className="text-lg font-bold text-red-700">{data.summary.rejectedApplications}</p>
             </div>
-          </Card>
-          <Card className="p-3">
+          </div>
+          <div className="bg-white p-3 rounded shadow">
             <div className="text-center">
               <p className="text-xs text-gray-600">Pending Payment</p>
               <p className="text-lg font-bold text-orange-700">{data.summary.pendingPayments}</p>
             </div>
-          </Card>
+          </div>
         </div>
       )}
 
@@ -252,15 +227,20 @@ export default function AdminApplicationsPage() {
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="flex-1">
           <div className="flex space-x-2">
-            <Input
+            <input
+              type="text"
               placeholder="Search by student name, email, institution, or course..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              className="flex-1 px-3 py-2 border rounded-md"
             />
-            <Button onClick={handleSearch}>
-              <Search className="h-4 w-4" />
-            </Button>
+            <button
+              onClick={handleSearch}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            >
+              Search
+            </button>
           </div>
         </div>
 
@@ -281,11 +261,11 @@ export default function AdminApplicationsPage() {
 
       {/* Applications Table */}
       {data && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Applications ({data.pagination.total})</CardTitle>
-          </CardHeader>
-          <CardContent>
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b">
+            <h3 className="text-lg font-semibold">Applications ({data.pagination.total})</h3>
+          </div>
+          <div className="p-6">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -317,9 +297,9 @@ export default function AdminApplicationsPage() {
                         </div>
                       </td>
                       <td className="p-2">
-                        <Badge className={getStatusColor(application.applicationStatus)}>
+                        <span className={`px-2 py-1 rounded text-xs ${getStatusColor(application.applicationStatus)}`}>
                           {application.applicationStatus.charAt(0).toUpperCase() + application.applicationStatus.slice(1)}
-                        </Badge>
+                        </span>
                         {application.submittedAt && (
                           <div className="text-xs text-gray-500 mt-1">
                             Submitted: {new Date(application.submittedAt).toLocaleDateString()}
@@ -327,10 +307,10 @@ export default function AdminApplicationsPage() {
                         )}
                       </td>
                       <td className="p-2">
-                        <Badge className={getPaymentStatusColor(application.paymentStatus)}>
+                        <span className={`px-2 py-1 rounded text-xs ${getPaymentStatusColor(application.paymentStatus)}`}>
                           {application.paymentStatus.replace('_', ' ').charAt(0).toUpperCase() +
                            application.paymentStatus.replace('_', ' ').slice(1)}
-                        </Badge>
+                        </span>
                         {application.paymentDate && (
                           <div className="text-xs text-gray-500 mt-1">
                             Paid: {new Date(application.paymentDate).toLocaleDateString()}
@@ -358,9 +338,9 @@ export default function AdminApplicationsPage() {
                           </div>
                           <div className="flex items-center space-x-1">
                             {application.documentsSubmitted ? (
-                              <CheckCircle className="h-3 w-3 text-green-500" />
+                              <div className="h-3 w-3 bg-green-500 rounded-full"></div>
                             ) : (
-                              <XCircle className="h-3 w-3 text-red-500" />
+                              <div className="h-3 w-3 bg-red-500 rounded-full"></div>
                             )}
                             <span className="text-xs">Docs</span>
                           </div>
@@ -368,22 +348,20 @@ export default function AdminApplicationsPage() {
                       </td>
                       <td className="p-2">
                         <div className="flex space-x-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
+                          <button
+                            className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
                             onClick={() => window.open(`/admin/profiles/${application.userId}`, '_blank')}
                             title="View Profile"
                           >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
+                            View
+                          </button>
+                          <button
+                            className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 rounded"
                             onClick={() => router.push('/admin/notifications')}
                             title="Send Notification"
                           >
-                            <Send className="h-3 w-3" />
-                          </Button>
+                            Notify
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -401,26 +379,27 @@ export default function AdminApplicationsPage() {
               </div>
 
               <div className="flex space-x-2">
-                <Button
-                  variant="outline"
+                <button
+                  className="px-3 py-1 border rounded disabled:opacity-50"
                   disabled={!data.pagination.hasPrev}
                   onClick={() => setPage(page - 1)}
                 >
                   Previous
-                </Button>
-                <Button
-                  variant="outline"
+                </button>
+                <button
+                  className="px-3 py-1 border rounded disabled:opacity-50"
                   disabled={!data.pagination.hasNext}
                   onClick={() => setPage(page + 1)}
                 >
                   Next
-                </Button>
+                </button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
       </div>
-    </AdminLayout>
+      </div>
+    </div>
   )
 }

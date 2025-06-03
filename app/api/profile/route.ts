@@ -118,7 +118,6 @@ export async function GET(request: NextRequest) {
 
     // Transform database record to StudentProfile format
     const studentProfile: StudentProfile = {
-      id: profile.id,
       personalInfo: profile.personal_info || {},
       contactInfo: profile.contact_info || {},
       academicHistory: profile.academic_history || {},
@@ -135,26 +134,26 @@ export async function GET(request: NextRequest) {
         affidavits: [],
         certifiedCopies: []
       },
-      readinessAssessment: {
-        profileComplete: profile.profile_completeness >= 90,
-        documentsComplete: profile.profile_completeness >= 100,
+      applicationReadiness: {
+        profileComplete: (profile.profile_completeness || 0) >= 90,
+        documentsComplete: (profile.profile_completeness || 0) >= 100,
         academicInfoComplete: !!profile.academic_history && Object.keys(profile.academic_history).length > 0,
         contactInfoComplete: !!profile.contact_info && Object.keys(profile.contact_info).length > 0,
-        identityVerified: profile.is_verified,
-        academicRecordsVerified: profile.is_verified,
-        documentsVerified: profile.is_verified,
+        identityVerified: profile.is_verified || false,
+        academicRecordsVerified: profile.is_verified || false,
+        documentsVerified: profile.is_verified || false,
         eligibleForUniversity: true,
         eligibleForTVET: true,
         eligibleForBursaries: true,
         missingDocuments: [],
         missingInformation: [],
         readinessScore: profile.readiness_score || 0,
-        lastAssessment: profile.updated_at
+        lastAssessment: profile.updated_at || new Date().toISOString()
       },
       profileCompleteness: profile.profile_completeness || 0,
-      lastUpdated: profile.updated_at,
-      isVerified: profile.is_verified,
-      createdAt: profile.created_at
+      lastUpdated: profile.updated_at || new Date().toISOString(),
+      isVerified: profile.is_verified || false,
+      createdAt: profile.created_at || new Date().toISOString()
     }
 
     return NextResponse.json({ profile: studentProfile })

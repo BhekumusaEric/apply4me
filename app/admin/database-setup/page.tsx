@@ -1,20 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import {
-  Database,
-  Play,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertTriangle,
-  RefreshCw,
-  Settings
-} from 'lucide-react'
+
+// Force dynamic rendering for admin pages
+export const dynamic = 'force-dynamic'
 
 export default function DatabaseSetupPage() {
   const [setupStatus, setSetupStatus] = useState<'idle' | 'running' | 'success' | 'error'>('idle')
@@ -69,27 +58,25 @@ export default function DatabaseSetupPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'running':
-        return <Clock className="h-5 w-5 text-yellow-600 animate-spin" />
+        return <div className="h-5 w-5 bg-yellow-600 rounded-full animate-pulse"></div>
       case 'success':
-        return <CheckCircle className="h-5 w-5 text-green-600" />
+        return <div className="h-5 w-5 bg-green-600 rounded-full"></div>
       case 'error':
-        return <XCircle className="h-5 w-5 text-red-600" />
+        return <div className="h-5 w-5 bg-red-600 rounded-full"></div>
       default:
-        return <Database className="h-5 w-5 text-blue-600" />
+        return <div className="h-5 w-5 bg-blue-600 rounded-full"></div>
     }
   }
 
   const getStatusBadge = (exists: boolean) => {
     return exists ? (
-      <Badge variant="outline" className="text-green-600 border-green-600">
-        <CheckCircle className="h-3 w-3 mr-1" />
-        Ready
-      </Badge>
+      <span className="px-2 py-1 text-xs rounded border text-green-600 border-green-600">
+        ✓ Ready
+      </span>
     ) : (
-      <Badge variant="outline" className="text-red-600 border-red-600">
-        <XCircle className="h-3 w-3 mr-1" />
-        Missing
-      </Badge>
+      <span className="px-2 py-1 text-xs rounded border text-red-600 border-red-600">
+        ✗ Missing
+      </span>
     )
   }
 
@@ -98,46 +85,45 @@ export default function DatabaseSetupPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
-          <Database className="h-8 w-8 text-blue-600" />
+          <div className="h-8 w-8 bg-blue-600 rounded"></div>
           Database Setup for Payment System
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-gray-600">
           Set up the required database schema for the payment verification system
         </p>
       </div>
 
       {/* Current Status */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
+      <div className="bg-white rounded-lg shadow mb-6">
+        <div className="p-6 border-b">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <div className="h-5 w-5 bg-gray-600 rounded"></div>
             Current Database Status
-          </CardTitle>
-          <CardDescription>
+          </h3>
+          <p className="text-gray-600 mt-1">
             Check the current state of payment-related database tables and columns
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+        <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <span>Schema Status Check</span>
-            <Button
+            <button
               onClick={checkSchemaStatus}
               disabled={loading}
-              variant="outline"
-              size="sm"
+              className="px-3 py-1 border rounded text-sm hover:bg-gray-50 disabled:opacity-50"
             >
               {loading ? (
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                <span className="inline-block animate-spin mr-2">⟳</span>
               ) : (
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <span className="mr-2">⟳</span>
               )}
               Check Status
-            </Button>
+            </button>
           </div>
 
           {schemaStatus && (
             <div className="space-y-3">
-              <Separator />
+              <div className="border-t pt-3"></div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Payment Columns</span>
@@ -154,9 +140,9 @@ export default function DatabaseSetupPage() {
                   <p className="text-sm font-medium mb-2">Found Columns:</p>
                   <div className="flex flex-wrap gap-2">
                     {schemaStatus.schema_status.columns_found.map((column: string) => (
-                      <Badge key={column} variant="secondary" className="text-xs">
+                      <span key={column} className="px-2 py-1 bg-gray-100 rounded text-xs">
                         {column}
-                      </Badge>
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -165,34 +151,32 @@ export default function DatabaseSetupPage() {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Ready for Payments:</span>
                 {schemaStatus.schema_status?.ready_for_payments ? (
-                  <Badge className="bg-green-600">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    Yes
-                  </Badge>
+                  <span className="px-2 py-1 bg-green-600 text-white rounded text-xs">
+                    ✓ Yes
+                  </span>
                 ) : (
-                  <Badge variant="destructive">
-                    <XCircle className="h-3 w-3 mr-1" />
-                    No - Setup Required
-                  </Badge>
+                  <span className="px-2 py-1 bg-red-600 text-white rounded text-xs">
+                    ✗ No - Setup Required
+                  </span>
                 )}
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Setup Action */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <div className="bg-white rounded-lg shadow mb-6">
+        <div className="p-6 border-b">
+          <h3 className="text-lg font-semibold flex items-center gap-2">
             {getStatusIcon(setupStatus)}
             Run Database Setup
-          </CardTitle>
-          <CardDescription>
+          </h3>
+          <p className="text-gray-600 mt-1">
             This will create all required tables and columns for the payment system
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+        <div className="p-6 space-y-4">
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">🔧 What this setup will do:</h4>
             <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
@@ -204,41 +188,40 @@ export default function DatabaseSetupPage() {
             </ul>
           </div>
 
-          <Button
+          <button
             onClick={runDatabaseSetup}
             disabled={loading || setupStatus === 'running'}
-            className="w-full"
-            size="lg"
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {setupStatus === 'running' ? (
               <>
-                <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                <span className="inline-block animate-spin mr-2">⟳</span>
                 Setting up database...
               </>
             ) : (
               <>
-                <Play className="h-5 w-5 mr-2" />
+                <span className="mr-2">▶</span>
                 Run Database Setup
               </>
             )}
-          </Button>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+      </div>
 
       {/* Setup Results */}
       {setupResult && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <div className="bg-white rounded-lg shadow">
+          <div className="p-6 border-b">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
               {setupStatus === 'success' ? (
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <div className="h-5 w-5 bg-green-600 rounded-full"></div>
               ) : (
-                <XCircle className="h-5 w-5 text-red-600" />
+                <div className="h-5 w-5 bg-red-600 rounded-full"></div>
               )}
               Setup Results
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div className="p-6">
             {setupStatus === 'success' ? (
               <div className="space-y-4">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -313,8 +296,8 @@ export default function DatabaseSetupPage() {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   )

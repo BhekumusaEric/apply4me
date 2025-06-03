@@ -1,31 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-  Send,
-  Mail,
-  MessageSquare,
-  Smartphone,
-  Bell,
-  Users,
-  Calendar,
-  Eye,
-  TrendingUp,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  ArrowLeft,
-  Plus,
-  Filter
-} from 'lucide-react'
+
+// Force dynamic rendering for admin pages
+export const dynamic = 'force-dynamic'
 import { useRouter } from 'next/navigation'
-import { AdminLayout } from '@/components/admin/admin-nav'
 
 interface Notification {
   id: string
@@ -156,12 +135,12 @@ export default function AdminNotificationsPage() {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'application_reminder': return <Calendar className="h-4 w-4" />
-      case 'payment_reminder': return <AlertTriangle className="h-4 w-4" />
-      case 'document_reminder': return <Eye className="h-4 w-4" />
-      case 'acceptance_notification': return <CheckCircle className="h-4 w-4" />
-      case 'weekly_digest': return <Mail className="h-4 w-4" />
-      default: return <Bell className="h-4 w-4" />
+      case 'application_reminder': return '📅'
+      case 'payment_reminder': return '⚠️'
+      case 'document_reminder': return '👁️'
+      case 'acceptance_notification': return '✅'
+      case 'weekly_digest': return '📧'
+      default: return '🔔'
     }
   }
 
@@ -208,156 +187,163 @@ export default function AdminNotificationsPage() {
   }
 
   return (
-    <AdminLayout
-      title="Notifications Center"
-      description="Send notifications and track communication with students"
-      breadcrumb={[{ name: 'Notifications' }]}
-    >
-      <div>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto p-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">📧 Notifications Center</h1>
+          <p className="text-gray-600">Send notifications and track communication with students</p>
+        </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">📊 Overview</TabsTrigger>
-          <TabsTrigger value="send">📧 Send Notification</TabsTrigger>
-          <TabsTrigger value="history">📋 History</TabsTrigger>
-        </TabsList>
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 rounded-md ${activeTab === 'overview' ? 'bg-white shadow' : 'hover:bg-gray-200'}`}
+            >
+              📊 Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('send')}
+              className={`px-4 py-2 rounded-md ${activeTab === 'send' ? 'bg-white shadow' : 'hover:bg-gray-200'}`}
+            >
+              📧 Send Notification
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-4 py-2 rounded-md ${activeTab === 'history' ? 'bg-white shadow' : 'hover:bg-gray-200'}`}
+            >
+              📋 History
+            </button>
+          </div>
+        </div>
 
         {/* Overview Tab */}
-        <TabsContent value="overview">
-          {data && (
-            <div className="space-y-6">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                      <Send className="h-5 w-5 text-blue-500" />
-                      <div>
-                        <p className="text-sm text-gray-600">Total Sent</p>
-                        <p className="text-2xl font-bold">{data.summary.sentNotifications}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-5 w-5 text-green-500" />
-                      <div>
-                        <p className="text-sm text-gray-600">Total Recipients</p>
-                        <p className="text-2xl font-bold">{data.summary.totalRecipients}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                      <TrendingUp className="h-5 w-5 text-purple-500" />
-                      <div>
-                        <p className="text-sm text-gray-600">Delivery Rate</p>
-                        <p className="text-2xl font-bold">{data.summary.deliveryRate}%</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center space-x-2">
-                      <Eye className="h-5 w-5 text-orange-500" />
-                      <div>
-                        <p className="text-sm text-gray-600">Open Rate</p>
-                        <p className="text-2xl font-bold">{data.summary.openRate}%</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+        {activeTab === 'overview' && data && (
+          <div className="space-y-6">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="flex items-center space-x-2">
+                  <span className="text-blue-500">📤</span>
+                  <div>
+                    <p className="text-sm text-gray-600">Total Sent</p>
+                    <p className="text-2xl font-bold">{data.summary.sentNotifications}</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Performance Metrics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="p-4">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600">Delivered</p>
-                    <p className="text-2xl font-bold text-green-600">{data.summary.totalDelivered}</p>
-                    <p className="text-xs text-gray-500">of {data.summary.totalRecipients} sent</p>
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-500">👥</span>
+                  <div>
+                    <p className="text-sm text-gray-600">Total Recipients</p>
+                    <p className="text-2xl font-bold">{data.summary.totalRecipients}</p>
                   </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600">Opened</p>
-                    <p className="text-2xl font-bold text-blue-600">{data.summary.totalOpened}</p>
-                    <p className="text-xs text-gray-500">of {data.summary.totalDelivered} delivered</p>
-                  </div>
-                </Card>
-                <Card className="p-4">
-                  <div className="text-center">
-                    <p className="text-sm text-gray-600">Clicked</p>
-                    <p className="text-2xl font-bold text-purple-600">{data.summary.totalClicked}</p>
-                    <p className="text-xs text-gray-500">of {data.summary.totalOpened} opened</p>
-                  </div>
-                </Card>
+                </div>
               </div>
 
-              {/* Recent Notifications */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Notifications</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {data.notifications.slice(0, 5).map((notification) => (
-                      <div key={notification.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          {getTypeIcon(notification.type)}
-                          <div>
-                            <h4 className="font-medium">{notification.title}</h4>
-                            <p className="text-sm text-gray-600">{notification.message.substring(0, 100)}...</p>
-                            <p className="text-xs text-gray-500">
-                              {notification.sentAt ?
-                                `Sent ${new Date(notification.sentAt).toLocaleDateString()}` :
-                                `Scheduled for ${notification.scheduledFor ? new Date(notification.scheduledFor).toLocaleDateString() : 'later'}`
-                              }
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <Badge className={getStatusColor(notification.status)}>
-                            {notification.status}
-                          </Badge>
-                          <p className="text-sm text-gray-600 mt-1">
-                            {notification.sentTo} recipients
-                          </p>
-                          {notification.status === 'sent' && (
-                            <p className="text-xs text-gray-500">
-                              {notification.openedBy} opened
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="flex items-center space-x-2">
+                  <span className="text-purple-500">📈</span>
+                  <div>
+                    <p className="text-sm text-gray-600">Delivery Rate</p>
+                    <p className="text-2xl font-bold">{data.summary.deliveryRate}%</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="flex items-center space-x-2">
+                  <span className="text-orange-500">👁️</span>
+                  <div>
+                    <p className="text-sm text-gray-600">Open Rate</p>
+                    <p className="text-2xl font-bold">{data.summary.openRate}%</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
-        </TabsContent>
+
+            {/* Performance Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Delivered</p>
+                  <p className="text-2xl font-bold text-green-600">{data.summary.totalDelivered}</p>
+                  <p className="text-xs text-gray-500">of {data.summary.totalRecipients} sent</p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Opened</p>
+                  <p className="text-2xl font-bold text-blue-600">{data.summary.totalOpened}</p>
+                  <p className="text-xs text-gray-500">of {data.summary.totalDelivered} delivered</p>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-lg shadow">
+                <div className="text-center">
+                  <p className="text-sm text-gray-600">Clicked</p>
+                  <p className="text-2xl font-bold text-purple-600">{data.summary.totalClicked}</p>
+                  <p className="text-xs text-gray-500">of {data.summary.totalOpened} opened</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Notifications */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold">Recent Notifications</h3>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  {data.notifications.slice(0, 5).map((notification) => (
+                    <div key={notification.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <span>{getTypeIcon(notification.type)}</span>
+                        <div>
+                          <h4 className="font-medium">{notification.title}</h4>
+                          <p className="text-sm text-gray-600">{notification.message.substring(0, 100)}...</p>
+                          <p className="text-xs text-gray-500">
+                            {notification.sentAt ?
+                              `Sent ${new Date(notification.sentAt).toLocaleDateString()}` :
+                              `Scheduled for ${notification.scheduledFor ? new Date(notification.scheduledFor).toLocaleDateString() : 'later'}`
+                            }
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`px-2 py-1 rounded text-xs ${getStatusColor(notification.status)}`}>
+                          {notification.status}
+                        </span>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {notification.sentTo} recipients
+                        </p>
+                        {notification.status === 'sent' && (
+                          <p className="text-xs text-gray-500">
+                            {notification.openedBy} opened
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Send Notification Tab */}
-        <TabsContent value="send">
+        {activeTab === 'send' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Send Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Send className="h-5 w-5" />
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold flex items-center space-x-2">
+                  <span>📤</span>
                   <span>Send New Notification</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </h3>
+              </div>
+              <div className="p-6 space-y-4">
                 {/* Notification Type */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Notification Type</label>
@@ -378,21 +364,24 @@ export default function AdminNotificationsPage() {
                 {/* Title */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Title</label>
-                  <Input
+                  <input
+                    type="text"
                     placeholder="Enter notification title..."
                     value={sendForm.title}
                     onChange={(e) => setSendForm({...sendForm, title: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 {/* Message */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Message</label>
-                  <Textarea
+                  <textarea
                     placeholder="Enter your message..."
                     value={sendForm.message}
                     onChange={(e) => setSendForm({...sendForm, message: e.target.value})}
                     rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
@@ -429,7 +418,7 @@ export default function AdminNotificationsPage() {
                         }}
                         className="mr-2"
                       />
-                      <Mail className="h-4 w-4 mr-1" />
+                      <span className="mr-1">📧</span>
                       Email
                     </label>
                     <label className="flex items-center">
@@ -445,7 +434,7 @@ export default function AdminNotificationsPage() {
                         }}
                         className="mr-2"
                       />
-                      <Smartphone className="h-4 w-4 mr-1" />
+                      <span className="mr-1">📱</span>
                       SMS
                     </label>
                     <label className="flex items-center">
@@ -461,7 +450,7 @@ export default function AdminNotificationsPage() {
                         }}
                         className="mr-2"
                       />
-                      <MessageSquare className="h-4 w-4 mr-1" />
+                      <span className="mr-1">💬</span>
                       WhatsApp
                     </label>
                   </div>
@@ -470,41 +459,42 @@ export default function AdminNotificationsPage() {
                 {/* Schedule */}
                 <div>
                   <label className="block text-sm font-medium mb-2">Schedule (Optional)</label>
-                  <Input
+                  <input
                     type="datetime-local"
                     value={sendForm.scheduledFor}
                     onChange={(e) => setSendForm({...sendForm, scheduledFor: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">Leave empty to send immediately</p>
                 </div>
 
                 {/* Send Button */}
-                <Button
+                <button
                   onClick={handleSendNotification}
                   disabled={sending || !sendForm.title || !sendForm.message}
-                  className="w-full"
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {sending ? (
                     <>
-                      <Clock className="h-4 w-4 mr-2 animate-spin" />
+                      <span className="mr-2">⏳</span>
                       {sendForm.scheduledFor ? 'Scheduling...' : 'Sending...'}
                     </>
                   ) : (
                     <>
-                      <Send className="h-4 w-4 mr-2" />
+                      <span className="mr-2">📤</span>
                       {sendForm.scheduledFor ? 'Schedule Notification' : 'Send Now'}
                     </>
                   )}
-                </Button>
-              </CardContent>
-            </Card>
+                </button>
+              </div>
+            </div>
 
             {/* Templates */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Templates</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="bg-white rounded-lg shadow">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold">Quick Templates</h3>
+              </div>
+              <div className="p-6">
                 <div className="space-y-3">
                   {notificationTemplates.map((template, index) => (
                     <div key={index} className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
@@ -515,62 +505,59 @@ export default function AdminNotificationsPage() {
                            message: template.message
                          })}>
                       <div className="flex items-center space-x-2 mb-2">
-                        {getTypeIcon(template.type)}
+                        <span>{getTypeIcon(template.type)}</span>
                         <h4 className="font-medium">{template.title}</h4>
                       </div>
                       <p className="text-sm text-gray-600">{template.message}</p>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </div>
-        </TabsContent>
+        )}
 
         {/* History Tab */}
-        <TabsContent value="history">
-          {data && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Notification History</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {data.notifications.map((notification) => (
-                    <div key={notification.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        {getTypeIcon(notification.type)}
-                        <div>
-                          <h4 className="font-medium">{notification.title}</h4>
-                          <p className="text-sm text-gray-600">{notification.message}</p>
-                          <p className="text-xs text-gray-500">
-                            {notification.sentAt ?
-                              `Sent ${new Date(notification.sentAt).toLocaleString()}` :
-                              `Scheduled for ${notification.scheduledFor ? new Date(notification.scheduledFor).toLocaleString() : 'later'}`
-                            }
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge className={getStatusColor(notification.status)}>
-                          {notification.status}
-                        </Badge>
-                        <div className="text-sm text-gray-600 mt-1">
-                          <p>Sent to: {notification.sentTo}</p>
-                          <p>Delivered: {notification.deliveredTo}</p>
-                          <p>Opened: {notification.openedBy}</p>
-                          <p>Clicked: {notification.clickedBy}</p>
-                        </div>
+        {activeTab === 'history' && data && (
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b">
+              <h3 className="text-lg font-semibold">Notification History</h3>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                {data.notifications.map((notification) => (
+                  <div key={notification.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <span>{getTypeIcon(notification.type)}</span>
+                      <div>
+                        <h4 className="font-medium">{notification.title}</h4>
+                        <p className="text-sm text-gray-600">{notification.message}</p>
+                        <p className="text-xs text-gray-500">
+                          {notification.sentAt ?
+                            `Sent ${new Date(notification.sentAt).toLocaleString()}` :
+                            `Scheduled for ${notification.scheduledFor ? new Date(notification.scheduledFor).toLocaleString() : 'later'}`
+                          }
+                        </p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+                    <div className="text-right">
+                      <span className={`px-2 py-1 rounded text-xs ${getStatusColor(notification.status)}`}>
+                        {notification.status}
+                      </span>
+                      <div className="text-sm text-gray-600 mt-1">
+                        <p>Sent to: {notification.sentTo}</p>
+                        <p>Delivered: {notification.deliveredTo}</p>
+                        <p>Opened: {notification.openedBy}</p>
+                        <p>Clicked: {notification.clickedBy}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </AdminLayout>
+    </div>
   )
 }

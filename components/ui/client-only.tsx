@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useEffect, useState } from 'react'
 
@@ -7,7 +7,11 @@ interface ClientOnlyProps {
   fallback?: React.ReactNode
 }
 
-export function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
+/**
+ * ClientOnly component to prevent hydration mismatches
+ * Renders children only on the client side after hydration
+ */
+function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
   const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
@@ -20,3 +24,6 @@ export function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
 
   return <>{children}</>
 }
+
+export { ClientOnly }
+export default ClientOnly

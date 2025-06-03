@@ -153,9 +153,9 @@ export default function ProgramsPage() {
   }
 
   // Get unique values for filters
-  const uniqueFields = [...new Set(programs.map(p => p.field_of_study))].sort()
-  const uniqueLevels = [...new Set(programs.map(p => p.qualification_level))].sort()
-  const uniqueProvinces = [...new Set(programs.map(p => p.institutions.province))].sort()
+  const uniqueFields = Array.from(new Set(programs.map(p => p.field_of_study))).sort()
+  const uniqueLevels = Array.from(new Set(programs.map(p => p.qualification_level))).sort()
+  const uniqueProvinces = Array.from(new Set(programs.map(p => (p.institutions as any)?.province))).sort()
 
   if (loading) {
     return (

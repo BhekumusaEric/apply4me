@@ -1,13 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseAdminClient } from '@/lib/supabase-server'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     console.log('👑 Admin: Fetching all applications...')
-    
+
     const adminSupabase = createServerSupabaseAdminClient()
-    const { searchParams } = new URL(request.url)
-    
+
+    // Handle static generation - use defaults when URL is not available
+    let searchParams: URLSearchParams
+    try {
+      searchParams = new URL(request.url).searchParams
+    } catch {
+      // During static generation, create empty search params
+      searchParams = new URLSearchParams()
+    }
+
     // Get query parameters
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')

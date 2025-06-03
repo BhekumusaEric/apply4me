@@ -20,15 +20,11 @@ export default function AdminLogin() {
 
   const adminCredentials = [
     {
-      email: 'emmanuelsiphugu@gmail.com',
+      email: 'bhntshwcjc025@student.wethinkcode.co.za',
       role: 'Super Admin'
     },
     {
-      email: 'apply4me2025@outlook.com',
-      role: 'Admin'
-    },
-    {
-      email: 'bhntshwcjc025@student.wethinkcode.co.za',
+      email: 'admin@apply4me.co.za',
       role: 'Admin'
     },
     {

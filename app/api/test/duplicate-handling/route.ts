@@ -32,12 +32,12 @@ export async function POST(request: NextRequest) {
     let duplicateHandling = {
       attempted: true,
       success: false,
-      error: null,
+      error: null as string | null,
       handled: false
     }
     
     if (duplicateError) {
-      duplicateHandling.error = duplicateError.message
+      duplicateHandling.error = duplicateError.message || 'Unknown error'
       
       if (duplicateError.code === '23505') {
         console.log('✅ Duplicate key error detected and can be handled gracefully')

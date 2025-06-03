@@ -14,7 +14,6 @@ import {
   AlertCircle,
   Clock,
   X,
-  MarkAsUnread,
   Trash2,
   RefreshCw
 } from 'lucide-react'

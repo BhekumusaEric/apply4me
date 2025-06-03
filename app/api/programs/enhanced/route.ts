@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     // Group by institution
     const byInstitution = programs?.reduce((acc, program) => {
-      const institutionName = program.institutions?.name || 'Unknown'
+      const institutionName = (program.institutions as any)?.name || 'Unknown'
       if (!acc[institutionName]) {
         acc[institutionName] = []
       }
