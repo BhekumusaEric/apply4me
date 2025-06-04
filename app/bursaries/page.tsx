@@ -62,14 +62,14 @@ export default function BursariesPage() {
         console.log('📋 Sample bursary:', result.data[0])
         setBursaries(result.data)
       } else {
-        console.log('⚠️ No bursaries found, using mock data')
-        setBursaries(mockBursaries)
+        console.log('⚠️ No bursaries found in database')
+        setBursaries([])
       }
     } catch (error) {
       console.error('❌ Error fetching bursaries:', error)
-      console.log('🔄 Falling back to mock data')
-      // Fallback to mock data
-      setBursaries(mockBursaries)
+      console.log('🔄 No bursaries available')
+      // Set empty array instead of mock data
+      setBursaries([])
     } finally {
       setLoading(false)
     }
@@ -136,113 +136,7 @@ export default function BursariesPage() {
     }
   }
 
-  // Mock data for fallback (Enhanced with automation-discovered bursaries)
-  const mockBursaries: Bursary[] = [
-    {
-      id: '1',
-      name: 'NSFAS Bursary',
-      provider: 'National Student Financial Aid Scheme',
-      type: 'national',
-      field_of_study: ['All Fields'],
-      eligibility_criteria: ['South African citizen', 'Household income below R350,000', 'First-time entering higher education'],
-      amount: 100000,
-      application_deadline: '2024-11-30',
-      application_url: 'https://www.nsfas.org.za',
-      description: 'Comprehensive financial aid covering tuition, accommodation, meals, and learning materials for qualifying students.',
-      is_active: true
-    },
-    {
-      id: '2',
-      name: 'Sasol Bursary Programme',
-      provider: 'Sasol Limited',
-      type: 'sector',
-      field_of_study: ['Engineering and Technology', 'Natural Sciences'],
-      eligibility_criteria: ['South African citizen', 'Academic excellence', 'Financial need', 'Studying relevant fields'],
-      amount: 150000,
-      application_deadline: '2024-08-31',
-      application_url: 'https://www.sasol.com/careers/bursaries',
-      description: 'Full bursary covering tuition, accommodation, and living expenses for engineering and science students.',
-      is_active: true
-    },
-    {
-      id: '3',
-      name: 'Funza Lushaka Teaching Bursary',
-      provider: 'Department of Basic Education',
-      type: 'national',
-      field_of_study: ['Education and Teaching'],
-      eligibility_criteria: ['South African citizen', 'Commitment to teach for equal years funded', 'Priority teaching subjects'],
-      amount: 80000,
-      application_deadline: '2024-09-15',
-      application_url: 'https://www.funzalushaka.doe.gov.za',
-      description: '🤖 Auto-discovered: Bursary for students pursuing teaching qualifications in priority subjects.',
-      is_active: true
-    },
-    {
-      id: '4',
-      name: 'Anglo American Mining Bursary',
-      provider: 'Anglo American',
-      type: 'sector',
-      field_of_study: ['Engineering and Technology', 'Natural Sciences'],
-      eligibility_criteria: ['South African citizen', 'Mining/engineering studies', 'Academic excellence', 'Leadership potential'],
-      amount: 120000,
-      application_deadline: '2024-07-31',
-      application_url: 'https://www.angloamerican.com/careers/bursaries',
-      description: '🤖 Auto-discovered: Comprehensive bursary for mining and engineering students with leadership potential.',
-      is_active: true
-    },
-    {
-      id: '5',
-      name: 'Eskom Engineering Bursary',
-      provider: 'Eskom Holdings SOC Ltd',
-      type: 'sector',
-      field_of_study: ['Engineering and Technology'],
-      eligibility_criteria: ['South African citizen', 'Engineering studies', 'Minimum 70% average', 'Work-back agreement'],
-      amount: 140000,
-      application_deadline: '2024-08-15',
-      application_url: 'https://www.eskom.co.za/careers/bursaries',
-      description: '🤖 Auto-discovered: Full bursary for engineering students with work-back commitment to Eskom.',
-      is_active: true
-    },
-    {
-      id: '6',
-      name: 'MTN Foundation Bursary',
-      provider: 'MTN Foundation',
-      type: 'sector',
-      field_of_study: ['Information Technology', 'Engineering and Technology'],
-      eligibility_criteria: ['South African citizen', 'ICT/Engineering studies', 'Financial need', 'Academic merit'],
-      amount: 100000,
-      application_deadline: '2024-09-30',
-      application_url: 'https://www.mtn.co.za/foundation/bursaries',
-      description: '🤖 Auto-discovered: Supporting ICT and engineering students to bridge the digital divide.',
-      is_active: true
-    },
-    {
-      id: '7',
-      name: 'Nedbank Bursary Programme',
-      provider: 'Nedbank Limited',
-      type: 'sector',
-      field_of_study: ['Business and Management', 'Information Technology', 'Finance'],
-      eligibility_criteria: ['South African citizen', 'Relevant field of study', 'Academic excellence', 'Leadership qualities'],
-      amount: 90000,
-      application_deadline: '2024-08-31',
-      application_url: 'https://www.nedbank.co.za/careers/bursaries',
-      description: '🤖 Auto-discovered: Developing future leaders in banking, finance, and technology sectors.',
-      is_active: true
-    },
-    {
-      id: '8',
-      name: 'Shoprite Checkers Bursary',
-      provider: 'Shoprite Holdings',
-      type: 'sector',
-      field_of_study: ['Business and Management', 'Supply Chain', 'Information Technology'],
-      eligibility_criteria: ['South African citizen', 'Retail/business studies', 'Financial need', 'Academic performance'],
-      amount: 75000,
-      application_deadline: '2024-10-15',
-      application_url: 'https://www.shopriteholdings.co.za/careers/bursaries',
-      description: '🤖 Auto-discovered: Supporting students in retail, supply chain, and business management.',
-      is_active: true
-    }
-  ]
+
 
   if (loading) {
     return (

@@ -117,6 +117,15 @@ export default function AdminDashboard() {
 
     } catch (error) {
       console.error('Error fetching admin data:', error)
+      // Set empty arrays instead of mock data
+      setInstitutions([])
+      setApplications([])
+      setStats({
+        totalInstitutions: 0,
+        totalApplications: 0,
+        totalRevenue: 0,
+        successRate: 0
+      })
     } finally {
       setLoading(false)
     }

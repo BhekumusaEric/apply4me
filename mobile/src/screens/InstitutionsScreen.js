@@ -14,64 +14,14 @@ export default function InstitutionsScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('all');
 
-  // Mock institutions data (would come from API)
-  const institutions = [
-    {
-      id: 1,
-      name: 'University of Cape Town',
-      type: 'university',
-      location: 'Cape Town, Western Cape',
-      description: '🤖 Auto-discovered: Leading research university in Africa',
-      programs: ['Medicine', 'Engineering', 'Business', 'Law'],
-      applicationFee: 200,
-      deadline: '2024-09-30',
-      rating: 4.8
-    },
-    {
-      id: 2,
-      name: 'University of Johannesburg',
-      type: 'university',
-      location: 'Johannesburg, Gauteng',
-      description: '🤖 Auto-discovered: Comprehensive university with diverse programs',
-      programs: ['Engineering', 'Business', 'Arts', 'Science'],
-      applicationFee: 200,
-      deadline: '2024-09-30',
-      rating: 4.6
-    },
-    {
-      id: 3,
-      name: 'Ekurhuleni East TVET College',
-      type: 'tvet',
-      location: 'Ekurhuleni, Gauteng',
-      description: '🤖 Auto-discovered: Technical and vocational training college',
-      programs: ['Electrical Engineering', 'Mechanical Engineering', 'Business'],
-      applicationFee: 50,
-      deadline: '2024-11-30',
-      rating: 4.2
-    },
-    {
-      id: 4,
-      name: 'Cape Peninsula University of Technology',
-      type: 'university',
-      location: 'Cape Town, Western Cape',
-      description: '🤖 Auto-discovered: Technology-focused university',
-      programs: ['Information Technology', 'Engineering', 'Applied Sciences'],
-      applicationFee: 150,
-      deadline: '2024-08-31',
-      rating: 4.4
-    },
-    {
-      id: 5,
-      name: 'Varsity College',
-      type: 'private',
-      location: 'Multiple Locations',
-      description: 'Private higher education institution',
-      programs: ['Business', 'Information Technology', 'Law', 'Psychology'],
-      applicationFee: 300,
-      deadline: '2024-10-15',
-      rating: 4.3
-    }
-  ];
+  // No mock data - fetch from API
+  const [institutions, setInstitutions] = useState([])
+
+  useEffect(() => {
+    // Fetch institutions from API
+    // TODO: Implement API call to fetch real institutions
+    setInstitutions([])
+  }, [])
 
   const institutionTypes = [
     { key: 'all', label: 'All Types', icon: 'apps' },

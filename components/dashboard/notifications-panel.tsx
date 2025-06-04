@@ -9,12 +9,9 @@ import {
   Bell,
   BellRing,
   CheckCircle,
-  CreditCard,
   FileText,
   AlertCircle,
   Clock,
-  X,
-  Trash2,
   RefreshCw
 } from 'lucide-react'
 import { useAuth } from '@/app/providers'
@@ -66,15 +63,15 @@ export function NotificationsPanel({ className }: NotificationsPanelProps) {
         setUnreadCount(data.unreadCount || 0)
       } else {
         console.warn('Failed to fetch notifications:', data.error)
-        // Use mock notifications for demo
-        setNotifications(getMockNotifications())
-        setUnreadCount(2)
+        // Set empty array instead of mock data
+        setNotifications([])
+        setUnreadCount(0)
       }
     } catch (error) {
       console.error('Error fetching notifications:', error)
-      // Use mock notifications for demo
-      setNotifications(getMockNotifications())
-      setUnreadCount(2)
+      // Set empty array instead of mock data
+      setNotifications([])
+      setUnreadCount(0)
     } finally {
       setLoading(false)
     }
@@ -152,48 +149,7 @@ export function NotificationsPanel({ className }: NotificationsPanelProps) {
     }
   }
 
-  const getMockNotifications = (): Notification[] => [
-    {
-      id: '1',
-      userId: user?.id || '',
-      type: 'payment_verified',
-      title: '✅ Payment Verified - Application Submitted!',
-      message: 'Your payment of R250 has been verified. Your application to University of KwaZulu-Natal has been successfully submitted.',
-      read: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutes ago
-      metadata: {
-        applicationId: 'app-123',
-        paymentReference: 'PAY-456',
-        institutionName: 'University of KwaZulu-Natal',
-        amount: 250
-      }
-    },
-    {
-      id: '2',
-      userId: user?.id || '',
-      type: 'application_submitted',
-      title: '📝 Application Submitted Successfully!',
-      message: 'Your application to Tshwane University of Technology has been submitted. We\'ll process your application and notify you once payment is verified.',
-      read: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-      metadata: {
-        applicationId: 'app-124',
-        institutionName: 'Tshwane University of Technology'
-      }
-    },
-    {
-      id: '3',
-      userId: user?.id || '',
-      type: 'deadline_reminder',
-      title: '⏰ Application Deadline Reminder',
-      message: 'Reminder: The application deadline for Stellenbosch University is in 7 days. Don\'t miss out!',
-      read: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
-      metadata: {
-        institutionName: 'Stellenbosch University'
-      }
-    }
-  ]
+
 
   const displayedNotifications = showAll ? notifications : notifications.slice(0, 5)
 

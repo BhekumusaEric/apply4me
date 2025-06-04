@@ -49,14 +49,14 @@ export function InstitutionShowcase() {
           console.log('✅ Found featured institutions:', featuredInstitutions.length)
           setInstitutions(featuredInstitutions)
         } else {
-          console.log('⚠️ No featured institutions found, using mock data')
-          setInstitutions(mockInstitutions)
+          console.log('⚠️ No featured institutions found')
+          setInstitutions([])
         }
       } catch (error) {
         console.error('❌ Error fetching institutions:', error)
-        console.log('🔄 Falling back to mock data for demo')
-        // Fallback to mock data for demo
-        setInstitutions(mockInstitutions)
+        console.log('🔄 No institutions available')
+        // Set empty array instead of mock data
+        setInstitutions([])
       } finally {
         setLoading(false)
       }
@@ -65,74 +65,7 @@ export function InstitutionShowcase() {
     fetchInstitutions()
   }, [])
 
-  const mockInstitutions: Institution[] = [
-    {
-      id: '1',
-      name: 'University of the Witwatersrand',
-      type: 'university',
-      province: 'Gauteng',
-      logo_url: '/logos/wits.svg',
-      description: 'Leading research university offering diverse undergraduate and postgraduate programs.',
-      application_deadline: '2024-09-30',
-      application_fee: 200,
-      is_featured: true,
-    },
-    {
-      id: '2',
-      name: 'University of Cape Town',
-      type: 'university',
-      province: 'Western Cape',
-      logo_url: '/logos/uct.svg',
-      description: 'Premier African university with world-class facilities and academic excellence.',
-      application_deadline: '2024-09-30',
-      application_fee: 250,
-      is_featured: true,
-    },
-    {
-      id: '3',
-      name: 'Stellenbosch University',
-      type: 'university',
-      province: 'Western Cape',
-      logo_url: '/logos/stellenbosch.svg',
-      description: 'Innovative university known for research excellence and beautiful campus.',
-      application_deadline: '2024-09-30',
-      application_fee: 200,
-      is_featured: true,
-    },
-    {
-      id: '4',
-      name: 'University of KwaZulu-Natal',
-      type: 'university',
-      province: 'KwaZulu-Natal',
-      logo_url: '/logos/ukzn.svg',
-      description: 'Comprehensive university with strong focus on African scholarship.',
-      application_deadline: '2024-09-30',
-      application_fee: 180,
-      is_featured: true,
-    },
-    {
-      id: '5',
-      name: 'Tshwane University of Technology',
-      type: 'university',
-      province: 'Gauteng',
-      logo_url: '/logos/tut.svg',
-      description: 'Technology-focused university offering practical and career-oriented programs.',
-      application_deadline: '2024-10-31',
-      application_fee: 150,
-      is_featured: true,
-    },
-    {
-      id: '6',
-      name: 'Cape Peninsula University of Technology',
-      type: 'university',
-      province: 'Western Cape',
-      logo_url: '/logos/cput.svg',
-      description: 'Leading university of technology with industry-relevant programs.',
-      application_deadline: '2024-10-31',
-      application_fee: 150,
-      is_featured: true,
-    },
-  ]
+
 
   const getTypeColor = (type: string) => {
     switch (type) {

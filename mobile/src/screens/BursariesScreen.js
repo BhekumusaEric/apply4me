@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -14,64 +14,14 @@ export default function BursariesScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedField, setSelectedField] = useState('all');
 
-  // Mock bursaries data (would come from API)
-  const bursaries = [
-    {
-      id: 1,
-      title: 'NSFAS Bursary 2024',
-      provider: 'National Student Financial Aid Scheme',
-      amount: 100000,
-      description: 'Comprehensive financial aid covering tuition, accommodation, meals, and learning materials',
-      fieldOfStudy: ['All Fields'],
-      deadline: '2024-11-30',
-      isActive: true,
-      requirements: ['South African citizen', 'Household income below R350,000']
-    },
-    {
-      id: 2,
-      title: 'Engineering Excellence Bursary 2024',
-      provider: 'Sasol Limited',
-      amount: 150000,
-      description: '🤖 Auto-discovered: Full bursary covering tuition, accommodation, and living expenses',
-      fieldOfStudy: ['Engineering and Technology'],
-      deadline: '2024-08-31',
-      isActive: true,
-      requirements: ['Grade 12 with Mathematics and Physical Science', 'Minimum 70% average']
-    },
-    {
-      id: 3,
-      title: 'Future Teachers Bursary Program',
-      provider: 'Department of Basic Education',
-      amount: 80000,
-      description: '🤖 Auto-discovered: Bursary for students pursuing teaching qualifications',
-      fieldOfStudy: ['Education and Teaching'],
-      deadline: '2024-09-15',
-      isActive: true,
-      requirements: ['Commitment to teach for 3 years after graduation', 'Grade 12 with minimum 60% average']
-    },
-    {
-      id: 4,
-      title: 'Healthcare Heroes Bursary',
-      provider: 'Medical Foundation',
-      amount: 200000,
-      description: '🤖 Auto-discovered: Comprehensive bursary for medical and health science students',
-      fieldOfStudy: ['Health Sciences'],
-      deadline: '2024-07-31',
-      isActive: true,
-      requirements: ['Accepted into medical or health science program', 'Minimum 80% average']
-    },
-    {
-      id: 5,
-      title: 'Digital Innovation Bursary',
-      provider: 'Tech Company SA',
-      amount: 110000,
-      description: '🤖 Auto-discovered: Empowering the next generation of IT professionals',
-      fieldOfStudy: ['Information Technology'],
-      deadline: '2024-08-31',
-      isActive: true,
-      requirements: ['Grade 12 with Mathematics', 'Minimum 70% average', 'Passion for technology']
-    }
-  ];
+  // No mock data - fetch from API
+  const [bursaries, setBursaries] = useState([])
+
+  useEffect(() => {
+    // Fetch bursaries from API
+    // TODO: Implement API call to fetch real bursaries
+    setBursaries([])
+  }, [])
 
   const studyFields = [
     { key: 'all', label: 'All Fields', icon: 'apps' },

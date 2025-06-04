@@ -76,9 +76,9 @@ function HeaderContent() {
                 'bhekumusa@apply4me.co.za'
               ].includes(user.email) && (
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/admin">
+                  <Link href="/admin-panel">
                     <User className="h-4 w-4 mr-2" />
-                    Admin
+                    Admin Panel
                   </Link>
                 </Button>
               )}
@@ -151,7 +151,7 @@ function HeaderContent() {
                     'bhekumusa@apply4me.co.za'
                   ].includes(user.email) && (
                     <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
-                      <Link href="/admin" onClick={() => setIsMenuOpen(false)}>
+                      <Link href="/admin-panel" onClick={() => setIsMenuOpen(false)}>
                         <User className="h-4 w-4 mr-2" />
                         Admin Panel
                       </Link>

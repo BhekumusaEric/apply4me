@@ -13,21 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 export default function InstitutionDetailScreen({ route, navigation }) {
   const { institution } = route.params || {};
 
-  // Fallback data if no institution is passed
-  const institutionData = institution || {
-    id: 1,
-    name: 'University of Cape Town',
-    type: 'university',
-    location: 'Cape Town, Western Cape',
-    description: '🤖 Auto-discovered: Leading research university in Africa with world-class facilities',
-    programs: ['Medicine', 'Engineering', 'Business', 'Law', 'Science'],
-    applicationFee: 200,
-    deadline: '2024-09-30',
-    rating: 4.8,
-    website: 'https://www.uct.ac.za',
-    phone: '+27 21 650 9111',
-    email: 'admissions@uct.ac.za'
-  };
+  // Use passed institution data or empty object
+  const institutionData = institution || {}
 
   const getTypeColor = (type) => {
     switch (type) {

@@ -1,48 +1,23 @@
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  SafeAreaView 
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ApplicationsScreen({ navigation }) {
-  // Mock applications data
-  const applications = [
-    {
-      id: 1,
-      institutionName: 'University of Cape Town',
-      program: 'Bachelor of Engineering',
-      status: 'submitted',
-      submittedDate: '2024-03-15',
-      applicationFee: 200,
-      paymentStatus: 'paid',
-      deadline: '2024-09-30'
-    },
-    {
-      id: 2,
-      institutionName: 'University of Johannesburg',
-      program: 'Bachelor of Business Administration',
-      status: 'payment_pending',
-      submittedDate: '2024-03-20',
-      applicationFee: 200,
-      paymentStatus: 'pending',
-      deadline: '2024-09-30'
-    },
-    {
-      id: 3,
-      institutionName: 'Ekurhuleni East TVET College',
-      program: 'Electrical Engineering N6',
-      status: 'draft',
-      submittedDate: null,
-      applicationFee: 50,
-      paymentStatus: 'unpaid',
-      deadline: '2024-11-30'
-    }
-  ];
+  // No mock data - fetch from API
+  const [applications, setApplications] = useState([])
+
+  useEffect(() => {
+    // Fetch applications from API
+    // TODO: Implement API call to fetch real applications
+    setApplications([])
+  }, [])
 
   const getStatusColor = (status) => {
     switch (status) {

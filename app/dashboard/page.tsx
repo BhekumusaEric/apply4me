@@ -25,8 +25,6 @@ import {
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
-import { NotificationsPanel } from '@/components/dashboard/notifications-panel'
-import { ClientOnly } from '@/components/ui/client-only'
 import { createClient } from '@/lib/supabase'
 
 interface Application {
@@ -55,8 +53,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) {
-      console.log('🔐 Authentication required for dashboard, redirecting...')
-      router.push('/auth/simple-signin')
+      router.push('/auth/signin')
       return
     }
 
@@ -87,16 +84,16 @@ export default function DashboardPage() {
             setProfileExists(true)
             setProfileCompleteness(profile.profileCompleteness || 0)
 
-            // If profile is incomplete, redirect to setup
-            if (profile.profileCompleteness < 70) {
-              router.push('/profile/setup')
-              return
-            }
+            // Don't redirect if profile is incomplete, just show setup prompt
+            // if (profile.profileCompleteness < 70) {
+            //   router.push('/profile/setup')
+            //   return
+            // }
           } else {
             setProfileExists(false)
-            // No profile exists, redirect to setup
-            router.push('/profile/setup')
-            return
+            // Don't redirect, just show setup prompt
+            // router.push('/profile/setup')
+            // return
           }
         }
       } catch (profileError) {
@@ -195,45 +192,18 @@ export default function DashboardPage() {
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
-      // Use mock data for demo
-      setApplications(mockApplications)
+      // Set empty arrays instead of mock data
+      setApplications([])
       setStats({
-        totalApplications: 3,
-        submittedApplications: 2,
-        completedApplications: 1,
-        pendingPayments: 1
+        totalApplications: 0,
+        submittedApplications: 0,
+        completedApplications: 0,
+        pendingPayments: 0
       })
     } finally {
       setLoading(false)
     }
   }
-
-  const mockApplications: Application[] = [
-    {
-      id: '1',
-      institution_name: 'University of the Witwatersrand',
-      status: 'completed',
-      service_type: 'express',
-      payment_status: 'paid',
-      created_at: '2024-01-15T10:00:00Z'
-    },
-    {
-      id: '2',
-      institution_name: 'University of Cape Town',
-      status: 'processing',
-      service_type: 'standard',
-      payment_status: 'paid',
-      created_at: '2024-01-20T14:30:00Z'
-    },
-    {
-      id: '3',
-      institution_name: 'Stellenbosch University',
-      status: 'draft',
-      service_type: 'standard',
-      payment_status: 'pending',
-      created_at: '2024-01-25T09:15:00Z'
-    }
-  ]
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -289,85 +259,44 @@ export default function DashboardPage() {
       <Header />
       <main className="container py-12">
         {/* Profile Completeness Banner */}
-        <ClientOnly>
-          {profileExists === false && (
-            <div className="mb-6 p-6 bg-gradient-to-r from-orange-50 via-red-50 to-pink-50 border border-orange-200 rounded-xl shadow-lg card-hover slide-up">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center pulse-glow">
-                    <AlertCircle className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-orange-800 mb-2">🎯 Complete Your Profile</h2>
-                  <p className="text-orange-700 mb-4 leading-relaxed">
-                    To unlock the full power of Apply4Me and start applying to institutions, you need to complete your comprehensive student profile first.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button asChild className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg">
-                      <Link href="/profile/setup">
-                        <User className="h-4 w-4 mr-2" />
-                        Complete Profile Setup
-                      </Link>
-                    </Button>
-                    <Button variant="outline" asChild className="border-orange-300 text-orange-700 hover:bg-orange-50">
-                      <Link href="/profile/preview">
-                        <Eye className="h-4 w-4 mr-2" />
-                        Preview Requirements
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
+        {profileExists === false && (
+          <div className="mb-6 p-6 bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 rounded-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <AlertCircle className="h-6 w-6 text-orange-600" />
+              <h2 className="text-xl font-bold text-orange-800">Complete Your Profile</h2>
             </div>
-          )}
-        </ClientOnly>
+            <p className="text-orange-700 mb-3">
+              🎯 To apply to institutions, you need to complete your comprehensive student profile first.
+            </p>
+            <Button asChild>
+              <Link href="/profile/setup">
+                <User className="h-4 w-4 mr-2" />
+                Complete Profile Setup
+              </Link>
+            </Button>
+          </div>
+        )}
 
-        <ClientOnly>
-          {profileCompleteness !== null && profileCompleteness < 90 && profileExists && (
-            <div className="mb-6 p-6 bg-gradient-to-r from-yellow-50 via-orange-50 to-amber-50 border border-yellow-200 rounded-xl shadow-lg card-hover slide-up">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-white" />
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h2 className="text-xl font-bold text-yellow-800">Profile {profileCompleteness}% Complete</h2>
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 border-yellow-300">
-                      {profileCompleteness >= 75 ? "Almost Done!" : profileCompleteness >= 50 ? "Good Progress" : "Getting Started"}
-                    </Badge>
-                  </div>
-                  <p className="text-yellow-700 mb-4 leading-relaxed">
-                    📋 You're making great progress! Complete your profile to unlock automatic applications, smart matching, and personalized recommendations.
-                  </p>
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-yellow-700">Progress</span>
-                      <span className="text-sm text-yellow-600">{profileCompleteness}% of 100%</span>
-                    </div>
-                    <Progress value={profileCompleteness} className="h-3 bg-yellow-100" />
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button asChild className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white shadow-lg">
-                      <Link href="/profile/setup">
-                        <User className="h-4 w-4 mr-2" />
-                        Continue Profile Setup
-                      </Link>
-                    </Button>
-                    <Button variant="outline" asChild className="border-yellow-300 text-yellow-700 hover:bg-yellow-50">
-                      <Link href="/profile/preview">
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Profile
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
+        {profileCompleteness !== null && profileCompleteness < 90 && profileExists && (
+          <div className="mb-6 p-6 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <Clock className="h-6 w-6 text-yellow-600" />
+              <h2 className="text-xl font-bold text-yellow-800">Profile {profileCompleteness}% Complete</h2>
             </div>
-          )}
-        </ClientOnly>
+            <p className="text-yellow-700 mb-3">
+              📋 Complete your profile to unlock automatic applications and smart matching.
+            </p>
+            <div className="mb-3">
+              <Progress value={profileCompleteness} className="h-2" />
+            </div>
+            <Button asChild>
+              <Link href="/profile/setup">
+                <User className="h-4 w-4 mr-2" />
+                Continue Profile Setup
+              </Link>
+            </Button>
+          </div>
+        )}
 
         {/* Welcome Banner for New Users */}
         {showWelcome && (
@@ -497,20 +426,20 @@ export default function DashboardPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Applications */}
           <div className="lg:col-span-2">
-            <Card className="card-hover">
-              <CardHeader className="flex flex-row items-center justify-between bg-gradient-bg-subtle rounded-t-lg">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl gradient-text">Your Applications</CardTitle>
-                  <CardDescription className="text-gray-600">
+                  <CardTitle>Your Applications</CardTitle>
+                  <CardDescription>
                     Track the status of your institution applications
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={fetchDashboardData} className="hover:scale-105 transition-transform">
+                  <Button variant="outline" size="sm" onClick={fetchDashboardData}>
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Refresh
                   </Button>
-                  <Button asChild className="bg-gradient-to-r from-sa-green to-sa-blue hover:from-sa-green/90 hover:to-sa-blue/90 shadow-lg">
+                  <Button asChild>
                     <Link href="/institutions">
                       <Plus className="h-4 w-4 mr-2" />
                       New Application
@@ -586,43 +515,69 @@ export default function DashboardPage() {
 
           {/* Quick Actions */}
           <div className="space-y-6">
-            <Card className="card-hover">
-              <CardHeader className="bg-gradient-bg-subtle rounded-t-lg">
-                <CardTitle className="gradient-text">🚀 Quick Actions</CardTitle>
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3 p-6">
-                <Button className="w-full justify-start bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:scale-105 transition-all" asChild>
+              <CardContent className="space-y-3">
+                <Button className="w-full justify-start" asChild>
                   <Link href="/career-profiler">
                     <Award className="h-4 w-4 mr-2" />
                     Take Career Test
                   </Link>
                 </Button>
 
-                <Button variant="outline" className="w-full justify-start border-2 border-sa-green/20 hover:bg-sa-green/10 hover:border-sa-green/40 hover:scale-105 transition-all" asChild>
+                <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/institutions">
                     <GraduationCap className="h-4 w-4 mr-2" />
                     Browse Institutions
                   </Link>
                 </Button>
 
-                <Button variant="outline" className="w-full justify-start border-2 border-yellow-300 hover:bg-yellow-50 hover:border-yellow-400 hover:scale-105 transition-all" asChild>
+                <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/bursaries">
                     <Award className="h-4 w-4 mr-2" />
                     Find Bursaries
                   </Link>
                 </Button>
-
-                <Button variant="outline" className="w-full justify-start border-2 border-blue-300 hover:bg-blue-50 hover:border-blue-400 hover:scale-105 transition-all" asChild>
-                  <Link href="/documents">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Upload Documents
-                  </Link>
-                </Button>
               </CardContent>
             </Card>
 
-            {/* Notifications Panel */}
-            <NotificationsPanel />
+            <Card>
+              <CardHeader>
+                <CardTitle>Application Progress</CardTitle>
+                <CardDescription>
+                  Your overall application completion rate
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Profile Completion</span>
+                      <span>85%</span>
+                    </div>
+                    <Progress value={85} />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Documents Uploaded</span>
+                      <span>60%</span>
+                    </div>
+                    <Progress value={60} />
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Applications Submitted</span>
+                      <span>75%</span>
+                    </div>
+                    <Progress value={75} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
