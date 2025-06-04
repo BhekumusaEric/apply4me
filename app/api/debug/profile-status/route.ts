@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClientWithCookies, createServerSupabaseAdminClient } from '@/lib/supabase-server'
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
+    // Skip during build time
+    if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+      return NextResponse.json({
+        success: false,
+        error: 'Debug route disabled in production build',
+        timestamp: new Date().toISOString()
+      }, { status: 503 })
+    }
+
     console.log('🔍 Checking profile status for current user...')
-    
+
     // Get the current authenticated user
     const supabase = createServerSupabaseClientWithCookies()
     const { data: { user }, error: authError } = await supabase.auth.getUser()

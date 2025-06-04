@@ -11,32 +11,62 @@ interface FeedbackSystemProps {
 }
 
 export function FeedbackSystem({ children }: FeedbackSystemProps) {
-  const feedback = useFeedback()
+  const { addFeedback } = useFeedback()
 
   useEffect(() => {
     // Listen for custom feedback events
     const handleProfileIncomplete = () => {
-      feedback.profileFeedback.incomplete()
+      addFeedback({
+        type: 'warning',
+        title: 'Profile Incomplete',
+        message: 'Please complete your profile to unlock all features',
+        duration: 6000
+      })
     }
 
     const handleProfileSaved = () => {
-      feedback.profileFeedback.saved()
+      addFeedback({
+        type: 'success',
+        title: 'Profile Saved',
+        message: 'Your profile has been updated successfully',
+        duration: 4000
+      })
     }
 
     const handleApplicationSubmitted = () => {
-      feedback.applicationFeedback.submitted()
+      addFeedback({
+        type: 'success',
+        title: 'Application Submitted',
+        message: 'Your application has been submitted successfully',
+        duration: 6000
+      })
     }
 
     const handlePaymentSuccess = () => {
-      feedback.paymentFeedback.success()
+      addFeedback({
+        type: 'success',
+        title: 'Payment Successful',
+        message: 'Your payment has been processed successfully',
+        duration: 5000
+      })
     }
 
     const handleDocumentUploaded = (event: CustomEvent) => {
-      feedback.documentFeedback.uploaded(event.detail.fileName)
+      addFeedback({
+        type: 'success',
+        title: 'Document Uploaded',
+        message: `${event.detail.fileName} has been uploaded successfully`,
+        duration: 4000
+      })
     }
 
     const handleNotificationReceived = (event: CustomEvent) => {
-      feedback.notificationFeedback.received(event.detail.title)
+      addFeedback({
+        type: 'info',
+        title: 'New Notification',
+        message: event.detail.title,
+        duration: 5000
+      })
     }
 
     // Add event listeners
@@ -56,7 +86,7 @@ export function FeedbackSystem({ children }: FeedbackSystemProps) {
       window.removeEventListener('document-uploaded', handleDocumentUploaded as EventListener)
       window.removeEventListener('notification-received', handleNotificationReceived as EventListener)
     }
-  }, [feedback])
+  }, [addFeedback])
 
   return <>{children}</>
 }

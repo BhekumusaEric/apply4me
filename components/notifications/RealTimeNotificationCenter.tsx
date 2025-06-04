@@ -19,11 +19,11 @@ export default function RealTimeNotificationCenter({ userId }: RealTimeNotificat
     unreadCount,
     loading,
     error,
-    markOneAsRead,
+    markAsRead,
     markAllAsRead,
     deleteNotification,
-    refetch
-  } = useRealTimeNotifications()
+    refreshNotifications
+  } = useRealTimeNotifications(userId)
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -51,8 +51,8 @@ export default function RealTimeNotificationCenter({ userId }: RealTimeNotificat
     return date.toLocaleDateString()
   }
 
-  const getNotificationBgColor = (type: string, read: boolean) => {
-    if (read) return 'bg-gray-50 dark:bg-gray-800'
+  const getNotificationBgColor = (type: string, isRead: boolean) => {
+    if (isRead) return 'bg-gray-50 dark:bg-gray-800'
 
     switch (type) {
       case 'payment_verified':
@@ -69,8 +69,8 @@ export default function RealTimeNotificationCenter({ userId }: RealTimeNotificat
   }
 
   const handleNotificationClick = async (notification: any) => {
-    if (!notification.read) {
-      await markOneAsRead(notification.id)
+    if (!notification.isRead) {
+      await markAsRead(notification.id)
     }
   }
 
@@ -112,7 +112,7 @@ export default function RealTimeNotificationCenter({ userId }: RealTimeNotificat
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={refetch}
+                    onClick={refreshNotifications}
                     className="text-xs"
                     title="Refresh notifications"
                   >
@@ -174,8 +174,8 @@ export default function RealTimeNotificationCenter({ userId }: RealTimeNotificat
                     <div
                       key={notification.id}
                       className={`p-3 rounded-lg border cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] group card-hover ${
-                        getNotificationBgColor(notification.type, notification.read)
-                      } ${!notification.read ? 'border-l-4 border-l-sa-green' : ''}`}
+                        getNotificationBgColor(notification.type, notification.isRead)
+                      } ${!notification.isRead ? 'border-l-4 border-l-sa-green' : ''}`}
                       onClick={() => handleNotificationClick(notification)}
                     >
                       <div className="flex items-start gap-3">
@@ -184,12 +184,12 @@ export default function RealTimeNotificationCenter({ userId }: RealTimeNotificat
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
                             <h4 className={`text-sm font-medium ${
-                              notification.read ? 'text-gray-700 dark:text-gray-300' : 'text-gray-900 dark:text-gray-100'
+                              notification.isRead ? 'text-gray-700 dark:text-gray-300' : 'text-gray-900 dark:text-gray-100'
                             }`}>
                               {notification.title}
                             </h4>
                             <div className="flex items-center gap-1">
-                              {!notification.read && (
+                              {!notification.isRead && (
                                 <div className="w-2 h-2 bg-blue-600 rounded-full flex-shrink-0 mt-1"></div>
                               )}
                               <Button
@@ -205,7 +205,7 @@ export default function RealTimeNotificationCenter({ userId }: RealTimeNotificat
                           </div>
 
                           <p className={`text-xs mt-1 ${
-                            notification.read ? 'text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'
+                            notification.isRead ? 'text-gray-500 dark:text-gray-400' : 'text-gray-700 dark:text-gray-300'
                           }`}>
                             {notification.message}
                           </p>

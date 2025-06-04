@@ -301,13 +301,13 @@ export default function PaymentPage() {
           applicationId: application.id,
           amount: totalAmount,
           description: `Apply4Me Application - ${application.institution_name}`,
-          userEmail: user.email || email,
-          userName: `${firstName} ${lastName}` || user.user_metadata?.full_name || 'Student',
+          userEmail: user?.email || user?.user_metadata?.email || "student@example.com",
+          userName: user?.user_metadata?.full_name || paymentData.cardholderName || 'Student',
           metadata: {
             applicationId: application.id,
             userId: user.id,
             institutionName: application.institution_name,
-            programName: application.program_info?.name || 'Program Application'
+            programName: 'Program Application'
           }
         })
       })

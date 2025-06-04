@@ -38,10 +38,24 @@ export async function GET(request: NextRequest) {
 
     // Fetch profile with graceful handling of multiple profiles
     console.log('🔍 Fetching profile for user:', user.id)
+
+    // Try user_id first, then userid if that fails
     let { data: profiles, error: profileError } = await supabase
       .from('student_profiles')
       .select('*')
       .eq('user_id', user.id)
+
+    // If user_id column doesn't exist, try userid
+    if (profileError && profileError.message?.includes('user_id does not exist')) {
+      console.log('🔄 Trying userid column instead...')
+      const { data: profilesAlt, error: profileErrorAlt } = await supabase
+        .from('student_profiles')
+        .select('*')
+        .eq('userid', user.id)
+
+      profiles = profilesAlt
+      profileError = profileErrorAlt
+    }
 
     let profile = null
 
@@ -66,8 +80,24 @@ export async function GET(request: NextRequest) {
       // Use admin client to create profile
       const adminSupabase = createServerSupabaseAdminClient()
 
-      const newProfileData = {
+      // Try to determine the correct column name by checking the error
+      const useUserIdColumn = !profileError || !profileError.message?.includes('user_id does not exist')
+
+      const newProfileData = useUserIdColumn ? {
         user_id: user.id,
+        personal_info: {
+          email: user.email
+        },
+        contact_info: {
+          email: user.email
+        },
+        academic_history: {},
+        study_preferences: {},
+        profile_completeness: 5,
+        readiness_score: 0,
+        is_verified: false
+      } : {
+        userid: user.id,
         personal_info: {
           email: user.email
         },
@@ -92,11 +122,12 @@ export async function GET(request: NextRequest) {
         if (createError.code === '23505') {
           console.log('⚠️ Profile already exists for user, fetching existing profile...')
 
-          // Fetch the existing profile
+          // Fetch the existing profile using the correct column name
+          const columnName = useUserIdColumn ? 'user_id' : 'userid'
           const { data: existingProfile, error: fetchError } = await adminSupabase
             .from('student_profiles')
             .select('*')
-            .eq('user_id', user.id)
+            .eq(columnName, user.id)
             .single()
 
           if (fetchError) {
@@ -202,15 +233,43 @@ export async function POST(request: NextRequest) {
     // Use admin client for database operations
     const adminSupabase = createServerSupabaseAdminClient()
 
-    // Check if profile exists
-    const { data: existingProfile } = await adminSupabase
+    // Check if profile exists - try user_id first, then userid
+    let { data: existingProfile, error: checkError } = await adminSupabase
       .from('student_profiles')
       .select('id')
       .eq('user_id', user.id)
       .single()
 
-    const profileData = {
+    let useUserIdColumn = true
+    if (checkError && checkError.message?.includes('user_id does not exist')) {
+      console.log('🔄 Trying userid column for profile check...')
+      const { data: existingProfileAlt, error: checkErrorAlt } = await adminSupabase
+        .from('student_profiles')
+        .select('id')
+        .eq('userid', user.id)
+        .single()
+
+      existingProfile = existingProfileAlt
+      checkError = checkErrorAlt
+      useUserIdColumn = false
+    }
+
+    const profileData = useUserIdColumn ? {
       user_id: user.id,
+      personal_info: profile.personalInfo || {},
+      contact_info: profile.contactInfo || {},
+      academic_history: profile.academicHistory || {},
+      study_preferences: profile.preferences || {},
+      profile_completeness: validation.completenessScore,
+      readiness_score: validation.completenessScore,
+      first_name: profile.personalInfo?.firstName,
+      last_name: profile.personalInfo?.lastName,
+      email: profile.contactInfo?.email,
+      phone: profile.contactInfo?.phone,
+      id_number: profile.personalInfo?.idNumber,
+      updated_at: new Date().toISOString()
+    } : {
+      userid: user.id,
       personal_info: profile.personalInfo || {},
       contact_info: profile.contactInfo || {},
       academic_history: profile.academicHistory || {},
@@ -227,11 +286,12 @@ export async function POST(request: NextRequest) {
 
     let result
     if (existingProfile) {
-      // Update existing profile
+      // Update existing profile using the correct column name
+      const columnName = useUserIdColumn ? 'user_id' : 'userid'
       const { data, error } = await adminSupabase
         .from('student_profiles')
         .update(profileData)
-        .eq('user_id', user.id)
+        .eq(columnName, user.id)
         .select()
         .single()
 
