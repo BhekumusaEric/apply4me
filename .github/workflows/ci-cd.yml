@@ -35,14 +35,28 @@ jobs:
 
     - name: 📝 Setup environment variables
       run: |
-        cp .env.example .env
-        echo "Environment variables set up for build"
+        cp .env.example .env.local
+        echo "NEXT_PUBLIC_SUPABASE_URL=https://test.supabase.co" >> .env.local
+        echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=test-anon-key" >> .env.local
+        echo "SUPABASE_SERVICE_ROLE_KEY=test-service-role-key" >> .env.local
+        echo "NODE_ENV=test" >> .env.local
+        echo "Environment variables set up for testing"
+
+    - name: 🧪 Run tests
+      run: npm run test:ci
+      env:
+        NODE_ENV: test
+        NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: test-anon-key
+        SUPABASE_SERVICE_ROLE_KEY: test-service-role-key
 
     - name: 🏗️ Build application
       run: npm run build
-
-    - name: 🧪 Run tests
-      run: npm test -- --passWithNoTests
+      env:
+        NODE_ENV: production
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
     - name: 📊 Upload build artifacts
       uses: actions/upload-artifact@v3
