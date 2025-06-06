@@ -9,6 +9,7 @@ import { Menu, X, GraduationCap, User, LogOut } from 'lucide-react'
 import { useAuth } from '@/app/providers'
 import { createClient } from '@/lib/supabase'
 import { ClientOnly } from '@/components/client-only'
+import RealTimeNotificationCenter from '@/components/notifications/RealTimeNotificationCenter'
 
 function HeaderContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -56,7 +57,7 @@ function HeaderContent() {
           <ThemeToggle />
           {user ? (
             <div className="hidden md:flex items-center space-x-2">
-              {/* <NotificationCenter userId={user.id} /> */}
+              <RealTimeNotificationCenter userId={user.id} />
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/dashboard">
                   <User className="h-4 w-4 mr-2" />
@@ -132,6 +133,9 @@ function HeaderContent() {
               </div>
               {user ? (
                 <>
+                  <div className="flex justify-center py-2">
+                    <RealTimeNotificationCenter userId={user.id} />
+                  </div>
                   <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
                     <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
                       <User className="h-4 w-4 mr-2" />

@@ -26,6 +26,7 @@ import {
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
 import { createClient } from '@/lib/supabase'
+import { NotificationsPanel } from '@/components/dashboard/notifications-panel'
 
 interface Application {
   id: string
@@ -542,6 +543,9 @@ export default function DashboardPage() {
                 </Button>
               </CardContent>
             </Card>
+
+            {/* Notifications Panel */}
+            <NotificationsPanel className="mb-6" />
 
             <Card>
               <CardHeader>
