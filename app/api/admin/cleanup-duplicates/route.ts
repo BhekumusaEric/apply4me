@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     
     console.log(`🔍 Found ${usersWithDuplicates.length} users with duplicate profiles`)
     
-    let cleanupResults = []
+    const cleanupResults = []
     
     for (const [userId, profiles] of usersWithDuplicates) {
       console.log(`🧹 Cleaning up ${profiles.length} profiles for user: ${userId}`)
