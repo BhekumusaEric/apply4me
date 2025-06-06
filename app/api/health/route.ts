@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerSupabaseAdminClient } from '@/lib/supabase-server';
 
 async function checkAdminSystem(supabase: any) {
   try {
@@ -43,10 +43,7 @@ export async function GET() {
     const startTime = Date.now();
 
     // Check database connection
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = createServerSupabaseAdminClient();
 
     // Simple database query to test connection
     const { data, error } = await supabase

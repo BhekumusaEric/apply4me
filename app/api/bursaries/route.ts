@@ -4,19 +4,16 @@
  */
 
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerSupabaseAdminClient } from '@/lib/supabase-server'
 
 export async function GET() {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabase = createServerSupabaseAdminClient()
 
-    // Get all bursaries and filter for unique ones
     const { data, error } = await supabase
       .from('bursaries')
       .select('*')
+      .eq('is_active', true)
       .order('amount', { ascending: false })
 
     if (error) {
@@ -27,23 +24,10 @@ export async function GET() {
       )
     }
 
-    // Remove duplicates based on name and provider
-    const uniqueBursaries = data?.filter((bursary, index, self) =>
-      index === self.findIndex(b =>
-        b.name === bursary.name && b.provider === bursary.provider
-      )
-    ) || []
-
-    // Sort by amount (highest first) and limit to reasonable number
-    const sortedBursaries = uniqueBursaries
-      .sort((a, b) => (b.amount || 0) - (a.amount || 0))
-      .slice(0, 20) // Show top 20 bursaries
-
     return NextResponse.json({
       success: true,
-      data: sortedBursaries,
-      count: sortedBursaries.length,
-      total_in_database: data?.length || 0,
+      data: data || [],
+      count: data?.length || 0,
       timestamp: new Date().toISOString()
     })
 
