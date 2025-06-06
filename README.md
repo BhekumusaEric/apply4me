@@ -1,5 +1,7 @@
 # 🎓 Apply4Me - South African Student Application Platform
 
+<!-- Database connection fix: Updated Supabase service role key -->
+
 [![Deployment Status](https://img.shields.io/badge/deployment-live-brightgreen)](https://apply4me-eta.vercel.app)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-14.0-black)](https://nextjs.org/)
