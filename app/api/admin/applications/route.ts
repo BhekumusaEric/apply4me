@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     
     // Transform profiles into mock applications for now
     // TODO: Replace with real applications table
-    const mockApplications = profiles.map((profile, index) => {
+    const mockApplications = profiles.map((profile: any, index: number) => {
       const statuses = ['draft', 'submitted', 'paid', 'processing', 'accepted', 'rejected']
       const institutions = ['University of Cape Town', 'University of the Witwatersrand', 'Stellenbosch University', 'University of Pretoria', 'Rhodes University']
       const courses = ['Computer Science', 'Engineering', 'Medicine', 'Law', 'Business Administration', 'Psychology']
