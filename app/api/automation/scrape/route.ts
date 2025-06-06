@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
 
     const scheduler = new AutomationScheduler()
-    let results: any = {}
+    const results: any = {}
 
     console.log(`🚀 Manual scraping triggered: ${type}`)
 

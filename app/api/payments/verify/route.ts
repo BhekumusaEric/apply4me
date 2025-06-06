@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
     const supabase = createClient()
 
     // Select only columns that definitely exist in the current schema (first schema version)
-    let selectQuery = `
+    const selectQuery = `
       id,
       payment_status,
       status,

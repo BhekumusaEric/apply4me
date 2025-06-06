@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     console.log(`🎯 Testing specific source: ${source} (${type})`)
     
     const scraper = new ProductionScraper()
-    let result: any = {}
+    const result: any = {}
     
     if (type === 'institution') {
       // Test specific institution scraping

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
     
-    let duplicateHandling = {
+    const duplicateHandling = {
       attempted: true,
       success: false,
       error: null as string | null,
