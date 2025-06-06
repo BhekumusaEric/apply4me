@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const manager = new DatabasePopulationManager()
     console.log(`🚀 Database ${action} triggered...`)
 
-    const result: any = {}
+    let result: any = {}
 
     switch (action) {
       case 'populate':
