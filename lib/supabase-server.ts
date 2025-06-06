@@ -45,22 +45,11 @@ export function createServerSupabaseClientWithCookies() {
  * This client has elevated privileges and bypasses RLS
  */
 export function createServerSupabaseAdminClient() {
-  return createServerClient<Database>(
+  // Use direct createClient for admin operations to avoid SSR cookie issues
+  const { createClient } = require('@supabase/supabase-js')
+  return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      cookies: {
-        get() {
-          return undefined
-        },
-        set() {
-          // No-op for admin client
-        },
-        remove() {
-          // No-op for admin client
-        },
-      },
-    }
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 }
 
