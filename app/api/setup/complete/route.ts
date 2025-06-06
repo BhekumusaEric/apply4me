@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseAdminClient } from '@/lib/supabase-server'
+import { areTestRoutesEnabled, isDevelopment } from '@/lib/production-utils'
 
 export async function POST(request: NextRequest) {
+  // Block in production unless explicitly enabled
+  if (!areTestRoutesEnabled()) {
+    return NextResponse.json(
+      {
+        error: 'Setup routes disabled in production',
+        message: 'This endpoint is disabled in production for security reasons.'
+      },
+      { status: 404 }
+    )
+  }
+
   try {
     console.log('🚀 Starting complete database and auth setup...')
     

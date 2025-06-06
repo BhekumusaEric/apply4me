@@ -4,6 +4,7 @@ import React from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, RefreshCw, AlertCircle } from 'lucide-react'
+import { prodLog } from '@/lib/production-utils'
 
 interface ErrorBoundaryState {
   hasError: boolean
@@ -26,7 +27,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo)
+    prodLog.error('Error caught by boundary:', error, errorInfo)
   }
 
   resetError = () => {

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Shield, Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 import { ButtonLoading } from '@/components/ui/loading'
+import { getAdminEmails } from '@/lib/production-utils'
 
 export default function AdminLogin() {
   const router = useRouter()
@@ -18,20 +19,8 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const adminCredentials = [
-    {
-      email: 'bhntshwcjc025@student.wethinkcode.co.za',
-      role: 'Super Admin'
-    },
-    {
-      email: 'admin@apply4me.co.za',
-      role: 'Admin'
-    },
-    {
-      email: 'bhekumusa@apply4me.co.za',
-      role: 'Owner'
-    }
-  ]
+  // Get admin emails from environment or fallback
+  const adminEmails = getAdminEmails()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,7 +30,7 @@ export default function AdminLogin() {
     try {
       const supabase = createClient()
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password
       })
@@ -52,7 +41,6 @@ export default function AdminLogin() {
       }
 
       // Check if user is admin
-      const adminEmails = adminCredentials.map(admin => admin.email)
       if (!adminEmails.includes(email)) {
         setError('Access denied. Admin privileges required.')
         await supabase.auth.signOut()
@@ -69,10 +57,7 @@ export default function AdminLogin() {
     }
   }
 
-  const handleQuickLogin = async (adminEmail: string) => {
-    setEmail(adminEmail)
-    // For demo purposes, you can set a default password or handle differently
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sa-green/10 via-background to-sa-gold/10 flex items-center justify-center p-4">
@@ -83,7 +68,7 @@ export default function AdminLogin() {
           </div>
           <CardTitle className="text-2xl">Admin Login</CardTitle>
           <p className="text-muted-foreground">
-            Access Apply4Me administration panel
+            Authorized administrators only
           </p>
         </CardHeader>
         <CardContent>
@@ -140,27 +125,7 @@ export default function AdminLogin() {
             </Button>
           </form>
 
-          <div className="mt-6 pt-6 border-t">
-            <p className="text-sm text-muted-foreground mb-3 text-center">
-              Quick Access (Demo)
-            </p>
-            <div className="space-y-2">
-              {adminCredentials.map((admin, index) => (
-                <Button
-                  key={index}
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start text-left"
-                  onClick={() => handleQuickLogin(admin.email)}
-                >
-                  <div>
-                    <div className="font-medium">{admin.role}</div>
-                    <div className="text-xs text-muted-foreground">{admin.email}</div>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </div>
+
 
           <div className="mt-6 text-center">
             <Button variant="ghost" size="sm" onClick={() => router.push('/')}>

@@ -1,7 +1,28 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isRouteAllowedInProduction, isProduction, getSecurityHeaders, prodLog } from '@/lib/production-utils'
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Check if route is allowed in production (before any other processing)
+  if (!isRouteAllowedInProduction(pathname)) {
+    return new NextResponse(
+      JSON.stringify({
+        error: 'Route not available in production',
+        message: 'This endpoint is disabled in production for security reasons.',
+        timestamp: new Date().toISOString()
+      }),
+      {
+        status: 404,
+        headers: {
+          'Content-Type': 'application/json',
+          ...getSecurityHeaders()
+        }
+      }
+    )
+  }
+
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -9,7 +30,7 @@ export async function middleware(request: NextRequest) {
   })
 
   // Skip middleware for API routes and health checks
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/')) {
     return response
   }
 
@@ -18,7 +39,7 @@ export async function middleware(request: NextRequest) {
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseKey) {
-    console.warn('⚠️ Supabase environment variables not configured, skipping auth middleware')
+    prodLog.warn('⚠️ Supabase environment variables not configured, skipping auth middleware')
     return response
   }
 
@@ -114,6 +135,14 @@ export async function middleware(request: NextRequest) {
     request.nextUrl.pathname.startsWith('/auth/signup')
   )) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  // Add security headers in production
+  if (isProduction()) {
+    const securityHeaders = getSecurityHeaders()
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value)
+    })
   }
 
   return response

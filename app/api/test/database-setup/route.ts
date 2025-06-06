@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { areTestRoutesEnabled, sanitizeError, prodLog } from '@/lib/production-utils'
 
 export async function GET(request: NextRequest) {
+  // Check if test routes are enabled
+  if (!areTestRoutesEnabled()) {
+    return NextResponse.json(
+      {
+        error: 'Test routes disabled in production',
+        message: 'This endpoint is disabled in production for security reasons.'
+      },
+      { status: 404 }
+    )
+  }
+
   try {
-    console.log('🔍 Testing database setup...')
+    prodLog.info('🔍 Testing database setup...')
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

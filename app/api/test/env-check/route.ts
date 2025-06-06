@@ -1,6 +1,18 @@
 import { NextResponse } from 'next/server'
+import { areTestRoutesEnabled, sanitizeError, prodLog } from '@/lib/production-utils'
 
 export async function GET() {
+  // Check if test routes are enabled
+  if (!areTestRoutesEnabled()) {
+    return NextResponse.json(
+      {
+        error: 'Test routes disabled in production',
+        message: 'This endpoint is disabled in production for security reasons.'
+      },
+      { status: 404 }
+    )
+  }
+
   try {
     const envCheck = {
       timestamp: new Date().toISOString(),
@@ -42,9 +54,10 @@ export async function GET() {
     })
 
   } catch (error) {
+    prodLog.error('Environment check error:', error)
     return NextResponse.json({
       error: 'Failed to check environment variables',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: sanitizeError(error)
     }, { status: 500 })
   }
 }
