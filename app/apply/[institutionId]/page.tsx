@@ -502,18 +502,18 @@ export default function ApplyPage() {
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 mb-2">Payment Summary</h4>
-                <div className="space-y-1 text-sm">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Payment Summary</h4>
+                <div className="space-y-1 text-sm text-blue-800 dark:text-blue-200">
                   <div className="flex justify-between">
                     <span>Program Fee:</span>
-                    <span>{formatCurrency(selectedProgram?.application_fee || institution?.application_fee || 0)}</span>
+                    <span className="font-medium">{formatCurrency(selectedProgram?.application_fee || institution?.application_fee || 0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Apply4Me Service Fee:</span>
-                    <span>R50</span>
+                    <span className="font-medium">R50</span>
                   </div>
-                  <div className="flex justify-between font-semibold border-t pt-1">
+                  <div className="flex justify-between font-semibold border-t border-blue-300 dark:border-blue-700 pt-1 text-blue-900 dark:text-blue-100">
                     <span>Total:</span>
                     <span>{formatCurrency((selectedProgram?.application_fee || institution?.application_fee || 0) + 50)}</span>
                   </div>

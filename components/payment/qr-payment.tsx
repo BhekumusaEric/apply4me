@@ -13,9 +13,12 @@ interface QRPaymentProps {
   amount: number
   applicationId: string
   onPaymentComplete: (reference: string) => void
+  programFee?: number
+  serviceFee?: number
+  programName?: string
 }
 
-export function QRPayment({ amount, applicationId, onPaymentComplete }: QRPaymentProps) {
+export function QRPayment({ amount, applicationId, onPaymentComplete, programFee, serviceFee, programName }: QRPaymentProps) {
   const [paymentReference, setPaymentReference] = useState('')
   const [proofFile, setProofFile] = useState<File | null>(null)
   const [notes, setNotes] = useState('')
@@ -139,6 +142,34 @@ export function QRPayment({ amount, applicationId, onPaymentComplete }: QRPaymen
           <div className="text-center space-y-2">
             <h3 className="font-semibold text-lg">CAPITEC SCAN TO PAY</h3>
             <p className="text-2xl font-bold text-blue-600">R{amount}</p>
+            {programFee && serviceFee && (
+              <div className="text-xs text-muted-foreground space-y-1">
+                <div className="flex justify-between max-w-xs mx-auto">
+                  <span>{programName ? `${programName} Fee` : 'Program Fee'}:</span>
+                  <span>R{programFee}</span>
+                </div>
+                <div className="flex justify-between max-w-xs mx-auto">
+                  <span>Apply4Me Service Fee:</span>
+                  <span>R{serviceFee}</span>
+                </div>
+                <div className="border-t pt-1 flex justify-between max-w-xs mx-auto font-semibold">
+                  <span>Total:</span>
+                  <span>R{amount}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Important Payment Amount Notice */}
+            <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3 mt-4">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-orange-800 dark:text-orange-200">
+                  <p className="font-medium mb-1">⚠️ Important: Payment Amount</p>
+                  <p>The QR code shows a default amount. When scanning, please manually enter <strong>R{amount}</strong> as the payment amount in your banking app.</p>
+                </div>
+              </div>
+            </div>
+
             <p className="text-sm text-muted-foreground">
               Scan with Capitec app, other banking apps, or SnapScan/Zapper
             </p>
@@ -164,7 +195,7 @@ export function QRPayment({ amount, applicationId, onPaymentComplete }: QRPaymen
                 <li>• <strong>Standard Bank:</strong> Pay → Scan QR</li>
                 <li>• <strong>ABSA:</strong> Pay → QR Payment</li>
                 <li>• <strong>Nedbank:</strong> Pay → Scan to Pay</li>
-                <li>• Confirm payment of R{amount}</li>
+                <li className="text-orange-700 dark:text-orange-300 font-medium">• <strong>⚠️ IMPORTANT:</strong> Enter amount R{amount}</li>
               </ul>
             </div>
             <div>
@@ -174,7 +205,7 @@ export function QRPayment({ amount, applicationId, onPaymentComplete }: QRPaymen
                 <li>• <strong>Zapper:</strong> Scan QR Code</li>
                 <li>• <strong>PayShap:</strong> QR Payment</li>
                 <li>• Scan the QR code above</li>
-                <li>• Amount: R{amount}</li>
+                <li className="text-orange-700 dark:text-orange-300 font-medium">• <strong>Amount: R{amount}</strong> (enter manually)</li>
                 <li>• Complete payment</li>
               </ul>
             </div>
