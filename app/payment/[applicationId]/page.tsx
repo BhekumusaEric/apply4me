@@ -19,8 +19,7 @@ import {
   CheckCircle,
   ArrowLeft,
   Lock,
-  AlertCircle,
-  QrCode
+  AlertCircle
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -39,6 +38,12 @@ interface Application {
   status: string
   payment_status: string
   personal_info: any
+  program_fee?: number
+  service_fee?: number
+  program_info?: {
+    name: string
+    field_of_study?: string
+  }
 }
 
 
@@ -57,30 +62,11 @@ interface PaymentMethod {
 
 const PAYMENT_METHODS: PaymentMethod[] = [
   {
-    id: 'payfast',
-    name: 'PayFast (All Methods)',
-    icon: CreditCard,
-    description: 'Credit/Debit Cards, EFT, SnapScan & more - Secure SA Payment Gateway',
-    processingTime: 'Instant',
-    fees: 'No additional fees',
-    available: false, // Temporarily disabled
-    recommended: false
-  },
-  {
     id: 'eft',
-    name: 'Direct EFT/Bank Transfer',
+    name: 'EFT/Bank Transfer',
     icon: Building2,
-    description: 'Manual bank transfer with proof of payment',
-    processingTime: '1-2 business days verification',
-    fees: 'No additional fees',
-    available: true
-  },
-  {
-    id: 'qr_code',
-    name: 'Capitec Scan to Pay',
-    icon: QrCode,
-    description: 'Scan with Capitec app or other banking apps',
-    processingTime: '2-4 hours verification',
+    description: 'Direct bank transfer - Available Now',
+    processingTime: 'Instant verification',
     fees: 'No additional fees',
     available: true,
     recommended: true
@@ -89,19 +75,28 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     id: 'mobile',
     name: 'SnapScan/Mobile Payment',
     icon: Smartphone,
-    description: 'QR code payment with manual verification',
-    processingTime: '1-2 hours verification',
+    description: 'QR code payment - Available Now',
+    processingTime: '1-2 minutes',
+    fees: 'No additional fees',
+    available: true
+  },
+  {
+    id: 'tymebank',
+    name: 'TymeBank Pay',
+    icon: Smartphone,
+    description: 'Instant TymeBank transfer - Available Now',
+    processingTime: 'Instant',
     fees: 'No additional fees',
     available: true
   },
   {
     id: 'card',
-    name: 'Credit/Debit Card (Yoco)',
+    name: 'Credit/Debit Card',
     icon: CreditCard,
-    description: 'Direct card payments via Yoco',
+    description: 'Secure card payments via Yoco - Available Now',
     processingTime: 'Instant',
     fees: 'No additional fees',
-    available: false, // Disabled until Yoco is configured
+    available: true,
     recommended: false
   }
 ]
@@ -160,16 +155,25 @@ export default function PaymentPage() {
           .from('applications')
           .select(`
             *,
-            institutions!inner(name)
+            institutions!inner(name, application_fee),
+            programs!inner(name, application_fee)
           `)
           .eq('id', params.applicationId)
           .eq('user_id', user?.id)
           .single()
 
         if (!error && data) {
+          // Calculate total amount based on program fee + service fee
+          const programFee = data.programs?.application_fee || data.institutions?.application_fee || 150
+          const serviceFee = 50
+          const calculatedTotal = programFee + serviceFee
+
           setApplication({
             ...data,
-            institution_name: data.institutions.name
+            institution_name: data.institutions.name,
+            total_amount: data.total_amount || calculatedTotal,
+            program_fee: programFee,
+            service_fee: serviceFee
           })
           setLoading(false)
           return
@@ -183,8 +187,10 @@ export default function PaymentPage() {
       if (storedApplication) {
         const appData = JSON.parse(storedApplication)
 
-        // Try to get real institution data
+        // Try to get real institution and program data
         let institutionData = null
+        let programData = null
+
         if (appData.institution_id) {
           try {
             const supabase = createClient()
@@ -202,6 +208,23 @@ export default function PaymentPage() {
           }
         }
 
+        if (appData.program_id) {
+          try {
+            const supabase = createClient()
+            const { data: program } = await supabase
+              .from('programs')
+              .select('name, application_fee, field_of_study')
+              .eq('id', appData.program_id)
+              .single()
+
+            if (program) {
+              programData = program
+            }
+          } catch (error) {
+            console.error('Failed to fetch program data:', error)
+          }
+        }
+
         // Fallback to default data if no real institution found
         if (!institutionData) {
           institutionData = {
@@ -211,10 +234,22 @@ export default function PaymentPage() {
           }
         }
 
+        // Calculate total amount based on program fee + service fee
+        const programFee = programData?.application_fee || institutionData?.application_fee || 150
+        const serviceFee = 50
+        const calculatedTotal = programFee + serviceFee
+
         setApplication({
           ...appData,
           institution_name: institutionData.name,
-          institutions: institutionData
+          institutions: institutionData,
+          total_amount: appData.total_amount || calculatedTotal,
+          program_fee: programFee,
+          service_fee: serviceFee,
+          program_info: programData ? {
+            name: programData.name,
+            field_of_study: programData.field_of_study
+          } : appData.program_info
         })
       } else {
         router.push('/dashboard')
@@ -233,13 +268,10 @@ export default function PaymentPage() {
     try {
       const supabase = createClient()
 
-      if (selectedMethod === 'payfast') {
-        // Process PayFast payment
-        await handlePayFastPayment()
-      } else if (selectedMethod === 'card') {
+      if (selectedMethod === 'card') {
         // Process card payment with Yoco
         await handleCardPayment()
-      } else if (['eft', 'mobile', 'qr_code'].includes(selectedMethod)) {
+      } else if (['eft', 'mobile', 'tymebank'].includes(selectedMethod)) {
         // For manual payment methods, mark as pending verification
         const updatedApplication = {
           ...application,
@@ -281,52 +313,6 @@ export default function PaymentPage() {
       alert('Payment processing failed. Please try again.')
     } finally {
       setProcessing(false)
-    }
-  }
-
-  const handlePayFastPayment = async () => {
-    if (!application || !user) {
-      alert('Application or user data not available. Please try again.')
-      return
-    }
-
-    try {
-      // Create PayFast payment
-      const response = await fetch('/api/payments/payfast', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          applicationId: application.id,
-          amount: totalAmount,
-          description: `Apply4Me Application - ${application.institution_name}`,
-          userEmail: user?.email || user?.user_metadata?.email || "student@example.com",
-          userName: user?.user_metadata?.full_name || paymentData.cardholderName || 'Student',
-          metadata: {
-            applicationId: application.id,
-            userId: user.id,
-            institutionName: application.institution_name,
-            programName: 'Program Application'
-          }
-        })
-      })
-
-      const result = await response.json()
-
-      if (!response.ok || !result.success) {
-        alert(`Payment setup failed: ${result.error || 'Unknown error'}`)
-        return
-      }
-
-      console.log('✅ PayFast payment created, redirecting to:', result.paymentUrl)
-
-      // Redirect to PayFast payment page
-      window.location.href = result.paymentUrl
-
-    } catch (error) {
-      console.error('PayFast payment error:', error)
-      alert('Payment setup failed. Please try again.')
     }
   }
 
@@ -506,11 +492,6 @@ export default function PaymentPage() {
                           {method.comingSoon && (
                             <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
                               Coming Soon
-                            </Badge>
-                          )}
-                          {!method.available && (method.id === 'payfast' || method.id === 'card') && (
-                            <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
-                              Temporarily Disabled
                             </Badge>
                           )}
                         </div>
@@ -749,81 +730,12 @@ export default function PaymentPage() {
             )}
 
             {selectedMethod === 'mobile' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Smartphone className="h-5 w-5 text-blue-600" />
-                    Mobile Payment Options
-                  </CardTitle>
-                  <CardDescription>
-                    Quick and easy mobile payment methods
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* SnapScan */}
-                    <div className="border rounded-lg p-4">
-                      <h4 className="font-semibold mb-2 flex items-center gap-2">
-                        <Smartphone className="h-4 w-4 text-green-600" />
-                        SnapScan
-                      </h4>
-                      <div className="text-center">
-                        <div className="w-24 h-24 bg-green-100 dark:bg-green-900/20 rounded-lg mx-auto mb-3 flex items-center justify-center">
-                          <span className="text-green-600 font-bold">QR</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Scan with SnapScan app
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Reference: {paymentReference}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Zapper */}
-                    <div className="border rounded-lg p-4">
-                      <h4 className="font-semibold mb-2 flex items-center gap-2">
-                        <Smartphone className="h-4 w-4 text-purple-600" />
-                        Zapper
-                      </h4>
-                      <div className="text-center">
-                        <div className="w-24 h-24 bg-purple-100 dark:bg-purple-900/20 rounded-lg mx-auto mb-3 flex items-center justify-center">
-                          <span className="text-purple-600 font-bold">QR</span>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          Scan with Zapper app
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Reference: {paymentReference}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">📱 Mobile Payment Instructions:</h4>
-                    <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                      <li>• <strong>Amount:</strong> R{totalAmount.toFixed(2)}</li>
-                      <li>• <strong>Reference:</strong> {paymentReference}</li>
-                      <li>• <strong>Verification:</strong> Instant to 24 hours</li>
-                      <li>• <strong>Confirmation:</strong> SMS/Email notification</li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                    <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">🚧 QR Codes Coming Soon</h4>
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                      We're setting up SnapScan and Zapper QR codes. For now, please use the EFT option above for fastest processing.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {selectedMethod === 'qr_code' && (
               <QRPayment
                 amount={totalAmount}
-                applicationId={application.id}
+                applicationId={params.applicationId as string}
+                programFee={application.program_fee || (totalAmount - 50)}
+                serviceFee={application.service_fee || 50}
+                programName={application.program_info?.name}
                 onPaymentComplete={(reference) => {
                   router.push(`/payment/pending?ref=${reference}&method=qr_code&amount=${totalAmount}`)
                 }}
@@ -885,9 +797,9 @@ export default function PaymentPage() {
               <CardHeader>
                 <CardTitle>Order Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4 payment-summary">
+              <CardContent className="space-y-4">
                 <div>
-                  <h4 className="font-medium mb-2 card-content-text">{application.institution_name}</h4>
+                  <h4 className="font-medium mb-2">{application.institution_name}</h4>
                   <p className="text-sm text-muted-foreground">
                     Application for {application.personal_info?.firstName} {application.personal_info?.lastName}
                   </p>
@@ -896,16 +808,16 @@ export default function PaymentPage() {
                 <Separator />
 
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm card-content-text">
+                  <div className="flex justify-between text-sm">
                     <span>Institution Fee</span>
                     <span>{formatCurrency((application.total_amount || 0) - (application.service_type === 'express' ? 100 : 50))}</span>
                   </div>
-                  <div className="flex justify-between text-sm card-content-text">
+                  <div className="flex justify-between text-sm">
                     <span>Service Fee ({application.service_type})</span>
                     <span>{formatCurrency(application.service_type === 'express' ? 100 : 50)}</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between font-semibold card-content-text">
+                  <div className="flex justify-between font-semibold">
                     <span>Total</span>
                     <span className="text-primary">{formatCurrency(application.total_amount)}</span>
                   </div>

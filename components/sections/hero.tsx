@@ -27,8 +27,22 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-sa-green via-sa-green/90 to-sa-blue">
-      {/* Background Pattern */}
+      {/* Background Image */}
+      <div className="absolute inset-0">
+        <Image
+          src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1920&h=1080&fit=crop&crop=center"
+          alt="South African students celebrating graduation success"
+          fill
+          className="object-cover opacity-20"
+          priority
+        />
+      </div>
+
+      {/* Background Pattern Overlay */}
       <div className="absolute inset-0 bg-[url('/patterns/grid.svg')] opacity-10" />
+
+      {/* Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-sa-green/80 via-sa-green/70 to-sa-blue/80" />
 
       <div className="container relative py-20 lg:py-32">
         <div className="grid lg:grid-cols-2 gap-12 items-center">

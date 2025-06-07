@@ -93,6 +93,19 @@ export function InstitutionShowcase() {
     }
   }
 
+  const getTypeImage = (type: string) => {
+    switch (type) {
+      case 'university':
+        return 'https://images.unsplash.com/photo-1562774053-701939374585?w=800&h=600&fit=crop'
+      case 'college':
+        return 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop'
+      case 'tvet':
+        return 'https://images.unsplash.com/photo-1581092795360-fd1ca04f0952?w=800&h=600&fit=crop'
+      default:
+        return 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=600&fit=crop'
+    }
+  }
+
   if (loading) {
     return (
       <section className="py-20 bg-muted/30">
@@ -126,11 +139,15 @@ export function InstitutionShowcase() {
   }
 
   return (
-    <section className="py-20 bg-muted/30">
+    <section className="py-20 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
       <div className="container">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Featured Institutions</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <div className="inline-flex items-center rounded-full bg-primary/10 px-4 py-2 text-sm text-primary mb-4">
+            <Users className="mr-2 h-4 w-4" />
+            200+ Partner Institutions
+          </div>
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4">Featured Institutions</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
             Discover top universities, colleges, and TVET institutions across South Africa.
             Start your application journey with just one click.
           </p>
@@ -138,16 +155,21 @@ export function InstitutionShowcase() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {institutions.map((institution) => (
-            <Card key={institution.id} className="institution-card group hover:shadow-lg transition-all duration-300">
-              <CardHeader className="pb-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <Badge className={getTypeColor(institution.type)} variant="secondary">
-                      {getTypeLabel(institution.type)}
-                    </Badge>
-                  </div>
-                  {institution.logo_url && (
-                    <div className="w-12 h-12 relative rounded-lg overflow-hidden bg-muted">
+            <Card key={institution.id} className="institution-card group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0 bg-white/80 backdrop-blur-sm shadow-lg overflow-hidden">
+              {/* Institution Background Image */}
+              <div className="relative h-48 overflow-hidden">
+                <Image
+                  src={getTypeImage(institution.type)}
+                  alt={`${getTypeLabel(institution.type)} campus`}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+                {/* Institution Logo */}
+                <div className="absolute top-4 right-4">
+                  {institution.logo_url ? (
+                    <div className="w-12 h-12 relative rounded-lg overflow-hidden bg-white/90 backdrop-blur-sm p-1">
                       <Image
                         src={institution.logo_url}
                         alt={`${institution.name} logo`}
@@ -155,8 +177,22 @@ export function InstitutionShowcase() {
                         className="object-contain"
                       />
                     </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center">
+                      <Users className="h-6 w-6 text-primary" />
+                    </div>
                   )}
                 </div>
+
+                {/* Institution Type Badge */}
+                <div className="absolute bottom-4 left-4">
+                  <Badge className={`${getTypeColor(institution.type)} backdrop-blur-sm`} variant="secondary">
+                    {getTypeLabel(institution.type)}
+                  </Badge>
+                </div>
+              </div>
+
+              <CardHeader className="pb-4">
                 <CardTitle className="text-lg leading-tight">{institution.name}</CardTitle>
               </CardHeader>
 
