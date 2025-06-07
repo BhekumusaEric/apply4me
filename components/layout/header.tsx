@@ -28,6 +28,7 @@ function HeaderContent() {
     { name: 'Career Profiler', href: '/career-profiler' },
     { name: 'Bursaries', href: '/bursaries' },
     { name: 'How It Works', href: '/how-it-works' },
+    { name: 'Google Services', href: '/google-services' },
   ]
 
   return (
