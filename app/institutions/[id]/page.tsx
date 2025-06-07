@@ -12,16 +12,11 @@ import {
   MapPin,
   Calendar,
   DollarSign,
-  Phone,
-  Mail,
-  Globe,
   FileText,
   Clock,
-  Users,
   Award,
   BookOpen,
   ArrowLeft,
-  ExternalLink,
   AlertCircle,
   CheckCircle,
   UserCheck,
@@ -325,25 +320,18 @@ export default function InstitutionDetailsPage() {
                   Apply Now
                 </Link>
               </Button>
-              {institution.website_url && (
-                <Button variant="outline" size="lg" asChild>
-                  <a href={institution.website_url} target="_blank" rel="noopener noreferrer">
-                    Visit Website
-                    <ExternalLink className="ml-2 h-4 w-4" />
-                  </a>
-                </Button>
-              )}
+              {/* Website button hidden for student privacy */}
             </div>
           </div>
         </div>
 
         {/* Content Tabs */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="programs">Programs</TabsTrigger>
             <TabsTrigger value="requirements">Requirements</TabsTrigger>
-            <TabsTrigger value="contact">Contact</TabsTrigger>
+            {/* Contact tab hidden for student privacy */}
           </TabsList>
 
           {/* Overview Tab */}
@@ -572,82 +560,8 @@ export default function InstitutionDetailsPage() {
             )}
           </TabsContent>
 
-          {/* Contact Tab */}
-          <TabsContent value="contact" className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              {institution.contact_email && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Mail className="h-5 w-5" />
-                      Email
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <a
-                      href={`mailto:${institution.contact_email}`}
-                      className="text-primary hover:underline"
-                    >
-                      {institution.contact_email}
-                    </a>
-                  </CardContent>
-                </Card>
-              )}
-
-              {institution.contact_phone && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Phone className="h-5 w-5" />
-                      Phone
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <a
-                      href={`tel:${institution.contact_phone}`}
-                      className="text-primary hover:underline"
-                    >
-                      {institution.contact_phone}
-                    </a>
-                  </CardContent>
-                </Card>
-              )}
-
-              {institution.website_url && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Globe className="h-5 w-5" />
-                      Website
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <a
-                      href={institution.website_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline flex items-center gap-1"
-                    >
-                      Visit Website
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    Location
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>{institution.province}, South Africa</p>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
+          {/* Contact Tab - Hidden for student privacy
+          Students should apply through the platform rather than contacting institutions directly */}
         </Tabs>
       </main>
       <Footer />

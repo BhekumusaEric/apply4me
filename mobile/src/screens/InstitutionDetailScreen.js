@@ -161,46 +161,8 @@ export default function InstitutionDetailScreen({ route, navigation }) {
           </View>
         </View>
 
-        {/* Contact Information */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📞 Contact Information</Text>
-          
-          <TouchableOpacity 
-            style={styles.contactItem}
-            onPress={() => handleContact('phone')}
-          >
-            <Ionicons name="call" size={20} color="#007A4D" />
-            <View style={styles.contactContent}>
-              <Text style={styles.contactLabel}>Phone</Text>
-              <Text style={styles.contactValue}>{institutionData.phone}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.contactItem}
-            onPress={() => handleContact('email')}
-          >
-            <Ionicons name="mail" size={20} color="#007A4D" />
-            <View style={styles.contactContent}>
-              <Text style={styles.contactLabel}>Email</Text>
-              <Text style={styles.contactValue}>{institutionData.email}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.contactItem}
-            onPress={() => handleContact('website')}
-          >
-            <Ionicons name="globe" size={20} color="#007A4D" />
-            <View style={styles.contactContent}>
-              <Text style={styles.contactLabel}>Website</Text>
-              <Text style={styles.contactValue}>{institutionData.website}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
-          </TouchableOpacity>
-        </View>
+        {/* Contact Information - Hidden for student privacy
+        Students should apply through the platform rather than contacting institutions directly */}
 
         {/* Action Buttons */}
         <View style={styles.actionContainer}>
