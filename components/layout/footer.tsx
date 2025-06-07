@@ -30,7 +30,6 @@ export function Footer() {
       { name: 'Study Guides', href: '/resources/guides' },
       { name: 'Career Paths', href: '/resources/careers' },
       { name: 'Funding Options', href: '/resources/funding' },
-      { name: 'Success Stories', href: '/resources/stories' },
       { name: 'Blog', href: '/blog' },
     ],
   }

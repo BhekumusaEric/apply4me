@@ -2,7 +2,7 @@ import { Hero } from '@/components/sections/hero'
 import { InstitutionShowcase } from '@/components/sections/institution-showcase'
 import { Features } from '@/components/sections/features'
 import { HowItWorks } from '@/components/sections/how-it-works'
-import { Testimonials } from '@/components/sections/testimonials'
+// import { ComingSoonTestimonials } from '@/components/sections/coming-soon-testimonials'
 import { CTA } from '@/components/sections/cta'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -16,7 +16,8 @@ export default function HomePage() {
         <InstitutionShowcase />
         <Features />
         <HowItWorks />
-        <Testimonials />
+        {/* Uncomment the line below if you want to add an honest "coming soon" testimonials section */}
+        {/* <ComingSoonTestimonials /> */}
         <CTA />
       </main>
       <Footer />
