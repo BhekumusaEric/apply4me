@@ -5,10 +5,22 @@
 describe('Health API Tests', () => {
   beforeEach(() => {
     // Set up environment variables for tests
-    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
-    process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
-    process.env.NODE_ENV = 'test'
+    Object.defineProperty(process.env, 'NEXT_PUBLIC_SUPABASE_URL', {
+      value: 'https://test.supabase.co',
+      writable: true
+    })
+    Object.defineProperty(process.env, 'NEXT_PUBLIC_SUPABASE_ANON_KEY', {
+      value: 'test-anon-key',
+      writable: true
+    })
+    Object.defineProperty(process.env, 'SUPABASE_SERVICE_ROLE_KEY', {
+      value: 'test-service-role-key',
+      writable: true
+    })
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value: 'test',
+      writable: true
+    })
   })
 
   it('should have environment variables set', () => {

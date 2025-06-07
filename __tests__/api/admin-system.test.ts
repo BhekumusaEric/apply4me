@@ -5,7 +5,10 @@
 describe('Admin System Tests', () => {
   beforeEach(() => {
     // Set up test environment
-    process.env.NODE_ENV = 'test'
+    Object.defineProperty(process.env, 'NODE_ENV', {
+      value: 'test',
+      writable: true
+    })
   })
 
   it('should validate admin system structure', () => {
