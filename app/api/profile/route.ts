@@ -194,6 +194,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// PUT - Update profile (alias for POST)
+export async function PUT(request: NextRequest) {
+  return POST(request)
+}
+
 // POST - Create or update profile (REAL DATABASE ONLY)
 export async function POST(request: NextRequest) {
   try {

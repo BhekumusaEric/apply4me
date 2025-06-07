@@ -6,18 +6,23 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { 
-  User, 
-  Phone, 
-  GraduationCap, 
-  FileText, 
-  Shield, 
+import {
+  User,
+  Phone,
+  GraduationCap,
+  FileText,
+  Shield,
   CheckCircle,
   ArrowRight,
-  ArrowLeft
+  ArrowLeft,
+  Settings
 } from 'lucide-react'
 import { StudentProfile } from '@/lib/types/student-profile'
 import PersonalInfoStep from './steps/PersonalInfoStep'
+import ContactInfoStep from './steps/ContactInfoStep'
+import AcademicHistoryStep from './steps/AcademicHistoryStep'
+import DocumentsStep from './steps/DocumentsStep'
+import PreferencesStep from './steps/PreferencesStep'
 import VerificationStep from './steps/VerificationStep'
 import ReviewStep from './steps/ReviewStep'
 
@@ -27,13 +32,14 @@ interface ProfileBuilderProps {
   onSave?: (profile: Partial<StudentProfile>) => void
 }
 
-type ProfileStep = 'personal' | 'contact' | 'academic' | 'documents' | 'verification' | 'review'
+type ProfileStep = 'personal' | 'contact' | 'academic' | 'documents' | 'preferences' | 'verification' | 'review'
 
 const STEPS: { key: ProfileStep; title: string; icon: any; description: string }[] = [
   { key: 'personal', title: 'Personal Info', icon: User, description: 'Basic personal information' },
   { key: 'contact', title: 'Contact Info', icon: Phone, description: 'Contact details and addresses' },
   { key: 'academic', title: 'Academic History', icon: GraduationCap, description: 'Educational background' },
   { key: 'documents', title: 'Documents', icon: FileText, description: 'Upload required documents' },
+  { key: 'preferences', title: 'Preferences', icon: Settings, description: 'Study and financial preferences' },
   { key: 'verification', title: 'Verification', icon: Shield, description: 'Verify your information' },
   { key: 'review', title: 'Review', icon: CheckCircle, description: 'Review and submit' }
 ]
@@ -84,6 +90,39 @@ export default function ProfileBuilder({ initialProfile = {}, onComplete, onSave
           <PersonalInfoStep
             profile={profile}
             onComplete={handleStepComplete}
+            onBack={handleBack}
+          />
+        )
+      case 'contact':
+        return (
+          <ContactInfoStep
+            profile={profile}
+            onComplete={handleStepComplete}
+            onBack={handleBack}
+          />
+        )
+      case 'academic':
+        return (
+          <AcademicHistoryStep
+            profile={profile}
+            onComplete={handleStepComplete}
+            onBack={handleBack}
+          />
+        )
+      case 'documents':
+        return (
+          <DocumentsStep
+            profile={profile}
+            onComplete={handleStepComplete}
+            onBack={handleBack}
+          />
+        )
+      case 'preferences':
+        return (
+          <PreferencesStep
+            profile={profile}
+            onComplete={handleStepComplete}
+            onBack={handleBack}
           />
         )
       case 'verification':

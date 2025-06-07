@@ -30,6 +30,24 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
 
+  // Webpack configuration to handle Supabase bundling
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      }
+    }
+    return config
+  },
+
+  // Experimental features for better bundling
+  experimental: {
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
+  },
+
   // PWA Configuration for mobile app
   async headers() {
     return [

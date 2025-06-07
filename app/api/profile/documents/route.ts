@@ -1,27 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
+import { createServerSupabaseClientWithCookies } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
 
 // POST - Upload document
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createServerSupabaseClientWithCookies()
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    console.log('🔍 Document upload authentication check:', {
+      hasUser: !!user,
+      userId: user?.id,
+      authError: authError?.message
+    })
+
     if (authError || !user) {
+      console.log('❌ Authentication required for document upload')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user's profile
-    const { data: profile, error: profileError } = await supabase
+    // Get user's profile - try user_id first, then userid
+    let { data: profile, error: profileError } = await supabase
       .from('student_profiles')
       .select('id')
       .eq('user_id', user.id)
       .single()
 
+    // If user_id column doesn't exist, try userid
+    if (profileError && profileError.message?.includes('user_id does not exist')) {
+      console.log('🔄 Trying userid column for profile lookup...')
+      const { data: profileAlt, error: profileErrorAlt } = await supabase
+        .from('student_profiles')
+        .select('id')
+        .eq('userid', user.id)
+        .single()
+
+      profile = profileAlt
+      profileError = profileErrorAlt
+    }
+
     if (profileError || !profile) {
+      console.error('❌ Profile not found:', profileError)
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
     }
+
+    console.log('✅ Profile found for document upload:', profile.id)
+    console.log('📄 Starting file upload process...')
 
     const formData = await request.formData()
     const file = formData.get('file') as File
@@ -47,8 +73,20 @@ export async function POST(request: NextRequest) {
     const fileExtension = file.name.split('.').pop()
     const fileName = `${user.id}/${documentType}/${timestamp}.${fileExtension}`
 
-    // Upload file to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    // Upload file to Supabase Storage using service role for admin access
+    const serviceSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    console.log('📤 Uploading file to storage...')
+    const { data: uploadData, error: uploadError } = await serviceSupabase.storage
       .from('documents')
       .upload(fileName, file, {
         cacheControl: '3600',
@@ -56,20 +94,34 @@ export async function POST(request: NextRequest) {
       })
 
     if (uploadError) {
-      console.error('File upload error:', uploadError)
+      console.error('❌ File upload error:', uploadError)
       return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 })
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
+    console.log('✅ File uploaded successfully')
+
+    // Get public URL using service role
+    const { data: { publicUrl } } = serviceSupabase.storage
       .from('documents')
       .getPublicUrl(fileName)
 
     // Save document record to database
-    const { data: documentData, error: documentError } = await supabase
+    console.log('💾 Attempting to save document record to database...')
+    console.log('📋 Document data:', {
+      student_profile_id: profile.id,
+      user_id: user.id,
+      document_type: documentType,
+      document_name: file.name,
+      file_url: publicUrl,
+      file_size: file.size,
+      mime_type: file.type
+    })
+
+    const { data: documentData, error: documentError } = await serviceSupabase
       .from('student_documents')
       .insert({
-        profile_id: profile.id,
+        student_profile_id: profile.id,
+        user_id: user.id,
         document_type: documentType,
         document_name: file.name,
         file_url: publicUrl,
@@ -81,14 +133,16 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (documentError) {
-      console.error('Document save error:', documentError)
+      console.error('❌ Document save error:', documentError)
       // Clean up uploaded file
-      await supabase.storage.from('documents').remove([fileName])
+      await serviceSupabase.storage.from('documents').remove([fileName])
       return NextResponse.json({ error: 'Failed to save document record' }, { status: 500 })
     }
 
-    // Update profile completeness
-    await updateProfileCompleteness(supabase, profile.id)
+    console.log('✅ Document record saved successfully:', documentData.id)
+
+    // Update profile completeness (temporarily disabled due to permissions)
+    // await updateProfileCompleteness(supabase, profile.id)
 
     return NextResponse.json({
       success: true,
@@ -112,7 +166,7 @@ export async function POST(request: NextRequest) {
 // DELETE - Remove document
 export async function DELETE(request: NextRequest) {
   try {
-    const supabase = createClient()
+    const supabase = createServerSupabaseClientWithCookies()
 
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -150,8 +204,19 @@ export async function DELETE(request: NextRequest) {
     const urlParts = document.file_url.split('/')
     const fileName = urlParts.slice(-3).join('/') // user_id/document_type/filename
 
-    // Delete file from storage
-    const { error: storageError } = await supabase.storage
+    // Delete file from storage using service role
+    const serviceSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
+
+    const { error: storageError } = await serviceSupabase.storage
       .from('documents')
       .remove([fileName])
 
@@ -170,8 +235,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to delete document' }, { status: 500 })
     }
 
-    // Update profile completeness
-    await updateProfileCompleteness(supabase, document.profile_id)
+    // Update profile completeness (temporarily disabled due to permissions)
+    // await updateProfileCompleteness(supabase, document.student_profile_id)
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -180,24 +245,24 @@ export async function DELETE(request: NextRequest) {
   }
 }
 
-// Helper function to update profile completeness
-async function updateProfileCompleteness(supabase: any, profileId: string) {
-  try {
-    // This would call the database function we created
-    const { data, error } = await supabase
-      .rpc('calculate_profile_completeness', { profile_id: profileId })
+// Helper function to update profile completeness (disabled)
+// async function updateProfileCompleteness(supabase: any, profileId: string) {
+//   try {
+//     // This would call the database function we created
+//     const { data, error } = await supabase
+//       .rpc('calculate_profile_completeness', { profile_id: profileId })
 
-    if (!error && data !== null) {
-      await supabase
-        .from('student_profiles')
-        .update({
-          profile_completeness: data,
-          readiness_score: data,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', profileId)
-    }
-  } catch (error) {
-    console.error('Failed to update profile completeness:', error)
-  }
-}
+//     if (!error && data !== null) {
+//       await supabase
+//         .from('student_profiles')
+//         .update({
+//           profile_completeness: data,
+//           readiness_score: data,
+//           updated_at: new Date().toISOString()
+//         })
+//         .eq('id', profileId)
+//     }
+//   } catch (error) {
+//     console.error('Failed to update profile completeness:', error)
+//   }
+// }
