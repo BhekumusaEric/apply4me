@@ -5,28 +5,80 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView
+  SafeAreaView,
+  FlatList,
+  RefreshControl,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Animatable from 'react-native-animatable';
+import { LinearGradient } from 'expo-linear-gradient';
+import { supabase } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { theme } from '../theme/theme';
 
 export default function ApplicationsScreen({ navigation }) {
-  // No mock data - fetch from API
-  const [applications, setApplications] = useState([])
+  const { user } = useAuth();
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    // Fetch applications from API
-    // TODO: Implement API call to fetch real applications
-    setApplications([])
-  }, [])
+    if (user) {
+      fetchApplications();
+    }
+  }, [user]);
+
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('applications')
+        .select(`
+          *,
+          institutions(name, type, province),
+          programs(name, qualification_level)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const applicationsWithDetails = data?.map(app => ({
+        ...app,
+        institutionName: app.institutions?.name || 'Unknown Institution',
+        program: app.programs?.name || 'Unknown Program',
+        deadline: app.deadline || new Date(),
+        applicationFee: app.application_fee || 0,
+        submittedDate: app.submitted_at,
+        paymentStatus: app.payment_status || 'pending'
+      })) || [];
+
+      setApplications(applicationsWithDetails);
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      Alert.alert('Error', 'Failed to load applications');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchApplications();
+    setRefreshing(false);
+  };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'submitted': return '#007A4D';
-      case 'payment_pending': return '#FF6B35';
-      case 'draft': return '#666';
-      case 'accepted': return '#4ECDC4';
-      case 'rejected': return '#FF4444';
-      default: return '#666';
+    switch (status?.toLowerCase()) {
+      case 'submitted': return theme.colors.tertiary;
+      case 'under_review': return theme.colors.secondary;
+      case 'payment_pending': return theme.colors.secondary;
+      case 'draft': return theme.colors.onSurfaceVariant;
+      case 'accepted': return theme.colors.primary;
+      case 'rejected': return theme.colors.error;
+      default: return theme.colors.onSurfaceVariant;
     }
   };
 
@@ -52,33 +104,67 @@ export default function ApplicationsScreen({ navigation }) {
     }
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading applications...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <LinearGradient
+        colors={[theme.colors.primary, theme.colors.primaryContainer]}
+        style={styles.header}
+      >
+        <Animatable.View animation="fadeInDown" style={styles.headerContent}>
+          <Text style={styles.headerTitle}>My Applications</Text>
+          <Text style={styles.headerSubtitle}>
+            Track your application progress
+          </Text>
+        </Animatable.View>
+      </LinearGradient>
       {/* Header Stats */}
-      <View style={styles.statsContainer}>
+      <Animatable.View animation="fadeInUp" delay={200} style={styles.statsContainer}>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>{applications.length}</Text>
-          <Text style={styles.statLabel}>Total Applications</Text>
+          <Text style={styles.statLabel}>Total</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>
-            {applications.filter(app => app.status === 'submitted').length}
+            {applications.filter(app => app.status === 'submitted' || app.status === 'under_review').length}
           </Text>
-          <Text style={styles.statLabel}>Submitted</Text>
+          <Text style={styles.statLabel}>In Progress</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statNumber}>
-            {applications.filter(app => app.status === 'payment_pending').length}
+            {applications.filter(app => app.status === 'accepted').length}
           </Text>
-          <Text style={styles.statLabel}>Pending Payment</Text>
+          <Text style={styles.statLabel}>Accepted</Text>
         </View>
-      </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>
+            {applications.filter(app => app.status === 'draft').length}
+          </Text>
+          <Text style={styles.statLabel}>Drafts</Text>
+        </View>
+      </Animatable.View>
 
       {/* Applications List */}
-      <ScrollView style={styles.applicationsList}>
-        <Text style={styles.sectionTitle}>📝 My Applications</Text>
-        
-        {applications.map((application) => (
+      <FlatList
+        data={applications}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item: application, index }) => (
+          <Animatable.View
+            animation="fadeInUp"
+            delay={300 + (index * 100)}
+            style={styles.applicationCardContainer}
+          >
           <TouchableOpacity
             key={application.id}
             style={styles.applicationCard}
@@ -149,61 +235,67 @@ export default function ApplicationsScreen({ navigation }) {
                 <Ionicons name="chevron-forward" size={16} color="#007A4D" />
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        ))}
-
-        {/* Empty State */}
-        {applications.length === 0 && (
+            </TouchableOpacity>
+          </Animatable.View>
+        )}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContainer}
+        ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="document-text-outline" size={64} color="#666" />
+            <Ionicons name="document-text-outline" size={64} color={theme.colors.onSurfaceVariant} />
             <Text style={styles.emptyTitle}>No Applications Yet</Text>
             <Text style={styles.emptyText}>
               Start your journey by browsing institutions and submitting your first application.
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.browseButton}
               onPress={() => navigation.navigate('Institutions')}
             >
               <Text style={styles.browseButtonText}>Browse Institutions</Text>
             </TouchableOpacity>
           </View>
-        )}
+        }
+        ListFooterComponent={
+          <Animatable.View animation="fadeInUp" delay={600} style={styles.quickActions}>
+            <Text style={styles.sectionTitle}>🚀 Quick Actions</Text>
 
-        {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <Text style={styles.sectionTitle}>🚀 Quick Actions</Text>
-          
-          <TouchableOpacity 
-            style={styles.quickActionCard}
-            onPress={() => navigation.navigate('Institutions')}
-          >
-            <Ionicons name="add-circle" size={24} color="#007A4D" />
-            <View style={styles.quickActionText}>
-              <Text style={styles.quickActionTitle}>New Application</Text>
-              <Text style={styles.quickActionSubtitle}>Start a new application</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.quickActionCard}
+              onPress={() => navigation.navigate('Institutions')}
+            >
+              <Ionicons name="add-circle" size={24} color={theme.colors.primary} />
+              <View style={styles.quickActionText}>
+                <Text style={styles.quickActionTitle}>New Application</Text>
+                <Text style={styles.quickActionSubtitle}>Start a new application</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.quickActionCard}>
-            <Ionicons name="document" size={24} color="#4ECDC4" />
-            <View style={styles.quickActionText}>
-              <Text style={styles.quickActionTitle}>Upload Documents</Text>
-              <Text style={styles.quickActionSubtitle}>Add supporting documents</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.quickActionCard}>
+              <Ionicons name="document" size={24} color={theme.colors.tertiary} />
+              <View style={styles.quickActionText}>
+                <Text style={styles.quickActionTitle}>Upload Documents</Text>
+                <Text style={styles.quickActionSubtitle}>Add supporting documents</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
+            </TouchableOpacity>
 
-          <TouchableOpacity style={styles.quickActionCard}>
-            <Ionicons name="help-circle" size={24} color="#FF6B35" />
-            <View style={styles.quickActionText}>
-              <Text style={styles.quickActionTitle}>Application Help</Text>
-              <Text style={styles.quickActionSubtitle}>Get help with your applications</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+            <TouchableOpacity style={styles.quickActionCard}>
+              <Ionicons name="help-circle" size={24} color={theme.colors.secondary} />
+              <View style={styles.quickActionText}>
+                <Text style={styles.quickActionTitle}>Application Help</Text>
+                <Text style={styles.quickActionSubtitle}>Get help with your applications</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={theme.colors.onSurfaceVariant} />
+            </TouchableOpacity>
+          </Animatable.View>
+        }
+      />
+
+
     </SafeAreaView>
   );
 }
@@ -211,13 +303,44 @@ export default function ApplicationsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: theme.colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: theme.colors.onSurface,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+    paddingTop: 50,
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     padding: 20,
-    backgroundColor: '#2a2a2a',
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.outline,
   },
   statCard: {
     alignItems: 'center',
@@ -225,12 +348,20 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007A4D',
+    color: theme.colors.primary,
   },
   statLabel: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    color: theme.colors.onSurfaceVariant,
     marginTop: 4,
+    fontWeight: '500',
+  },
+  listContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  applicationCardContainer: {
+    marginBottom: 16,
   },
   applicationsList: {
     flex: 1,

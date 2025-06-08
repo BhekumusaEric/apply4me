@@ -1,55 +1,131 @@
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
   SafeAreaView,
-  Alert 
+  Alert,
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Animatable from 'react-native-animatable';
+import { LinearGradient } from 'expo-linear-gradient';
+import { supabase } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
+import { theme } from '../theme/theme';
 
 export default function ProfileScreen({ navigation }) {
-  const user = {
-    name: 'Thabo Mthembu',
-    email: 'thabo.mthembu@email.com',
-    phone: '+27 69 343 4126',
-    idNumber: '0012345678901',
-    address: 'Johannesburg, Gauteng',
-    grade12Year: '2023',
-    subjects: ['Mathematics', 'Physical Science', 'English', 'Life Sciences'],
-    averagePercentage: 78
+  const { user: authUser, signOut } = useAuth();
+  const [userProfile, setUserProfile] = useState(null);
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (authUser) {
+      fetchUserProfile();
+      fetchUserApplications();
+    }
+  }, [authUser]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('student_profiles')
+        .select('*')
+        .eq('user_id', authUser.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      if (data) {
+        // Extract data from JSONB fields
+        const personalInfo = data.personal_info || {};
+        const contactInfo = data.contact_info || {};
+        const academicHistory = data.academic_history || {};
+
+        setUserProfile({
+          full_name: personalInfo.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim() || authUser.email?.split('@')[0] || 'Student',
+          email: data.email || authUser.email,
+          phone: data.phone || contactInfo.phone || '+27693434126',
+          id_number: data.id_number || '',
+          address: personalInfo.address || '',
+          grade12_year: academicHistory.grade12_year || '',
+          subjects: academicHistory.subjects || [],
+          average_percentage: academicHistory.average_percentage || 0
+        });
+      } else {
+        setUserProfile({
+          full_name: authUser.email?.split('@')[0] || 'Student',
+          email: authUser.email,
+          phone: '+27693434126',
+          id_number: '',
+          address: '',
+          grade12_year: '',
+          subjects: [],
+          average_percentage: 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
   };
 
-  const profileSections = [
+  const fetchUserApplications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*')
+        .eq('user_id', authUser.id);
+
+      if (error) throw error;
+      setApplications(data || []);
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchUserProfile(), fetchUserApplications()]);
+    setRefreshing(false);
+  };
+
+  const profileSections = userProfile ? [
     {
       title: 'Personal Information',
       icon: 'person',
       items: [
-        { label: 'Full Name', value: user.name, icon: 'person-outline' },
-        { label: 'Email Address', value: user.email, icon: 'mail-outline' },
-        { label: 'Phone Number', value: user.phone, icon: 'call-outline' },
-        { label: 'ID Number', value: user.idNumber, icon: 'card-outline' },
-        { label: 'Address', value: user.address, icon: 'location-outline' }
+        { label: 'Full Name', value: userProfile.full_name || 'Not provided', icon: 'person-outline' },
+        { label: 'Email Address', value: userProfile.email || authUser.email, icon: 'mail-outline' },
+        { label: 'Phone Number', value: userProfile.phone || 'Not provided', icon: 'call-outline' },
+        { label: 'ID Number', value: userProfile.id_number || 'Not provided', icon: 'card-outline' },
+        { label: 'Address', value: userProfile.address || 'Not provided', icon: 'location-outline' }
       ]
     },
     {
       title: 'Academic Information',
       icon: 'school',
       items: [
-        { label: 'Grade 12 Year', value: user.grade12Year, icon: 'calendar-outline' },
-        { label: 'Average Percentage', value: `${user.averagePercentage}%`, icon: 'trophy-outline' },
-        { label: 'Subjects', value: user.subjects.join(', '), icon: 'book-outline' }
+        { label: 'Grade 12 Year', value: userProfile.grade12_year || 'Not provided', icon: 'calendar-outline' },
+        { label: 'Average Percentage', value: userProfile.average_percentage ? `${userProfile.average_percentage}%` : 'Not provided', icon: 'trophy-outline' },
+        { label: 'Subjects', value: userProfile.subjects?.length ? userProfile.subjects.join(', ') : 'Not provided', icon: 'book-outline' }
       ]
     }
-  ];
+  ] : [];
 
   const settingsOptions = [
     {
       title: 'Account Settings',
       options: [
-        { label: 'Edit Profile', icon: 'create-outline', action: () => Alert.alert('Coming Soon', 'Profile editing will be available soon!') },
+        { label: 'Edit Profile', icon: 'create-outline', action: () => navigation.navigate('EditProfile') },
         { label: 'Change Password', icon: 'lock-closed-outline', action: () => Alert.alert('Coming Soon', 'Password change will be available soon!') },
         { label: 'Notification Settings', icon: 'notifications-outline', action: () => Alert.alert('Coming Soon', 'Notification settings will be available soon!') }
       ]
@@ -78,41 +154,79 @@ export default function ProfileScreen({ navigation }) {
       'Are you sure you want to logout?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: () => Alert.alert('Logged Out', 'You have been logged out successfully.') }
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          }
+        }
       ]
     );
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  const userName = userProfile?.full_name || authUser?.email?.split('@')[0] || 'Student';
+  const userEmail = userProfile?.email || authUser?.email || '';
+  const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {user.name.split(' ').map(n => n[0]).join('')}
-              </Text>
+        <LinearGradient
+          colors={[theme.colors.primary, theme.colors.primaryContainer]}
+          style={styles.profileHeader}
+        >
+          <Animatable.View animation="fadeInDown" style={styles.headerContent}>
+            <View style={styles.avatarContainer}>
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{userInitials}</Text>
+              </View>
             </View>
-          </View>
-          <Text style={styles.userName}>{user.name}</Text>
-          <Text style={styles.userEmail}>{user.email}</Text>
-          
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>3</Text>
-              <Text style={styles.statLabel}>Applications</Text>
+            <Text style={styles.userName}>{userName}</Text>
+            <Text style={styles.userEmail}>{userEmail}</Text>
+
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>{applications.length}</Text>
+                <Text style={styles.statLabel}>Applications</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {applications.filter(app => app.status === 'submitted' || app.status === 'under_review').length}
+                </Text>
+                <Text style={styles.statLabel}>In Progress</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statValue}>
+                  {userProfile?.average_percentage ? `${userProfile.average_percentage}%` : 'N/A'}
+                </Text>
+                <Text style={styles.statLabel}>Grade 12 Avg</Text>
+              </View>
             </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>1</Text>
-              <Text style={styles.statLabel}>Submitted</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>78%</Text>
-              <Text style={styles.statLabel}>Grade 12 Avg</Text>
-            </View>
-          </View>
-        </View>
+          </Animatable.View>
+        </LinearGradient>
 
         {/* Profile Information */}
         {profileSections.map((section, sectionIndex) => (
