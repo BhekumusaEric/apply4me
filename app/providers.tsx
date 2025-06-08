@@ -3,101 +3,109 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { Toaster } from '@/components/ui/toaster'
-import type { User, Session } from '@supabase/supabase-js'
+import { SessionProvider, useSession } from 'next-auth/react'
+import type { User } from '@supabase/supabase-js'
 
 interface AuthContextType {
   user: User | null
-  session: Session | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signUp: (email: string, password: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
-  refreshSession: () => Promise<void>
+  // Hybrid auth properties
+  isAuthenticated: boolean
+  authProvider: 'supabase' | 'nextauth' | null
+  userEmail: string | null
+  userName: string | null
+  userId: string | null
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  session: null,
   loading: true,
   signIn: async () => ({ error: null }),
   signUp: async () => ({ error: null }),
   signOut: async () => {},
-  refreshSession: async () => {},
+  isAuthenticated: false,
+  authProvider: null,
+  userEmail: null,
+  userName: null,
+  userId: null,
 })
 
 export const useAuth = () => {
-  try {
-    const context = useContext(AuthContext)
-    if (!context) {
-      // Check if we're on the server side
-      if (typeof window === 'undefined') {
-        // Server-side fallback
-        return {
-          user: null,
-          session: null,
-          loading: true,
-          signIn: async () => ({ error: new Error('Auth not available on server') }),
-          signUp: async () => ({ error: new Error('Auth not available on server') }),
-          signOut: async () => {},
-          refreshSession: async () => {},
-        }
+  const context = useContext(AuthContext)
+  if (!context) {
+    // In development, log the error but provide a fallback
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('useAuth called outside of AuthProvider, providing fallback')
+      return {
+        user: null,
+        loading: false,
+        signIn: async () => ({ error: new Error('Auth not available') }),
+        signUp: async () => ({ error: new Error('Auth not available') }),
+        signOut: async () => {},
+        isAuthenticated: false,
+        authProvider: null,
+        userEmail: null,
+        userName: null,
+        userId: null,
       }
-
-      // In development, log the error but provide a fallback
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('useAuth called outside of AuthProvider, providing fallback')
-        return {
-          user: null,
-          session: null,
-          loading: false,
-          signIn: async () => ({ error: new Error('Auth not available') }),
-          signUp: async () => ({ error: new Error('Auth not available') }),
-          signOut: async () => {},
-          refreshSession: async () => {},
-        }
-      }
-      throw new Error('useAuth must be used within an AuthProvider')
     }
-    return context
-  } catch (error) {
-    // Catch any React context errors and provide fallback
-    console.warn('useAuth context error, providing fallback:', error)
-    return {
-      user: null,
-      session: null,
-      loading: false,
-      signIn: async () => ({ error: new Error('Auth context error') }),
-      signUp: async () => ({ error: new Error('Auth context error') }),
-      signOut: async () => {},
-      refreshSession: async () => {},
-    }
+    throw new Error('useAuth must be used within an AuthProvider')
   }
+  return context
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+// Hybrid Auth Provider that combines Supabase and NextAuth
+function HybridAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+
+  // Get NextAuth session
+  const { data: nextAuthSession, status: nextAuthStatus } = useSession()
+
+  // Hybrid authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authProvider, setAuthProvider] = useState<'supabase' | 'nextauth' | null>(null)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [userName, setUserName] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+      const { data: { session } } = await supabase.auth.getSession()
+      setUser(session?.user ?? null)
 
-        if (error) {
-          console.error('❌ Error getting initial session:', error)
-        } else {
-          console.log('🔐 Initial session:', session ? 'Found' : 'None')
-          setSession(session)
-          setUser(session?.user ?? null)
-        }
-      } catch (error) {
-        console.error('❌ Session fetch error:', error)
-      } finally {
-        setLoading(false)
+      // Check if we have either Supabase or NextAuth session
+      const hasSupabaseAuth = !!session?.user
+      const hasNextAuth = nextAuthStatus === 'authenticated' && !!nextAuthSession?.user
+
+      if (hasSupabaseAuth) {
+        setIsAuthenticated(true)
+        setAuthProvider('supabase')
+        setUserEmail(session.user.email || null)
+        setUserName(session.user.user_metadata?.full_name || session.user.email || null)
+        setUserId(session.user.id || null)
+        console.log('🔐 Supabase auth detected:', session.user.email, 'ID:', session.user.id)
+      } else if (hasNextAuth && nextAuthSession?.user) {
+        setIsAuthenticated(true)
+        setAuthProvider('nextauth')
+        setUserEmail(nextAuthSession.user.email || null)
+        setUserName(nextAuthSession.user.name || nextAuthSession.user.email || null)
+        setUserId(nextAuthSession.user.email || null) // For NextAuth, we'll use email as identifier
+        console.log('🔐 NextAuth detected:', nextAuthSession.user.email)
+      } else {
+        setIsAuthenticated(false)
+        setAuthProvider(null)
+        setUserEmail(null)
+        setUserName(null)
+        setUserId(null)
       }
+
+      setLoading(false)
     }
 
     getInitialSession()
@@ -105,25 +113,56 @@ export function Providers({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔐 Auth state change:', event, session ? 'Session exists' : 'No session')
-
-        setSession(session)
+        console.log('Supabase auth state changed:', event, session?.user?.email)
         setUser(session?.user ?? null)
-        setLoading(false)
 
-        // Handle specific auth events
-        if (event === 'SIGNED_IN') {
-          console.log('✅ User signed in:', session?.user?.email)
-        } else if (event === 'SIGNED_OUT') {
-          console.log('👋 User signed out')
-        } else if (event === 'TOKEN_REFRESHED') {
-          console.log('🔄 Token refreshed for:', session?.user?.email)
+        if (session?.user) {
+          setIsAuthenticated(true)
+          setAuthProvider('supabase')
+          setUserEmail(session.user.email || null)
+          setUserName(session.user.user_metadata?.full_name || session.user.email || null)
+          setUserId(session.user.id || null)
+        } else if (nextAuthStatus !== 'authenticated') {
+          // Only clear if NextAuth is also not authenticated
+          setIsAuthenticated(false)
+          setAuthProvider(null)
+          setUserEmail(null)
+          setUserName(null)
+          setUserId(null)
         }
+
+        setLoading(false)
       }
     )
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase.auth, nextAuthSession, nextAuthStatus])
+
+  // Update state when NextAuth session changes
+  useEffect(() => {
+    if (nextAuthStatus === 'loading') return
+
+    if (nextAuthStatus === 'authenticated' && nextAuthSession?.user) {
+      // Only set NextAuth as primary if no Supabase user
+      if (!user) {
+        setIsAuthenticated(true)
+        setAuthProvider('nextauth')
+        setUserEmail(nextAuthSession.user.email || null)
+        setUserName(nextAuthSession.user.name || nextAuthSession.user.email || null)
+        setUserId(nextAuthSession.user.email || null) // For NextAuth, use email as identifier
+        console.log('🔐 NextAuth session updated:', nextAuthSession.user.email)
+      }
+    } else if (nextAuthStatus === 'unauthenticated') {
+      // Only clear if Supabase is also not authenticated
+      if (!user) {
+        setIsAuthenticated(false)
+        setAuthProvider(null)
+        setUserEmail(null)
+        setUserName(null)
+        setUserId(null)
+      }
+    }
+  }, [nextAuthSession, nextAuthStatus, user])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -142,42 +181,42 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    try {
-      setLoading(true)
-      const { error } = await supabase.auth.signOut()
-      if (error) {
-        console.error('❌ Sign out error:', error)
-        throw error
-      }
-      console.log('👋 Successfully signed out')
-    } catch (error) {
-      console.error('❌ Sign out failed:', error)
-      throw error
-    } finally {
-      setLoading(false)
-    }
-  }
+    // Sign out from both systems
+    await supabase.auth.signOut()
 
-  const refreshSession = async () => {
-    try {
-      const { data: { session }, error } = await supabase.auth.refreshSession()
-      if (error) {
-        console.error('❌ Session refresh error:', error)
-        throw error
-      }
-      console.log('🔄 Session refreshed successfully')
-      setSession(session)
-      setUser(session?.user ?? null)
-    } catch (error) {
-      console.error('❌ Session refresh failed:', error)
-      throw error
-    }
+    // Clear hybrid state
+    setIsAuthenticated(false)
+    setAuthProvider(null)
+    setUserEmail(null)
+    setUserName(null)
+    setUserId(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, refreshSession }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      signIn,
+      signUp,
+      signOut,
+      isAuthenticated,
+      authProvider,
+      userEmail,
+      userName,
+      userId
+    }}>
       {children}
       <Toaster />
     </AuthContext.Provider>
+  )
+}
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <SessionProvider>
+      <HybridAuthProvider>
+        {children}
+      </HybridAuthProvider>
+    </SessionProvider>
   )
 }

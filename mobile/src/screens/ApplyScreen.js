@@ -95,7 +95,7 @@ export default function ApplyScreen({ route, navigation }) {
                 <Ionicons name="call" size={20} color="#007A4D" />
                 <View style={styles.infoContent}>
                   <Text style={styles.infoLabel}>Phone Number</Text>
-                  <Text style={styles.infoValue}>+27 82 123 4567</Text>
+                  <Text style={styles.infoValue}>+27 69 343 4126</Text>
                 </View>
                 <TouchableOpacity>
                   <Ionicons name="create" size={20} color="#666" />

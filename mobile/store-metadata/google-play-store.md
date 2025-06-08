@@ -63,7 +63,7 @@ Our advanced automation system continuously discovers new institutions and bursa
 Join over 2,847 students who have successfully used Apply4Me to secure their place in higher education institutions across South Africa.
 
 **📞 SUPPORT:**
-Our dedicated support team is available to help you throughout your application journey. Contact us at support@apply4me.co.za or +27 (0) 11 123 4567.
+Our dedicated support team is available to help you throughout your application journey. Contact us at apply4me2025@outlook.com or +27 69 343 4126.
 
 **🚀 START YOUR JOURNEY TODAY:**
 Download Apply4Me and take the first step towards your educational future. Your dream institution is just a few taps away!
@@ -82,7 +82,7 @@ education, university, college, applications, bursaries, south africa, students,
 Everyone
 
 ## 📧 **Contact Information**
-- **Email:** support@apply4me.co.za
+- **Email:** apply4me2025@outlook.com
 - **Website:** https://apply4me-eta.vercel.app
 - **Privacy Policy:** https://apply4me-eta.vercel.app/privacy
 

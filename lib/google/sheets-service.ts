@@ -1,17 +1,42 @@
 import { google } from 'googleapis'
 import { getGoogleAuthClient } from './auth-config'
+import { getGoogleOAuthClient, hasValidGoogleSession, getGoogleOAuthClientFromToken } from './oauth-client'
 
 export class GoogleSheetsService {
   private sheets: any
 
   constructor() {
-    this.initializeSheets()
+    // Don't initialize automatically to avoid build-time issues
+    // Initialize lazily when needed
   }
 
-  private async initializeSheets() {
+  // Initialize with OAuth token
+  static async withOAuth(accessToken: string, refreshToken?: string) {
+    const service = new GoogleSheetsService()
+    await service.initializeSheets(true, accessToken)
+    return service
+  }
+
+  private async initializeSheets(useOAuth: boolean = false, accessToken?: string) {
     try {
-      const authClient = await getGoogleAuthClient()
-      this.sheets = google.sheets({ version: 'v4', auth: authClient })
+      let auth: any;
+
+      // Use OAuth if explicitly requested and token provided
+      if (useOAuth && accessToken) {
+        console.log('Using Google OAuth for Sheets...')
+        auth = await getGoogleOAuthClientFromToken(accessToken)
+      } else if (process.env.GOOGLE_UNRESTRICTED_API_ACCESS) {
+        console.log('Using Google unrestricted API key for Sheets...')
+        auth = process.env.GOOGLE_UNRESTRICTED_API_ACCESS
+      } else if (process.env.GOOGLE_API_KEY) {
+        console.log('Using Google API key for Sheets...')
+        auth = process.env.GOOGLE_API_KEY
+      } else {
+        console.log('Using service account for Sheets...')
+        auth = await getGoogleAuthClient()
+      }
+
+      this.sheets = google.sheets({ version: 'v4', auth: auth as any })
     } catch (error) {
       console.error('Error initializing Google Sheets:', error)
       throw error
@@ -25,15 +50,22 @@ export class GoogleSheetsService {
         await this.initializeSheets()
       }
 
+      console.log('🔍 Creating spreadsheet with title:', typeof title, title)
+      console.log('🔍 Sheet names:', sheetNames)
+
       const sheets = sheetNames.map(name => ({
         properties: { title: name }
       }))
 
+      const requestBody = {
+        properties: { title },
+        sheets
+      }
+
+      console.log('🔍 Request body:', JSON.stringify(requestBody, null, 2))
+
       const response = await this.sheets.spreadsheets.create({
-        resource: {
-          properties: { title },
-          sheets
-        }
+        resource: requestBody
       })
 
       return {
@@ -254,5 +286,5 @@ export class GoogleSheetsService {
   }
 }
 
-// Export singleton instance
-export const googleSheetsService = new GoogleSheetsService()
+// Export factory function instead of singleton to avoid build-time initialization
+export const createGoogleSheetsService = () => new GoogleSheetsService()

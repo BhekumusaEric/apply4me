@@ -5,11 +5,12 @@ export const GOOGLE_CLOUD_CONFIG = {
   projectId: process.env.GOOGLE_CLOUD_PROJECT_ID || 'apply4me',
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
   scopes: [
-    'https://www.googleapis.com/auth/cloud-platform',
-    'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/drive',
     'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/gmail.send'
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/calendar.events',
+    'https://www.googleapis.com/auth/cloud-platform'
   ]
 }
 

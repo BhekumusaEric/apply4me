@@ -198,11 +198,11 @@ export default function SimpleSignInPage() {
           </CardContent>
         </Card>
 
-        {/* Test Account Info */}
+        {/* Contact Support */}
         <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm text-blue-800">
-          <p className="font-medium">For testing:</p>
-          <p><strong>Email:</strong> test@apply4me.co.za</p>
-          <p><strong>Password:</strong> TestPassword123!</p>
+          <p className="font-medium">Need help?</p>
+          <p><strong>Email:</strong> apply4me2025@outlook.com</p>
+          <p><strong>WhatsApp:</strong> +27 69 343 4126</p>
         </div>
       </div>
     </div>

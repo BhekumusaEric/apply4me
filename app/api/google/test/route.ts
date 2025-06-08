@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyGoogleCredentials } from '@/lib/google/auth-config'
 import { googleDriveService } from '@/lib/google/drive-service'
-import { googleSheetsService } from '@/lib/google/sheets-service'
+import { createGoogleSheetsService } from '@/lib/google/sheets-service'
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,6 +47,7 @@ export async function GET(request: NextRequest) {
 
     try {
       // Try to create a test spreadsheet
+      const googleSheetsService = createGoogleSheetsService()
       const sheetsResult = await googleSheetsService.createSpreadsheet(
         `Apply4Me Test - ${new Date().toISOString()}`,
         ['Test Sheet']
@@ -135,6 +136,7 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'create_tracking_sheet':
         const { studentName, studentEmail } = data
+        const googleSheetsService = createGoogleSheetsService()
         const result = await googleSheetsService.createApplicationTrackingSheet(
           studentName,
           studentEmail

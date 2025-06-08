@@ -1,5 +1,6 @@
 import { google } from 'googleapis'
 import { getGoogleAuthClient } from './auth-config'
+import { getGoogleOAuthClient, hasValidGoogleSession, getGoogleOAuthClientFromToken } from './oauth-client'
 
 export class GoogleDriveService {
   private drive: any
@@ -8,10 +9,33 @@ export class GoogleDriveService {
     this.initializeDrive()
   }
 
-  private async initializeDrive() {
+  // Initialize with OAuth token
+  static async withOAuth(accessToken: string, refreshToken?: string) {
+    const service = new GoogleDriveService()
+    await service.initializeDrive(true, accessToken)
+    return service
+  }
+
+  private async initializeDrive(useOAuth: boolean = false, accessToken?: string) {
     try {
-      const authClient = await getGoogleAuthClient()
-      this.drive = google.drive({ version: 'v3', auth: authClient })
+      let auth: any;
+
+      // Use OAuth if explicitly requested and token provided
+      if (useOAuth && accessToken) {
+        console.log('Using Google OAuth for Drive...')
+        auth = await getGoogleOAuthClientFromToken(accessToken)
+      } else if (process.env.GOOGLE_UNRESTRICTED_API_ACCESS) {
+        console.log('Using Google unrestricted API key for Drive...')
+        auth = process.env.GOOGLE_UNRESTRICTED_API_ACCESS
+      } else if (process.env.GOOGLE_API_KEY) {
+        console.log('Using Google API key for Drive...')
+        auth = process.env.GOOGLE_API_KEY
+      } else {
+        console.log('Using service account for Drive...')
+        auth = await getGoogleAuthClient()
+      }
+
+      this.drive = google.drive({ version: 'v3', auth: auth as any })
     } catch (error) {
       console.error('Error initializing Google Drive:', error)
       throw error

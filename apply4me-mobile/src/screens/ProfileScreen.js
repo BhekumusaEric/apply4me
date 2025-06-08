@@ -66,7 +66,7 @@ export default function ProfileScreen({ navigation }) {
       title: 'Support & Help',
       options: [
         { label: 'Help Center', icon: 'help-circle-outline', action: () => Alert.alert('Help Center', 'Visit our website for comprehensive help guides.') },
-        { label: 'Contact Support', icon: 'call-outline', action: () => Alert.alert('Contact Support', 'Call us at +27 (0) 11 123 4567 or email support@apply4me.co.za') },
+        { label: 'Contact Support', icon: 'call-outline', action: () => Alert.alert('Contact Support', 'Call us at +27 69 343 4126 or email apply4me2025@outlook.com') },
         { label: 'About Apply4Me', icon: 'information-circle-outline', action: () => Alert.alert('About Apply4Me', 'Apply4Me v1.0.0\nEmpowering South African students to access higher education opportunities.') }
       ]
     }

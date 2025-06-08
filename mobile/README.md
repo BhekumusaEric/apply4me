@@ -148,8 +148,8 @@ npm run submit:ios
 
 ## 📞 Support
 
-- **Email:** support@apply4me.co.za
-- **Phone:** +27 (0) 11 123 4567
+- **Email:** apply4me2025@outlook.com
+- **Phone:** +27 69 343 4126
 - **Website:** https://apply4me-eta.vercel.app
 
 ---

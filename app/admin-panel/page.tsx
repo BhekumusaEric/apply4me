@@ -28,6 +28,8 @@ import {
 } from 'lucide-react'
 import { UserManagement } from '@/components/admin/user-management'
 import { ApplicationManagement } from '@/components/admin/application-management'
+import { InstitutionManagement } from '@/components/admin/institution-management'
+import { ProgramManagement } from '@/components/admin/program-management'
 
 interface AdminStats {
   totalUsers: number
@@ -325,10 +327,11 @@ export default function AdminPanel() {
       {/* Main Content */}
       <div className="container py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="institutions">Institutions</TabsTrigger>
+            <TabsTrigger value="programs">Programs</TabsTrigger>
             <TabsTrigger value="bursaries">Bursaries</TabsTrigger>
             <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -444,47 +447,18 @@ export default function AdminPanel() {
 
           {/* Institutions Tab */}
           <TabsContent value="institutions" className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Institution Management</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Institution
-              </Button>
-            </div>
+            <InstitutionManagement
+              institutions={institutions}
+              onRefresh={fetchAllData}
+            />
+          </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>All Institutions ({institutions.length})</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {institutions.map((institution) => (
-                    <div key={institution.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{institution.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {institution.type} • {institution.province}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Application Fee: R{institution.application_fee}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={institution.is_featured ? "default" : "secondary"}>
-                          {institution.is_featured ? "Featured" : "Standard"}
-                        </Badge>
-                        <Button variant="outline" size="sm">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          {/* Programs Tab */}
+          <TabsContent value="programs" className="space-y-6">
+            <ProgramManagement
+              institutions={institutions}
+              onRefresh={fetchAllData}
+            />
           </TabsContent>
 
           {/* Bursaries Tab */}

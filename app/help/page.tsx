@@ -212,7 +212,7 @@ export default function HelpCenterPage() {
                     <Mail className="h-5 w-5 text-primary" />
                     <div>
                       <h4 className="font-medium text-sm">Email Support</h4>
-                      <p className="text-xs text-muted-foreground">support@apply4me.co.za</p>
+                      <p className="text-xs text-muted-foreground">apply4me2025@outlook.com</p>
                       <p className="text-xs text-muted-foreground">Response within 24 hours</p>
                     </div>
                   </div>
@@ -221,7 +221,7 @@ export default function HelpCenterPage() {
                     <Phone className="h-5 w-5 text-primary" />
                     <div>
                       <h4 className="font-medium text-sm">Phone Support</h4>
-                      <p className="text-xs text-muted-foreground">+27 (0) 11 123 4567</p>
+                      <p className="text-xs text-muted-foreground">+27 69 343 4126</p>
                       <p className="text-xs text-muted-foreground">Mon-Fri 8AM-6PM SAST</p>
                     </div>
                   </div>

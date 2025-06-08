@@ -339,7 +339,7 @@ function VerifyEmailContent() {
               <ul className="list-disc list-inside space-y-1 ml-4">
                 <li>Check your spam/junk folder</li>
                 <li>Make sure you entered the correct email address</li>
-                <li>Add support@apply4me.co.za to your contacts</li>
+                <li>Add apply4me2025@outlook.com to your contacts</li>
                 <li>Try resending the verification email</li>
               </ul>
 

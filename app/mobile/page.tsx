@@ -115,7 +115,7 @@ export default function MobilePage() {
             Contact us for QR code access or help with installation
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="mailto:support@apply4me.co.za" style={{ backgroundColor: '#007A4D', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none' }}>
+            <Link href="mailto:apply4me2025@outlook.com" style={{ backgroundColor: '#007A4D', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none' }}>
               📧 Email Support
             </Link>
             <Link href="https://apply4me-eta.vercel.app" style={{ backgroundColor: '#4ECDC4', color: 'white', padding: '12px 24px', borderRadius: '8px', textDecoration: 'none' }}>

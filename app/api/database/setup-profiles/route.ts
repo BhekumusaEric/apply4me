@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase'
+import { createServerSupabaseAdminClient } from '@/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -261,7 +261,7 @@ CREATE INDEX IF NOT EXISTS idx_student_documents_user_id ON public.student_docum
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = createServerSupabaseAdminClient()
 
     console.log('🔍 Checking existing database tables...')
 

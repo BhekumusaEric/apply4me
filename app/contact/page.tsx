@@ -89,7 +89,7 @@ export default function ContactPage() {
                     <Mail className="h-5 w-5 text-primary mt-0.5" />
                     <div>
                       <h4 className="font-medium">Email Support</h4>
-                      <p className="text-sm text-muted-foreground">support@apply4me.co.za</p>
+                      <p className="text-sm text-muted-foreground">apply4me2025@outlook.com</p>
                       <p className="text-xs text-muted-foreground">We respond within 24 hours</p>
                     </div>
                   </div>
@@ -98,7 +98,7 @@ export default function ContactPage() {
                     <Phone className="h-5 w-5 text-primary mt-0.5" />
                     <div>
                       <h4 className="font-medium">Phone Support</h4>
-                      <p className="text-sm text-muted-foreground">+27 (0) 11 123 4567</p>
+                      <p className="text-sm text-muted-foreground">+27 69 343 4126</p>
                       <p className="text-xs text-muted-foreground">Mon-Fri 8AM-6PM SAST</p>
                     </div>
                   </div>
@@ -108,9 +108,9 @@ export default function ContactPage() {
                     <div>
                       <h4 className="font-medium">Office Address</h4>
                       <p className="text-sm text-muted-foreground">
-                        123 Education Street<br />
-                        Johannesburg, 2000<br />
-                        South Africa
+                        Eric Tech Solutions<br />
+                        Johannesburg, South Africa<br />
+                        Remote Operations
                       </p>
                     </div>
                   </div>

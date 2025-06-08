@@ -1,5 +1,56 @@
 import { createServerSupabaseAdminClient } from '@/lib/supabase-server'
 
+/**
+ * Helper function to resolve user identifier to UUID
+ * Handles both email addresses and UUIDs
+ */
+async function resolveUserIdToUUID(userIdentifier: string): Promise<string | null> {
+  if (!userIdentifier || userIdentifier === 'unknown') {
+    return null
+  }
+
+  // Check if it's already a UUID (basic UUID format check)
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (uuidRegex.test(userIdentifier)) {
+    return userIdentifier
+  }
+
+  // If it looks like an email, try to find the user by email
+  if (userIdentifier.includes('@')) {
+    const supabase = createServerSupabaseAdminClient()
+
+    try {
+      // First try to find in auth.users table by listing users and filtering by email
+      const { data: authUsers } = await supabase.auth.admin.listUsers()
+      const authUser = authUsers?.users?.find(user => user.email === userIdentifier)
+      if (authUser?.id) {
+        return authUser.id
+      }
+
+      // Fallback: try to find in student_profiles table
+      const { data: profile } = await supabase
+        .from('student_profiles')
+        .select('user_id')
+        .eq('email', userIdentifier)
+        .single()
+
+      if (profile?.user_id) {
+        return profile.user_id
+      }
+
+      console.log(`⚠️ Could not resolve user identifier to UUID: ${userIdentifier}`)
+      return null
+    } catch (error) {
+      console.error(`❌ Error resolving user identifier ${userIdentifier}:`, error)
+      return null
+    }
+  }
+
+  // If it's neither UUID nor email, return null
+  console.log(`⚠️ Invalid user identifier format: ${userIdentifier}`)
+  return null
+}
+
 export interface NotificationData {
   type: 'general' | 'payment_verified' | 'payment_rejected' | 'application_update' | 'deadline_reminder'
   title: string
@@ -37,14 +88,25 @@ class RealTimeNotificationService {
    */
   async sendNotification(notification: UserNotification): Promise<NotificationResult> {
     try {
-      console.log(`📧 Sending notification to user ${notification.userId}:`, notification.title)
+      // Resolve user identifier to UUID
+      const resolvedUserId = await resolveUserIdToUUID(notification.userId)
+      if (!resolvedUserId) {
+        console.error(`❌ Could not resolve user identifier: ${notification.userId}`)
+        return {
+          success: false,
+          summary: { total: 1, successful: 0, failed: 1 },
+          errors: [`Could not resolve user identifier: ${notification.userId}`]
+        }
+      }
+
+      console.log(`📧 Sending notification to user ${resolvedUserId}:`, notification.title)
 
       // Store notification in database
       const { error: dbError } = await this.supabase
-        .from('user_notifications')
+        .from('notifications')
         .insert({
           id: notification.id,
-          user_id: notification.userId,
+          user_id: resolvedUserId,
           type: notification.type,
           title: notification.title,
           message: notification.message,
@@ -180,15 +242,23 @@ class RealTimeNotificationService {
    * Get notifications for a specific user
    */
   async getUserNotifications(
-    userId: string,
+    userIdentifier: string,
     options: { limit?: number; unreadOnly?: boolean } | number = 50
   ): Promise<UserNotification[]> {
     // Handle both old and new API signatures
     const limit = typeof options === 'number' ? options : (options.limit || 50)
     const unreadOnly = typeof options === 'object' ? options.unreadOnly : false
+
     try {
+      // Resolve user identifier to UUID
+      const userId = await resolveUserIdToUUID(userIdentifier)
+      if (!userId) {
+        console.log(`⚠️ Could not resolve user identifier for notifications: ${userIdentifier}`)
+        return []
+      }
+
       let query = this.supabase
-        .from('user_notifications')
+        .from('notifications')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
@@ -228,7 +298,7 @@ class RealTimeNotificationService {
   async markAsRead(notificationId: string): Promise<boolean> {
     try {
       const { error } = await this.supabase
-        .from('user_notifications')
+        .from('notifications')
         .update({ is_read: true })
         .eq('id', notificationId)
 

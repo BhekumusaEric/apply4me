@@ -139,7 +139,7 @@ export default function HomeScreen({ navigation }) {
             <Ionicons name="call" size={24} color="#007A4D" />
             <View style={styles.helpText}>
               <Text style={styles.helpTitle}>Contact Support</Text>
-              <Text style={styles.helpSubtitle}>+27 (0) 11 123 4567</Text>
+              <Text style={styles.helpSubtitle}>+27 69 343 4126</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>

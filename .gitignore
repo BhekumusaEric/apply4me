@@ -16,6 +16,11 @@ build/
 .env.test.local
 .env.production.local
 
+# Google Cloud credentials
+credentials/
+service-account-key.json
+*.json
+
 # Vercel
 .vercel
 

@@ -41,19 +41,6 @@ export default function PaymentSuccessPage() {
 
   useEffect(() => {
     fetchApplicationDetails()
-
-    // Check for PayFast return parameters
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search)
-      const paymentId = urlParams.get('pf_payment_id')
-      const paymentStatus = urlParams.get('payment_status')
-
-      if (paymentId && paymentStatus) {
-        console.log('PayFast return detected:', { paymentId, paymentStatus })
-        // PayFast will handle the status update via ITN webhook
-        // This is just for user feedback
-      }
-    }
   }, [params.applicationId])
 
   const fetchApplicationDetails = async () => {
@@ -208,18 +195,18 @@ export default function PaymentSuccessPage() {
               <CardHeader>
                 <CardTitle>Payment Summary</CardTitle>
               </CardHeader>
-              <CardContent className="payment-summary">
+              <CardContent>
                 <div className="space-y-2">
-                  <div className="flex justify-between text-sm card-content-text">
+                  <div className="flex justify-between text-sm">
                     <span>Institution Application Fee</span>
                     <span>{formatCurrency((application.total_amount || 0) - (application.service_type === 'express' ? 100 : 50))}</span>
                   </div>
-                  <div className="flex justify-between text-sm card-content-text">
+                  <div className="flex justify-between text-sm">
                     <span>Apply4Me Service Fee ({application.service_type})</span>
                     <span>{formatCurrency(application.service_type === 'express' ? 100 : 50)}</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between font-semibold text-lg card-content-text">
+                  <div className="flex justify-between font-semibold text-lg">
                     <span>Total Paid</span>
                     <span className="text-green-600">{formatCurrency(application.total_amount)}</span>
                   </div>
@@ -328,10 +315,10 @@ export default function PaymentSuccessPage() {
                 </p>
                 <div className="space-y-2 text-sm">
                   <div>
-                    <strong>Email:</strong> support@apply4me.co.za
+                    <strong>Email:</strong> apply4me2025@outlook.com
                   </div>
                   <div>
-                    <strong>Phone:</strong> +27 (0) 11 123 4567
+                    <strong>Phone:</strong> +27 69 343 4126
                   </div>
                   <div>
                     <strong>Hours:</strong> Mon-Fri 8AM-6PM

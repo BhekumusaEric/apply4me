@@ -58,7 +58,7 @@ Our intelligent system continuously discovers new institutions and bursary oppor
 Join 2,847+ students who have successfully secured their place in higher education through Apply4Me. Our platform has facilitated thousands of successful applications across South Africa.
 
 **📞 DEDICATED SUPPORT:**
-Our South African support team understands the local education landscape and is ready to help you succeed. Contact us at support@apply4me.co.za or +27 (0) 11 123 4567.
+Our South African support team understands the local education landscape and is ready to help you succeed. Contact us at apply4me2025@outlook.com or +27 69 343 4126.
 
 **🚀 START YOUR EDUCATIONAL JOURNEY:**
 Download Apply4Me today and transform your educational aspirations into reality. Your future starts with a single tap.

@@ -3,22 +3,28 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/app/providers'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { Menu, X, GraduationCap, User, LogOut } from 'lucide-react'
-import { useAuth } from '@/app/providers'
-import { createClient } from '@/lib/supabase'
 import { ClientOnly } from '@/components/client-only'
 import RealTimeNotificationCenter from '@/components/notifications/RealTimeNotificationCenter'
 
 function HeaderContent() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const router = useRouter()
-  const { user } = useAuth()
-  const supabase = createClient()
+  const {
+    isAuthenticated,
+    authProvider,
+    userEmail,
+    userName,
+    userId,
+    signOut: hybridSignOut,
+    user: supabaseUser
+  } = useAuth()
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    await hybridSignOut()
     router.push('/')
   }
 
@@ -28,7 +34,6 @@ function HeaderContent() {
     { name: 'Career Profiler', href: '/career-profiler' },
     { name: 'Bursaries', href: '/bursaries' },
     { name: 'How It Works', href: '/how-it-works' },
-    { name: 'Google Services', href: '/google-services' },
   ]
 
   return (
@@ -56,9 +61,9 @@ function HeaderContent() {
         {/* User Actions */}
         <div className="flex items-center space-x-4">
           <ThemeToggle />
-          {user ? (
+          {isAuthenticated ? (
             <div className="hidden md:flex items-center space-x-2">
-              <RealTimeNotificationCenter userId={user.id} />
+              <RealTimeNotificationCenter userId={userId || userEmail || 'unknown'} />
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/dashboard">
                   <User className="h-4 w-4 mr-2" />
@@ -72,11 +77,12 @@ function HeaderContent() {
                 </Link>
               </Button>
               {/* Admin Link for authorized users */}
-              {user?.email && [
+              {userEmail && [
                 'bhntshwcjc025@student.wethinkcode.co.za',
                 'admin@apply4me.co.za',
-                'bhekumusa@apply4me.co.za'
-              ].includes(user.email) && (
+                'bhekumusa@apply4me.co.za',
+                'kelvinbacela@gmail.com'
+              ].includes(userEmail) && (
                 <Button variant="ghost" size="sm" asChild>
                   <Link href="/admin-panel">
                     <User className="h-4 w-4 mr-2" />
@@ -132,10 +138,10 @@ function HeaderContent() {
                 <span className="text-sm font-medium">Theme</span>
                 <ThemeToggle />
               </div>
-              {user ? (
+              {isAuthenticated ? (
                 <>
                   <div className="flex justify-center py-2">
-                    <RealTimeNotificationCenter userId={user.id} />
+                    <RealTimeNotificationCenter userId={userId || userEmail || 'unknown'} />
                   </div>
                   <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
                     <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
@@ -150,11 +156,12 @@ function HeaderContent() {
                     </Link>
                   </Button>
                   {/* Admin Link for authorized users */}
-                  {user?.email && [
+                  {userEmail && [
                     'bhntshwcjc025@student.wethinkcode.co.za',
                     'admin@apply4me.co.za',
-                    'bhekumusa@apply4me.co.za'
-                  ].includes(user.email) && (
+                    'bhekumusa@apply4me.co.za',
+                    'kelvinbacela@gmail.com'
+                  ].includes(userEmail) && (
                     <Button variant="ghost" size="sm" className="w-full justify-start" asChild>
                       <Link href="/admin-panel" onClick={() => setIsMenuOpen(false)}>
                         <User className="h-4 w-4 mr-2" />

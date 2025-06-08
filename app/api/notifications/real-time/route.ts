@@ -16,12 +16,21 @@ export async function GET(request: NextRequest) {
       }, { status: 400 })
     }
 
-    const result = await notificationService.getUserNotifications(userId, {
+    console.log(`🔍 Fetching notifications for user: ${userId}`)
+
+    const notifications = await notificationService.getUserNotifications(userId, {
       limit,
       unreadOnly
     })
 
-    return NextResponse.json(result)
+    const unreadCount = notifications.filter(n => !n.isRead).length
+
+    return NextResponse.json({
+      success: true,
+      notifications,
+      unreadCount,
+      total: notifications.length
+    })
 
   } catch (error) {
     console.error('❌ Real-time notifications GET error:', error)

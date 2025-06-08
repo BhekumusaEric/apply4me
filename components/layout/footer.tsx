@@ -149,7 +149,7 @@ export function Footer() {
         {/* Bottom Section */}
         <div className="mt-12 pt-8 border-t flex flex-col md:flex-row justify-between items-center">
           <div className="text-sm text-muted-foreground mb-4 md:mb-0">
-            © {currentYear} Apply4Me. All rights reserved. | Empowering South African students.
+            © {currentYear} Apply4Me. All rights reserved. | Empowering South African students. | Developed by Eric Tech
           </div>
 
           {/* Social Links */}

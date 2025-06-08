@@ -410,11 +410,11 @@ export default function ApplicationDetailsPage() {
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-2 text-sm">
                   <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span>support@apply4me.co.za</span>
+                  <span>apply4me2025@outlook.com</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>+27 11 123 4567</span>
+                  <span>+27 69 343 4126</span>
                 </div>
                 <Button variant="outline" size="sm" className="w-full" asChild>
                   <Link href="/help">

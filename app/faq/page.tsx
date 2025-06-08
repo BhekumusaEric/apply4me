@@ -199,13 +199,13 @@ export default function FAQPage() {
               <div className="grid md:grid-cols-2 gap-6 text-sm">
                 <div>
                   <h4 className="font-semibold mb-2">Email Support</h4>
-                  <p className="text-muted-foreground mb-1">support@apply4me.co.za</p>
+                  <p className="text-muted-foreground mb-1">apply4me2025@outlook.com</p>
                   <p className="text-xs text-muted-foreground">Response within 24 hours</p>
                 </div>
                 
                 <div>
                   <h4 className="font-semibold mb-2">Phone Support</h4>
-                  <p className="text-muted-foreground mb-1">+27 (0) 11 123 4567</p>
+                  <p className="text-muted-foreground mb-1">+27 69 343 4126</p>
                   <p className="text-xs text-muted-foreground">Mon-Fri 8AM-6PM SAST</p>
                 </div>
               </div>

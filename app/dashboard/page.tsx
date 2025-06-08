@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+
 import {
   FileText,
   GraduationCap,
@@ -19,9 +20,10 @@ import {
   CheckCircle,
   AlertCircle,
   TrendingUp,
-  RefreshCw,
+
   Shield,
-  User
+  User,
+  FileSpreadsheet
 } from 'lucide-react'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -38,7 +40,12 @@ interface Application {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const {
+    isAuthenticated,
+    loading: authLoading,
+    userEmail,
+    userName
+  } = useAuth()
   const router = useRouter()
   const [applications, setApplications] = useState<Application[]>([])
   const [loading, setLoading] = useState(true)
@@ -53,7 +60,9 @@ export default function DashboardPage() {
   const [profileExists, setProfileExists] = useState<boolean | null>(null)
 
   useEffect(() => {
-    if (!user) {
+    if (authLoading) return // Still loading
+
+    if (!isAuthenticated) {
       router.push('/auth/signin')
       return
     }
@@ -70,7 +79,7 @@ export default function DashboardPage() {
     }
 
     fetchDashboardData()
-  }, [user, router])
+  }, [isAuthenticated, authLoading, router])
 
   const fetchDashboardData = async () => {
     try {
@@ -119,7 +128,7 @@ export default function DashboardPage() {
               name
             )
           `)
-          .eq('user_id', user?.id)
+          .eq('user_id', userEmail) // Use email as user identifier
           .order('created_at', { ascending: false })
 
         if (!appsError && applicationsData) {
@@ -143,7 +152,7 @@ export default function DashboardPage() {
         if (key && key.startsWith('application_')) {
           try {
             const appData = JSON.parse(localStorage.getItem(key) || '{}')
-            if (appData.user_id === user?.id) {
+            if (appData.user_id === userEmail) {
               localStorageApplications.push({
                 id: appData.id,
                 institution_name: 'University of the Witwatersrand', // Mock institution name
@@ -236,7 +245,22 @@ export default function DashboardPage() {
     }
   }
 
-  if (!user) {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading your dashboard...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
     return null // Will redirect to signin
   }
 
@@ -329,7 +353,7 @@ export default function DashboardPage() {
         {/* Welcome Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">
-            {showWelcome ? 'Welcome to your dashboard' : 'Welcome back'}, {user?.user_metadata?.full_name || user?.email || 'Student'}!
+            {showWelcome ? 'Welcome to your dashboard' : 'Welcome back'}, {userName || userEmail || 'Student'}!
           </h1>
           <p className="text-muted-foreground">
             {showWelcome
@@ -339,11 +363,12 @@ export default function DashboardPage() {
           </p>
 
           {/* Admin Access */}
-          {user?.email && [
+          {userEmail && [
             'bhntshwcjc025@student.wethinkcode.co.za',
             'admin@apply4me.co.za',
-            'bhekumusa@apply4me.co.za'
-          ].includes(user.email) && (
+            'bhekumusa@apply4me.co.za',
+            'kelvinbacela@gmail.com'
+          ].includes(userEmail) && (
             <div className="mt-4 p-4 bg-primary/10 border border-primary/20 rounded-lg">
               <h3 className="font-semibold text-primary mb-2 flex items-center gap-2">
                 <Shield className="h-5 w-5" />
@@ -352,19 +377,12 @@ export default function DashboardPage() {
               <p className="text-sm text-muted-foreground mb-3">
                 You have admin privileges. Access the admin dashboard to manage institutions and applications.
               </p>
-              <div className="flex gap-2">
-                <Button asChild>
-                  <Link href="/admin">
-                    <Shield className="h-4 w-4 mr-2" />
-                    Open Admin Dashboard
-                  </Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link href="/admin/login">
-                    Admin Login
-                  </Link>
-                </Button>
-              </div>
+              <Button asChild>
+                <Link href="/admin">
+                  <Shield className="h-4 w-4 mr-2" />
+                  Open Admin Dashboard
+                </Link>
+              </Button>
             </div>
           )}
         </div>
@@ -435,18 +453,12 @@ export default function DashboardPage() {
                     Track the status of your institution applications
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={fetchDashboardData}>
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Refresh
-                  </Button>
-                  <Button asChild>
-                    <Link href="/institutions">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New Application
-                    </Link>
-                  </Button>
-                </div>
+                <Button asChild>
+                  <Link href="/institutions">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Application
+                  </Link>
+                </Button>
               </CardHeader>
               <CardContent>
                 {applications.length === 0 ? (
@@ -529,6 +541,13 @@ export default function DashboardPage() {
                 </Button>
 
                 <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link href="/applications/tracker">
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Application Tracker
+                  </Link>
+                </Button>
+
+                <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/institutions">
                     <GraduationCap className="h-4 w-4 mr-2" />
                     Browse Institutions
@@ -547,41 +566,7 @@ export default function DashboardPage() {
             {/* Notifications Panel */}
             <NotificationsPanel className="mb-6" />
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Application Progress</CardTitle>
-                <CardDescription>
-                  Your overall application completion rate
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Profile Completion</span>
-                      <span>85%</span>
-                    </div>
-                    <Progress value={85} />
-                  </div>
 
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Documents Uploaded</span>
-                      <span>60%</span>
-                    </div>
-                    <Progress value={60} />
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span>Applications Submitted</span>
-                      <span>75%</span>
-                    </div>
-                    <Progress value={75} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </main>

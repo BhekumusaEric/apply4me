@@ -103,8 +103,13 @@ export async function POST(request: NextRequest) {
       description,
       entry_requirements,
       is_available = true,
-      application_status = 'open'
+      application_status = 'open',
+      career_outcomes
     } = body
+
+    // Convert entry_requirements string to array if provided
+    const requirements = entry_requirements ? entry_requirements.split('\n').filter((req: string) => req.trim()) : []
+    const careerOutcomes = career_outcomes ? career_outcomes.split('\n').filter((outcome: string) => outcome.trim()) : []
 
     // Validate required fields
     if (!institution_id || !name || !qualification_level || !field_of_study) {
@@ -123,12 +128,17 @@ export async function POST(request: NextRequest) {
         qualification_level,
         duration_years: duration_years || 3,
         field_of_study,
-        application_deadline,
-        application_fee,
-        description,
-        entry_requirements,
+        application_deadline: application_deadline || null,
+        application_fee: application_fee || 0,
+        requirements,
+        career_outcomes: careerOutcomes,
         is_available,
         application_status,
+        is_popular: false,
+        priority_level: 1,
+        application_count: 0,
+        success_rate: 0,
+        available_spots: 50,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -152,6 +162,48 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Programs POST error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = createServerSupabaseAdminClient()
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Program ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Delete program
+    const { error } = await supabase
+      .from('programs')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Program deletion error:', error)
+      return NextResponse.json(
+        { error: 'Failed to delete program', details: error.message },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Program deleted successfully',
+      timestamp: new Date().toISOString()
+    })
+
+  } catch (error) {
+    console.error('Programs DELETE error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

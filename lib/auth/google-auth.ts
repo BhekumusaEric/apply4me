@@ -16,7 +16,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          scope: 'openid email profile https://www.googleapis.com/auth/drive.file',
+          scope: 'openid email profile https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/calendar',
           prompt: 'consent',
           access_type: 'offline',
           response_type: 'code'
@@ -24,10 +24,11 @@ export const authOptions: NextAuthOptions = {
       }
     })
   ],
-  adapter: SupabaseAdapter({
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    secret: process.env.SUPABASE_SERVICE_ROLE_KEY!
-  }),
+  // Temporarily disable Supabase adapter to avoid schema issues
+  // adapter: SupabaseAdapter({
+  //   url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  //   secret: process.env.SUPABASE_SERVICE_ROLE_KEY!
+  // }),
   session: {
     strategy: 'jwt'
   },
@@ -39,13 +40,16 @@ export const authOptions: NextAuthOptions = {
         token.refreshToken = account.refresh_token
         token.provider = account.provider
       }
-      
+
       if (profile) {
         token.email = profile.email
         token.name = profile.name
-        token.picture = profile.picture
+        // Handle picture property safely
+        if ('picture' in profile && typeof profile.picture === 'string') {
+          token.picture = profile.picture
+        }
       }
-      
+
       return token
     },
     async session({ session, token }) {
@@ -53,23 +57,32 @@ export const authOptions: NextAuthOptions = {
       session.accessToken = token.accessToken as string
       session.refreshToken = token.refreshToken as string
       session.provider = token.provider as string
-      
+
       return session
     },
     async signIn({ user, account, profile }) {
       // Allow sign in
       if (account?.provider === 'google') {
         try {
+          console.log('🔍 Google sign-in attempt for:', user.email)
+
           // Store additional user info in Supabase
-          const { data: existingUser } = await supabase
+          const { data: existingUser, error: fetchError } = await supabase
             .from('profiles')
             .select('*')
             .eq('email', user.email)
             .single()
 
+          if (fetchError && fetchError.code !== 'PGRST116') {
+            // PGRST116 is "not found" error, which is expected for new users
+            console.error('Error fetching user profile:', fetchError)
+            return false
+          }
+
           if (!existingUser) {
+            console.log('✅ Creating new user profile for:', user.email)
             // Create new user profile
-            await supabase
+            const { error: insertError } = await supabase
               .from('profiles')
               .insert({
                 email: user.email,
@@ -79,16 +92,33 @@ export const authOptions: NextAuthOptions = {
                 google_id: account.providerAccountId,
                 created_at: new Date().toISOString()
               })
+
+            if (insertError) {
+              console.error('Error creating user profile:', insertError)
+              return false
+            }
+
+            console.log('✅ New user profile created successfully')
+          } else {
+            console.log('✅ Existing user found:', existingUser.email)
           }
-          
+
           return true
         } catch (error) {
           console.error('Error during Google sign in:', error)
           return false
         }
       }
-      
+
       return true
+    },
+    async redirect({ url, baseUrl }) {
+      // Always redirect to dashboard after successful sign-in
+      console.log('🔍 NextAuth redirect:', { url, baseUrl })
+
+      // Always redirect to dashboard after any authentication
+      console.log('✅ Forcing redirect to dashboard')
+      return `${baseUrl}/dashboard`
     }
   },
   pages: {
