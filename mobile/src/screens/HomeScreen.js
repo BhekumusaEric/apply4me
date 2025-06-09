@@ -1,101 +1,283 @@
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  SafeAreaView 
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+  RefreshControl,
+  Dimensions,
+  Alert,
+  StatusBar
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Animatable from 'react-native-animatable';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../context/AuthContext';
+import { theme } from '../theme/theme';
 
-export default function HomeScreen({ navigation }) {
+const { width } = Dimensions.get('window');
+
+export default function HomeScreen({ navigation }: any) {
+  const { user, signOut } = useAuth();
+  const [refreshing, setRefreshing] = useState(false);
+  const [greeting, setGreeting] = useState('');
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: 'Application Update',
+      message: 'Your application to University of Cape Town has been received',
+      time: '2 hours ago',
+      read: false,
+      type: 'application'
+    },
+    {
+      id: 2,
+      title: 'New Bursary Available',
+      message: 'MTN Foundation Bursary applications now open',
+      time: '1 day ago',
+      read: false,
+      type: 'bursary'
+    },
+    {
+      id: 3,
+      title: 'Document Required',
+      message: 'Please upload your matric certificate',
+      time: '3 days ago',
+      read: true,
+      type: 'document'
+    }
+  ]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    setGreetingMessage();
+  }, []);
+
+  const setGreetingMessage = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      setGreeting('Good morning');
+    } else if (hour < 17) {
+      setGreeting('Good afternoon');
+    } else {
+      setGreeting('Good evening');
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Simulate refresh and update greeting
+    setGreetingMessage();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Logout',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleContactSupport = () => {
+    Alert.alert(
+      'Contact Support',
+      'Choose how you would like to contact us:',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Call +27693434126',
+          onPress: () => {
+            // In a real app, this would open the phone dialer
+            Alert.alert('Call Support', 'Calling +27693434126...');
+          },
+        },
+        {
+          text: 'WhatsApp',
+          onPress: () => {
+            // In a real app, this would open WhatsApp
+            Alert.alert('WhatsApp Support', 'Opening WhatsApp to +27693434126...');
+          },
+        },
+      ]
+    );
+  };
+
+  const unreadNotifications = notifications.filter(n => !n.read).length;
   const quickActions = [
     {
       id: 1,
       title: 'Browse Institutions',
-      subtitle: '150+ Universities & Colleges',
+      subtitle: 'Find your perfect university',
       icon: 'school',
-      color: '#007A4D',
+      gradient: [theme.colors.primary, theme.colors.primaryContainer],
       onPress: () => navigation.navigate('Institutions')
     },
     {
       id: 2,
       title: 'Find Bursaries',
-      subtitle: '75+ Funding Opportunities',
-      icon: 'cash',
-      color: '#FF6B35',
+      subtitle: 'Discover funding opportunities',
+      icon: 'wallet',
+      gradient: [theme.colors.secondary, theme.colors.secondaryContainer],
       onPress: () => navigation.navigate('Bursaries')
     },
     {
       id: 3,
       title: 'My Applications',
-      subtitle: 'Track Your Progress',
+      subtitle: 'Track your progress',
       icon: 'document-text',
-      color: '#4ECDC4',
+      gradient: [theme.colors.tertiary, '#64B5F6'],
       onPress: () => navigation.navigate('Applications')
     },
     {
       id: 4,
       title: 'Profile Settings',
-      subtitle: 'Manage Your Info',
+      subtitle: 'Manage your information',
       icon: 'person',
-      color: '#45B7D1',
+      gradient: ['#9C27B0', '#BA68C8'],
       onPress: () => navigation.navigate('Profile')
     }
   ];
 
-  const stats = [
-    { label: 'Institutions', value: '150+', icon: 'school' },
-    { label: 'Bursaries', value: '75+', icon: 'cash' },
-    { label: 'Students Helped', value: '2,847', icon: 'people' }
-  ];
-
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeTitle}>Welcome to Apply4Me! 🇿🇦</Text>
-          <Text style={styles.welcomeSubtitle}>
-            Your gateway to South African higher education
-          </Text>
-        </View>
+      <StatusBar barStyle="light-content" backgroundColor={theme.colors.primary} />
 
-        {/* Stats Section */}
-        <View style={styles.statsContainer}>
-          <Text style={styles.sectionTitle}>📊 Platform Statistics</Text>
-          <View style={styles.statsGrid}>
-            {stats.map((stat, index) => (
-              <View key={index} style={styles.statCard}>
-                <Ionicons name={stat.icon} size={24} color="#007A4D" />
-                <Text style={styles.statValue}>{stat.value}</Text>
-                <Text style={styles.statLabel}>{stat.label}</Text>
+      {/* Top Navigation Bar */}
+      <View style={styles.topNavBar}>
+        <View style={styles.navLeft}>
+          <Text style={styles.appTitle}>Apply4Me</Text>
+        </View>
+        <View style={styles.navRight}>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={() => setShowNotifications(!showNotifications)}
+          >
+            <Ionicons name="notifications" size={24} color="white" />
+            {unreadNotifications > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.badgeText}>{unreadNotifications}</Text>
               </View>
-            ))}
-          </View>
+            )}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.navButton}
+            onPress={handleLogout}
+          >
+            <Ionicons name="log-out" size={24} color="white" />
+          </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Quick Actions */}
-        <View style={styles.actionsContainer}>
-          <Text style={styles.sectionTitle}>🚀 Quick Actions</Text>
-          <View style={styles.actionsGrid}>
-            {quickActions.map((action) => (
-              <TouchableOpacity
-                key={action.id}
-                style={[styles.actionCard, { borderLeftColor: action.color }]}
-                onPress={action.onPress}
-              >
-                <View style={styles.actionHeader}>
-                  <Ionicons name={action.icon} size={28} color={action.color} />
-                  <Text style={styles.actionTitle}>{action.title}</Text>
+      {/* Notifications Panel */}
+      {showNotifications && (
+        <Animatable.View animation="slideInDown" style={styles.notificationsPanel}>
+          <View style={styles.notificationHeader}>
+            <Text style={styles.notificationTitle}>Notifications</Text>
+            <TouchableOpacity onPress={() => setShowNotifications(false)}>
+              <Ionicons name="close" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.notificationsList}>
+            {notifications.map((notification) => (
+              <TouchableOpacity key={notification.id} style={styles.notificationItem}>
+                <View style={styles.notificationContent}>
+                  <View style={styles.notificationHeader}>
+                    <Text style={[styles.notificationItemTitle, !notification.read && styles.unreadTitle]}>
+                      {notification.title}
+                    </Text>
+                    <Text style={styles.notificationTime}>{notification.time}</Text>
+                  </View>
+                  <Text style={styles.notificationMessage}>{notification.message}</Text>
+                  {!notification.read && <View style={styles.unreadDot} />}
                 </View>
-                <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
-                <Ionicons name="chevron-forward" size={20} color="#666" />
               </TouchableOpacity>
             ))}
+          </ScrollView>
+        </Animatable.View>
+      )}
+
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header Section */}
+        <LinearGradient
+          colors={[theme.colors.primary, theme.colors.primaryContainer]}
+          style={styles.headerGradient}
+        >
+          <Animatable.View animation="fadeInDown" style={styles.headerContent}>
+            <Text style={styles.greetingText}>{greeting}!</Text>
+            <Text style={styles.userNameText}>
+              {user?.email?.split('@')[0] || 'Student'}
+            </Text>
+            <Text style={styles.headerSubtitle}>
+              Ready to explore your future? 🚀
+            </Text>
+          </Animatable.View>
+        </LinearGradient>
+
+        {/* Quick Actions */}
+        <Animatable.View animation="fadeInUp" delay={300} style={styles.actionsContainer}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.actionsGrid}>
+            {quickActions.map((action, index) => (
+              <Animatable.View
+                key={action.id}
+                animation="fadeInUp"
+                delay={400 + (index * 100)}
+              >
+                <TouchableOpacity
+                  style={styles.actionCard}
+                  onPress={action.onPress}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={action.gradient}
+                    style={styles.actionGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <View style={styles.actionContent}>
+                      <Ionicons name={action.icon} size={32} color="white" />
+                      <View style={styles.actionTextContainer}>
+                        <Text style={styles.actionTitle}>{action.title}</Text>
+                        <Text style={styles.actionSubtitle}>{action.subtitle}</Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={24} color="rgba(255,255,255,0.8)" />
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Animatable.View>
+            ))}
           </View>
-        </View>
+        </Animatable.View>
 
         {/* Recent Updates */}
         <View style={styles.updatesContainer}>
@@ -130,16 +312,16 @@ export default function HomeScreen({ navigation }) {
             <Ionicons name="help-circle" size={24} color="#007A4D" />
             <View style={styles.helpText}>
               <Text style={styles.helpTitle}>How to Apply</Text>
-              <Text style={styles.helpSubtitle}>Step-by-step guide</Text>
+              <Text style={styles.helpSubtitle}>Step-by-step application guide</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.helpCard}>
+
+          <TouchableOpacity style={styles.helpCard} onPress={handleContactSupport}>
             <Ionicons name="call" size={24} color="#007A4D" />
             <View style={styles.helpText}>
               <Text style={styles.helpTitle}>Contact Support</Text>
-              <Text style={styles.helpSubtitle}>+27 (0) 11 123 4567</Text>
+              <Text style={styles.helpSubtitle}>+27693434126 (Phone/WhatsApp)</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#666" />
           </TouchableOpacity>
@@ -154,25 +336,138 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1a1a1a',
   },
+  topNavBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  navLeft: {
+    flex: 1,
+  },
+  navRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  appTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  navButton: {
+    marginLeft: 15,
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#FF4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  badgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  notificationsPanel: {
+    backgroundColor: '#2a2a2a',
+    maxHeight: 300,
+    borderBottomWidth: 1,
+    borderBottomColor: '#444',
+  },
+  notificationHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#444',
+  },
+  notificationTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  notificationsList: {
+    maxHeight: 200,
+  },
+  notificationItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  notificationContent: {
+    position: 'relative',
+  },
+  notificationItemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: 'white',
+    marginBottom: 4,
+  },
+  unreadTitle: {
+    color: theme.colors.primary,
+  },
+  notificationMessage: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 18,
+  },
+  notificationTime: {
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 4,
+  },
+  unreadDot: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.primary,
+  },
   scrollView: {
     flex: 1,
   },
-  welcomeSection: {
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: '#2a2a2a',
+  headerGradient: {
+    paddingHorizontal: 20,
+    paddingVertical: 30,
     marginBottom: 20,
   },
-  welcomeTitle: {
-    fontSize: 24,
+  headerContent: {
+    alignItems: 'center',
+  },
+  greetingText: {
+    fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
     marginBottom: 8,
   },
-  welcomeSubtitle: {
+  userNameText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    marginBottom: 8,
+    textTransform: 'capitalize',
+  },
+  headerSubtitle: {
     fontSize: 16,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
   },
   sectionTitle: {
@@ -182,33 +477,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     paddingHorizontal: 20,
   },
-  statsContainer: {
-    marginBottom: 30,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingHorizontal: 20,
-  },
-  statCard: {
-    alignItems: 'center',
-    backgroundColor: '#2a2a2a',
-    padding: 15,
-    borderRadius: 12,
-    minWidth: 80,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#007A4D',
-    marginTop: 8,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 4,
-    textAlign: 'center',
-  },
   actionsContainer: {
     marginBottom: 30,
   },
@@ -216,31 +484,36 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   actionCard: {
-    backgroundColor: '#2a2a2a',
+    borderRadius: 16,
+    marginBottom: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  actionGradient: {
+    borderRadius: 16,
     padding: 20,
-    borderRadius: 12,
-    marginBottom: 12,
-    borderLeftWidth: 4,
+  },
+  actionContent: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  actionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  actionTextContainer: {
     flex: 1,
+    marginLeft: 16,
   },
   actionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
-    marginLeft: 12,
+    marginBottom: 4,
   },
   actionSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
-    marginLeft: 40,
-    flex: 1,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
   },
   updatesContainer: {
     marginBottom: 30,
