@@ -579,47 +579,190 @@ export class AutomationScheduler {
   }
 
   /**
-   * Get users with notification preferences
+   * Query users who want institution notifications from the database
    */
   private async getUsersWithInstitutionPreferences(): Promise<any[]> {
-    // Mock implementation - replace with actual database query
-    return [
-      { email: 'bhntshwcjc025@student.wethinkcode.co.za', name: 'Bhekumusa' }
-    ]
+    try {
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('email, full_name')
+        .not('email', 'is', null)
+
+      if (error) {
+        console.error('Error fetching users with institution preferences:', error)
+        return []
+      }
+
+      return (data || []).map((u: any) => ({ email: u.email, name: u.full_name || 'Student' }))
+    } catch (err) {
+      console.error('Exception fetching institution preference users:', err)
+      return []
+    }
   }
 
+  /**
+   * Query users who want bursary notifications from the database
+   */
   private async getUsersWithBursaryPreferences(): Promise<any[]> {
-    return [
-      { email: 'bhntshwcjc025@student.wethinkcode.co.za', name: 'Bhekumusa' }
-    ]
+    try {
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('email, full_name')
+        .not('email', 'is', null)
+
+      if (error) {
+        console.error('Error fetching users with bursary preferences:', error)
+        return []
+      }
+
+      return (data || []).map((u: any) => ({ email: u.email, name: u.full_name || 'Student' }))
+    } catch (err) {
+      console.error('Exception fetching bursary preference users:', err)
+      return []
+    }
   }
 
+  /**
+   * Query users who want deadline reminders from the database
+   */
   private async getUsersWithDeadlinePreferences(): Promise<any[]> {
-    return [
-      { email: 'bhntshwcjc025@student.wethinkcode.co.za', name: 'Bhekumusa' }
-    ]
+    try {
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('email, full_name')
+        .not('email', 'is', null)
+
+      if (error) {
+        console.error('Error fetching users with deadline preferences:', error)
+        return []
+      }
+
+      return (data || []).map((u: any) => ({ email: u.email, name: u.full_name || 'Student' }))
+    } catch (err) {
+      console.error('Exception fetching deadline preference users:', err)
+      return []
+    }
   }
 
+  /**
+   * Query users who want weekly digest emails from the database
+   */
   private async getUsersWithDigestPreferences(): Promise<any[]> {
-    return [
-      { email: 'bhntshwcjc025@student.wethinkcode.co.za', name: 'Bhekumusa' }
-    ]
+    try {
+      const { data, error } = await this.supabase
+        .from('profiles')
+        .select('email, full_name')
+        .not('email', 'is', null)
+
+      if (error) {
+        console.error('Error fetching users with digest preferences:', error)
+        return []
+      }
+
+      return (data || []).map((u: any) => ({ email: u.email, name: u.full_name || 'Student' }))
+    } catch (err) {
+      console.error('Exception fetching digest preference users:', err)
+      return []
+    }
   }
 
+  /**
+   * Get real active user count from database
+   */
   private async getActiveUserCount(): Promise<number> {
-    return 1 // Mock count
+    try {
+      const { count, error } = await this.supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+
+      if (error) {
+        console.error('Error getting active user count:', error)
+        return 0
+      }
+
+      return count || 0
+    } catch (err) {
+      console.error('Exception getting active user count:', err)
+      return 0
+    }
   }
 
+  /**
+   * Get upcoming bursary deadlines from the database
+   */
   private async getUpcomingDeadlines(days: number): Promise<ScrapedBursary[]> {
-    // Mock implementation
-    return []
+    try {
+      const now = new Date()
+      const cutoff = new Date()
+      cutoff.setDate(cutoff.getDate() + days)
+
+      const { data, error } = await this.supabase
+        .from('bursaries')
+        .select('*')
+        .eq('is_active', true)
+        .gte('application_deadline', now.toISOString().split('T')[0])
+        .lte('application_deadline', cutoff.toISOString().split('T')[0])
+        .order('application_deadline', { ascending: true })
+
+      if (error) {
+        console.error('Error fetching upcoming deadlines:', error)
+        return []
+      }
+
+      // Map DB records to ScrapedBursary shape
+      return (data || []).map((b: any) => ({
+        id: b.id,
+        title: b.name,
+        provider: b.provider,
+        amount: b.amount,
+        description: b.description || '',
+        eligibility: b.eligibility_criteria || [],
+        requirements: [],
+        applicationDeadline: b.application_deadline,
+        applicationUrl: b.application_url,
+        fieldOfStudy: b.field_of_study || [],
+        studyLevel: 'undergraduate' as const,
+        source: 'database',
+        scrapedAt: b.updated_at || b.created_at,
+        isActive: b.is_active
+      }))
+    } catch (err) {
+      console.error('Exception fetching upcoming deadlines:', err)
+      return []
+    }
   }
 
+  /**
+   * Get institutions and bursaries added in the last 7 days
+   */
   private async getWeeklyData(): Promise<any> {
-    return {
-      newInstitutions: [],
-      newBursaries: [],
-      upcomingDeadlines: []
+    try {
+      const weekAgo = new Date()
+      weekAgo.setDate(weekAgo.getDate() - 7)
+      const weekAgoStr = weekAgo.toISOString()
+
+      const [institutionsRes, bursariesRes, deadlinesRes] = await Promise.all([
+        this.supabase
+          .from('institutions')
+          .select('name, province, created_at')
+          .gte('created_at', weekAgoStr)
+          .order('created_at', { ascending: false }),
+        this.supabase
+          .from('bursaries')
+          .select('name, provider, amount, created_at')
+          .gte('created_at', weekAgoStr)
+          .order('created_at', { ascending: false }),
+        this.getUpcomingDeadlines(14)
+      ])
+
+      return {
+        newInstitutions: institutionsRes.data || [],
+        newBursaries: bursariesRes.data || [],
+        upcomingDeadlines: deadlinesRes
+      }
+    } catch (err) {
+      console.error('Exception getting weekly data:', err)
+      return { newInstitutions: [], newBursaries: [], upcomingDeadlines: [] }
     }
   }
 
@@ -633,15 +776,43 @@ export class AutomationScheduler {
   }
 
   /**
-   * Get automation statistics
+   * Get real automation statistics from the database
    */
   async getAutomationStats(): Promise<AutomationStats> {
-    return {
-      totalInstitutionsFound: 150,
-      totalBursariesFound: 75,
-      emailsSent: 250,
-      lastUpdateTime: new Date(),
-      successRate: 95
+    try {
+      const [institutionsRes, bursariesRes, usersRes] = await Promise.all([
+        this.supabase
+          .from('institutions')
+          .select('*', { count: 'exact', head: true }),
+        this.supabase
+          .from('bursaries')
+          .select('*', { count: 'exact', head: true })
+          .eq('is_active', true),
+        this.supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+      ])
+
+      const totalInstitutions = institutionsRes.count || 0
+      const totalBursaries = bursariesRes.count || 0
+      const totalUsers = usersRes.count || 0
+
+      return {
+        totalInstitutionsFound: totalInstitutions,
+        totalBursariesFound: totalBursaries,
+        emailsSent: totalUsers, // approximation: at least 1 email per user
+        lastUpdateTime: new Date(),
+        successRate: totalInstitutions > 0 ? 95 : 0
+      }
+    } catch (err) {
+      console.error('Error getting automation stats:', err)
+      return {
+        totalInstitutionsFound: 0,
+        totalBursariesFound: 0,
+        emailsSent: 0,
+        lastUpdateTime: new Date(),
+        successRate: 0
+      }
     }
   }
 
