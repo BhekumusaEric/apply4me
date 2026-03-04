@@ -88,11 +88,10 @@ export async function POST(request: NextRequest) {
       message: 'Account created successfully! You can now sign in.'
     })
 
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err)
-    console.error('❌ Signup API error:', message)
+  } catch (err) {
+    console.error('❌ Signup API error:', err)
     return NextResponse.json(
-      { error: 'Internal server error', details: message },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }
