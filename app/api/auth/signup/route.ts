@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase'
-import { createServerSupabaseAdminClient } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
+
+// Use admin client to bypass RLS and email confirmation issues
+const adminSupabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,28 +24,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password must be at least 6 characters' },
+        { status: 400 }
+      )
+    }
+
     console.log('👤 Creating new user account:', email)
 
-    const supabase = createClient()
-
-    // Create the user account
-    const { data, error } = await supabase.auth.signUp({
+    // Use admin API to create user — auto-confirms email, bypasses rate limiting
+    const { data, error } = await adminSupabase.auth.admin.createUser({
       email,
       password,
+      email_confirm: true, // Auto-confirm so users can login immediately
     })
 
     if (error) {
       console.error('❌ Signup error:', error)
 
-      // Handle duplicate user gracefully
-      if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
+      if (error.message?.includes('already registered') || error.message?.includes('already exists') || error.status === 422) {
         return NextResponse.json(
           {
             error: 'Account already exists',
             message: 'An account with this email already exists. Please sign in instead.',
             action: 'signin'
           },
-          { status: 409 } // Conflict status
+          { status: 409 }
         )
       }
 
@@ -47,52 +63,28 @@ export async function POST(request: NextRequest) {
     if (data.user) {
       console.log('✅ User created successfully:', data.user.email)
 
-      // Automatically create a profile for the new user
-      console.log('📝 Creating profile for new user:', data.user.id)
-
-      const adminSupabase = createServerSupabaseAdminClient()
-
-      const profileData = {
-        user_id: data.user.id,
-        personal_info: {
-          email: data.user.email
-        },
-        contact_info: {
-          email: data.user.email
-        },
-        academic_history: {},
-        study_preferences: {},
-        profile_completeness: 5,
-        readiness_score: 0,
-        is_verified: false
-      }
-
-      const { data: profile, error: profileError } = await adminSupabase
-        .from('student_profiles')
-        .insert(profileData)
+      // Create a profile for the new user
+      const { error: profileError } = await adminSupabase
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          email: data.user.email,
+          full_name: email.split('@')[0], // Use part of email as initial name
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .select()
         .single()
 
-      if (profileError) {
-        // Check if it's a duplicate key error (profile already exists)
-        if (profileError.code === '23505') {
-          console.log('⚠️ Profile already exists for new user (this is fine)')
-        } else {
-          console.error('❌ Failed to create profile for new user:', profileError)
-          // Don't fail the signup, just log the error
-        }
-      } else {
-        console.log('✅ Profile created successfully for new user')
+      if (profileError && profileError.code !== '23505') {
+        console.warn('⚠️ Could not create profile (non-fatal):', profileError.message)
       }
     }
 
     return NextResponse.json({
       success: true,
-      user: data.user,
-      session: data.session,
-      message: data.user?.email_confirmed_at
-        ? 'Account created successfully!'
-        : 'Account created! Please check your email to verify your account.'
+      user: { id: data.user?.id, email: data.user?.email },
+      message: 'Account created successfully! You can now sign in.'
     })
 
   } catch (error) {

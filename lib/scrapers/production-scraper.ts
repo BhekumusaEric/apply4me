@@ -8,7 +8,7 @@ import * as cheerio from 'cheerio'
 import { ScrapedInstitution } from './institution-scraper'
 import { ScrapedBursary } from './bursary-scraper'
 import { DeadlineManager } from '@/lib/services/deadline-manager'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export interface ScrapingResult {
   institutions: ScrapedInstitution[]
@@ -24,7 +24,10 @@ export interface ScrapingResult {
 export class ProductionScraper {
   private readonly USER_AGENT = 'Mozilla/5.0 (compatible; Apply4Me-Bot/1.0; +https://apply4me.co.za)'
   private deadlineManager = new DeadlineManager()
-  private supabase = createClient()
+  private supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
   private institutionSources = [
     {
