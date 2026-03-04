@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Use admin client to bypass RLS and email confirmation issues
-const adminSupabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
-
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json()
@@ -31,19 +19,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Use service role admin client — required for admin.createUser
+    const adminSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+
     console.log('👤 Creating new user account:', email)
 
-    // Use admin API to create user — auto-confirms email, bypasses rate limiting
+    // Use admin API — creates user with email already confirmed so they can
+    // log in immediately without needing to verify their email first
     const { data, error } = await adminSupabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm so users can login immediately
+      email_confirm: true,
     })
 
     if (error) {
       console.error('❌ Signup error:', error)
 
-      if (error.message?.includes('already registered') || error.message?.includes('already exists') || error.status === 422) {
+      // Duplicate email
+      if (error.status === 422 ||
+        error.message?.toLowerCase().includes('already registered') ||
+        error.message?.toLowerCase().includes('already exists') ||
+        error.message?.toLowerCase().includes('email address has already been registered')) {
         return NextResponse.json(
           {
             error: 'Account already exists',
@@ -54,30 +54,31 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
     if (data.user) {
       console.log('✅ User created successfully:', data.user.email)
 
-      // Create a profile for the new user
+      // Create profile record — profiles has its own auto-generated UUID PK
+      // It is NOT linked to auth.users by FK, just email is used to match
       const { error: profileError } = await adminSupabase
         .from('profiles')
         .insert({
-          id: data.user.id,
           email: data.user.email,
-          full_name: email.split('@')[0], // Use part of email as initial name
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          full_name: email.split('@')[0],
+          role: 'student',
         })
-        .select()
-        .single()
 
-      if (profileError && profileError.code !== '23505') {
-        console.warn('⚠️ Could not create profile (non-fatal):', profileError.message)
+      if (profileError) {
+        if (profileError.code === '23505') {
+          console.log('⚠️ Profile already exists (fine)')
+        } else {
+          // Non-fatal — user can still log in, profile built during onboarding
+          console.warn('⚠️ Profile creation failed (non-fatal):', profileError.message)
+        }
+      } else {
+        console.log('✅ Profile created successfully')
       }
     }
 
@@ -87,8 +88,8 @@ export async function POST(request: NextRequest) {
       message: 'Account created successfully! You can now sign in.'
     })
 
-  } catch (error) {
-    console.error('❌ Signup API error:', error)
+  } catch (err) {
+    console.error('❌ Signup API error:', err)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
