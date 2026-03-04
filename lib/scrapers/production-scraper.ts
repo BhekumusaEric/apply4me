@@ -1168,7 +1168,7 @@ export class ProductionScraper {
         pageText.includes('no longer accepting')
 
       const deadlineFromPage = this.extractDeadlineFromPage($('body').text())
-      let deadline = deadlineFromPage || this.generateApplicationDeadline()
+      const deadline = deadlineFromPage || this.generateApplicationDeadline()
 
       const deadlineStatus = this.deadlineManager.checkDeadlineStatus(deadline)
       const window = this.deadlineManager.determineApplicationWindow(source.name, deadline)
